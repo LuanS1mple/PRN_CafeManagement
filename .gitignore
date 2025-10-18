@@ -67,7 +67,7 @@ _ReSharper*/
 ##############################
 # Publish / deploy folders
 **/publish/
-**/wwwroot/lib/
+# **/wwwroot/lib/
 *.Publish.xml
 *.pubxml
 *.pubxml.user
