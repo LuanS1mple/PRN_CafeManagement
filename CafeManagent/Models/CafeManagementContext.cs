@@ -74,6 +74,7 @@ public partial class CafeManagementContext : DbContext
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("total_hour");
             entity.Property(e => e.Workdate).HasColumnName("workdate");
+            entity.Property(e => e.WorkshiftId).HasColumnName("workshift_id");
 
             entity.HasOne(d => d.Shift).WithMany(p => p.Attendances)
                 .HasForeignKey(d => d.ShiftId)
@@ -82,6 +83,10 @@ public partial class CafeManagementContext : DbContext
             entity.HasOne(d => d.Staff).WithMany(p => p.Attendances)
                 .HasForeignKey(d => d.StaffId)
                 .HasConstraintName("FK__Attendanc__staff__5070F446");
+
+            entity.HasOne(d => d.Workshift).WithMany(p => p.Attendances)
+                .HasForeignKey(d => d.WorkshiftId)
+                .HasConstraintName("FK_Attendance_Workshift");
         });
 
         modelBuilder.Entity<Contract>(entity =>

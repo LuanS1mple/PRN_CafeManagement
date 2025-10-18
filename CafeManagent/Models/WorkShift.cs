@@ -13,5 +13,7 @@ public partial class WorkShift
 
     public TimeOnly? EndTime { get; set; }
 
+    public virtual ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+
     public virtual ICollection<WorkSchedule> WorkSchedules { get; set; } = new List<WorkSchedule>();
 }

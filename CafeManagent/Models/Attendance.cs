@@ -23,7 +23,11 @@ public partial class Attendance
 
     public string? Note { get; set; }
 
+    public int? WorkshiftId { get; set; }
+
     public virtual WorkSchedule? Shift { get; set; }
 
     public virtual Staff? Staff { get; set; }
+
+    public virtual WorkShift? Workshift { get; set; }
 }
