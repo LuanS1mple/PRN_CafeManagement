@@ -7,43 +7,83 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CafeManagent.styles.css" asp-append-version="true" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CafeManagent</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="bg-dark text-white p-3" id="sidebar">
+            <h4 class="text-center mb-4"><i class="fa-solid fa-mug-hot me-2"></i>CafeManager</h4>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" asp-controller="Home" asp-action="Index">
+                        <i class="fa-solid fa-house me-2"></i>Trang chủ
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" asp-controller="AttendanceRequest" asp-action="Init">
+                        <i class="fa-solid fa-calendar-check me-2"></i>Chấm công
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" asp-controller="Staff" asp-action="Index">
+                        <i class="fa-solid fa-users me-2"></i>Nhân viên
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link text-white" asp-controller="Report" asp-action="Index">
+                        <i class="fa-solid fa-chart-line me-2"></i>Báo cáo
+                    </a>
+                </li>
+                <li class="nav-item mt-3 border-top pt-3">
+                    <a class="nav-link text-white" asp-controller="Account" asp-action="Logout">
+                        <i class="fa-solid fa-right-from-bracket me-2"></i>Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="flex-grow-1 d-flex flex-column">
+            <!-- Topbar -->
+            <nav class="navbar navbar-expand navbar-light bg-light border-bottom px-4">
+                <button class="btn btn-outline-secondary" id="menu-toggle">
+                    <i class="fa-solid fa-bars"></i>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+                <div class="ms-auto d-flex align-items-center">
+                    <span class="me-3 text-muted">Xin chào, Admin</span>
+                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="rounded-circle" width="35" height="35" alt="User" />
                 </div>
+            </nav>
+
+            <!-- Main Content -->
+            <div class="container-fluid p-4 flex-grow-1">
+                <main role="main" class="pb-3 h-100">
+                    @RenderBody()
+                </main>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+            <!-- Footer -->
+            <footer class="border-top text-center py-3 text-muted mt-auto bg-white">
+                &copy; 2025 - CafeManagent
+            </footer>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - CafeManagent - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        // Sidebar toggle
+        $("#menu-toggle").click(function (e) {
+            e.preventDefault();
+            $("#wrapper").toggleClass("toggled");
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

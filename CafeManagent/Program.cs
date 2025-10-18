@@ -1,7 +1,16 @@
+using CafeManagent.Models;
+using CafeManagent.Services;
+using CafeManagent.Services.Imp;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+//DI
+builder.Services.AddTransient<IAttendanceService, AttendanceService>();
+builder.Services.AddTransient<IRequestService, RequestService>();
+builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
 
 var app = builder.Build();
 
