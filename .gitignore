@@ -1,0 +1,104 @@
+##############################
+# Build results and binaries #
+##############################
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Tt]est[Rr]esults/
+
+##############################
+# User-specific files #
+##############################
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.cache
+*.pdb
+*.dbmdl
+*.jfm
+*.vsp
+*.vspx
+
+##############################
+# Visual Studio specific #
+##############################
+.vs/
+.vscode/
+*.vsidx
+*.ncrunch*
+*.nupkg
+*.snupkg
+*.sdf
+*.opensdf
+*.dbmdl
+*.sln.iml
+
+##############################
+# NuGet packages #
+##############################
+*.nupkg
+packages/
+!packages/build/
+!packages/repositories.config
+project.lock.json
+project.fragment.lock.json
+
+##############################
+# Resharper / Rider #
+##############################
+_ReSharper*/
+*.ReSharper*/
+*.DotSettings.user
+
+##############################
+# Logs and databases #
+##############################
+*.log
+*.sqlite
+*.mdf
+*.ldf
+
+##############################
+# Web / ASP.NET stuff #
+##############################
+# Publish / deploy folders
+**/publish/
+**/wwwroot/lib/
+*.Publish.xml
+*.pubxml
+*.pubxml.user
+
+# Config files (optional)
+appsettings.*.json
+
+##############################
+# OS generated files #
+##############################
+.DS_Store
+ehthumbs.db
+Icon?
+Thumbs.db
+desktop.ini
+
+##############################
+# Archives #
+##############################
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+*.iso
+
+##############################
+# Others #
+##############################
+*.bak
+*.tmp
+~$*
+*.swp
+*.swo
