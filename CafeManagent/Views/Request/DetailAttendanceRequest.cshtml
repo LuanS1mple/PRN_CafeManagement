@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Chi tiết yêu cầu chỉnh giờ điểm danh";
+}
+@using CafeManagent.dto.response;
+@model PendingAttendance;
+<div class="request-detail-page bg-body-secondary min-vh-100 p-4">
+    <div class="card shadow-sm p-4 w-100">
+        <h2 class="text-center mb-4 fw-semibold">Chi tiết yêu cầu chỉnh giờ điểm danh</h2>
+
+        <form>
+            <!-- Thông tin cơ bản -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Tên nhân viên</label>
+                    <input type="text" class="form-control" value="@Model.StaffName" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Ngày</label>
+                    <input type="date" class="form-control" value="@Model.Date" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Ca làm</label>
+                    <input type="text" class="form-control" value="@Model.ShiftId" readonly>
+                </div>
+            </div>
+
+            <!-- Tiêu đề + Mô tả -->
+            <div class="mb-3">
+                <label class="form-label">Tiêu đề</label>
+                <input type="text" class="form-control" value="Chỉnh lại giờ điểm danh sáng nay" readonly>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Mô tả chi tiết</label>
+                <textarea class="form-control" rows="3" readonly>@Model.Description</textarea>
+            </div>
+
+            <!-- Giờ checkin / checkout -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Giờ Check-in</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="time" class="form-control text-center" value="@Model.OldCheckIn" readonly>
+                        <span class="arrow text-primary fs-5 fw-bold">→</span>
+                        <input type="time" class="form-control text-center" value="@Model.NewCheckIn" readonly>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Giờ Check-out</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="time" class="form-control text-center" value="@Model.OldCheckOut" readonly>
+                        <span class="arrow text-primary fs-5 fw-bold">→</span>
+                        <input type="time" class="form-control text-center" value="@Model.NewCheckOut" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nút hành động -->
+            <div class="d-flex justify-content-center gap-3 border-top pt-4">
+                <button type="submit" class="btn btn-success px-4">
+                    <i class="fa-solid fa-check me-2"></i>Duyệt
+                </button>
+                <button type="button" class="btn btn-danger px-4">
+                    <i class="fa-solid fa-xmark me-2"></i>Từ chối
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .request-detail-page {
+        width: 100%;
+    }
+
+    .card {
+        border-radius: 14px;
+        background: #fff;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+    .arrow {
+        font-size: 22px;
+    }
+
+    input[readonly], textarea[readonly] {
+        background-color: #f8f9fa !important;
+    }
+</style>

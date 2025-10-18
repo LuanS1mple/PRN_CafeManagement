@@ -1,4 +1,5 @@
 ﻿using CafeManagent.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace CafeManagent.Services.Imp
 {
@@ -13,6 +14,23 @@ namespace CafeManagent.Services.Imp
         {
             _context.Requests.Add(request); 
             _context.SaveChanges();
+        }
+
+        public Request GetById(int id)
+        {
+            return _context.Requests.Include(r => r.Staff)
+                .Where(r => r.ReportId==id).FirstOrDefault();
+        }
+
+        public List<Request> GetWaitingAttendanceRequest()
+        {
+            return _context.Requests.Include(r => r.Staff)
+                .Where(r => r.ReportType.Equals("Attendance")).ToList();
+        }
+
+        public List<Request> GetWaitingShiftRequest()
+        {
+            return _context.Requests.Include(r => r.Staff).Where(r => r.ReportType.Equals("Shift")).ToList();
         }
     }
 }
