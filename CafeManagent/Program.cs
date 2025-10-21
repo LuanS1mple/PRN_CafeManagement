@@ -15,6 +15,7 @@ builder.Services.AddDbContext<CafeManagementContext>(options =>
 builder.Services.AddSession();
 //DI
 builder.Services.AddScoped<IStaffService, StaffService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddTransient<IAttendanceService, AttendanceService>();
 builder.Services.AddTransient<IRequestService, RequestService>();
 //builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
