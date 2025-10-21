@@ -13,6 +13,8 @@ public partial class Staff
 
     public bool? Gender { get; set; }
 
+    public int? Status { get; set; }
+
     public DateOnly? BirthDate { get; set; }
 
     public string? Address { get; set; }

@@ -11,6 +11,8 @@ public partial class Attendance
 
     public int? ShiftId { get; set; }
 
+    public int? WorkshiftId { get; set; }
+
     public TimeOnly? CheckIn { get; set; }
 
     public TimeOnly? CheckOut { get; set; }
@@ -22,8 +24,6 @@ public partial class Attendance
     public decimal? TotalHour { get; set; }
 
     public string? Note { get; set; }
-
-    public int? WorkshiftId { get; set; }
 
     public virtual WorkSchedule? Shift { get; set; }
 

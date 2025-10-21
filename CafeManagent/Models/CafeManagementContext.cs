@@ -42,25 +42,18 @@ public partial class CafeManagementContext : DbContext
     public virtual DbSet<WorkShift> WorkShifts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseSqlServer(config.GetConnectionString("MyCnn"));
-        }
-    }
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Data Source=.;Initial Catalog=CafeManagement; Trusted_Connection=SSPI;Encrypt=false;TrustServerCertificate=true");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Attendance>(entity =>
         {
-            entity.HasKey(e => e.AttendanceId).HasName("PK__Attendan__20D6A968B62DF5CF");
+            entity.HasKey(e => e.AttendanceId).HasName("PK__Attendan__20D6A968EED28288");
 
             entity.ToTable("Attendance");
 
-            entity.Property(e => e.AttendanceId)
-                .ValueGeneratedNever()
-                .HasColumnName("attendance_id");
+            entity.Property(e => e.AttendanceId).HasColumnName("attendance_id");
             entity.Property(e => e.CheckIn).HasColumnName("check_in");
             entity.Property(e => e.CheckOut).HasColumnName("check_out");
             entity.Property(e => e.Note)
@@ -85,20 +78,18 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Workshift).WithMany(p => p.Attendances)
                 .HasForeignKey(d => d.WorkshiftId)
-                .HasConstraintName("FK_Attendance_Workshift");
+                .HasConstraintName("FK__Attendanc__works__5165187F");
         });
 
         modelBuilder.Entity<Contract>(entity =>
         {
-            entity.HasKey(e => e.ContractId).HasName("PK__Contract__F8D66423939BDA63");
+            entity.HasKey(e => e.ContractId).HasName("PK__Contract__F8D6642317F07A2B");
 
             entity.ToTable("Contract");
 
-            entity.HasIndex(e => e.StaffId, "UQ__Contract__1963DD9D59936C1C").IsUnique();
+            entity.HasIndex(e => e.StaffId, "UQ__Contract__1963DD9D5FF09941").IsUnique();
 
-            entity.Property(e => e.ContractId)
-                .ValueGeneratedNever()
-                .HasColumnName("contract_id");
+            entity.Property(e => e.ContractId).HasColumnName("contract_id");
             entity.Property(e => e.BaseSalary)
                 .HasColumnType("decimal(10, 2)")
                 .HasColumnName("base_salary");
@@ -118,20 +109,18 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Staff).WithOne(p => p.Contract)
                 .HasForeignKey<Contract>(d => d.StaffId)
-                .HasConstraintName("FK__Contract__staff___5165187F");
+                .HasConstraintName("FK__Contract__staff___52593CB8");
         });
 
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__CD65CB85B5221840");
+            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__CD65CB85228A4709");
 
             entity.ToTable("Customer");
 
-            entity.Property(e => e.CustomerId)
-                .ValueGeneratedNever()
-                .HasColumnName("customer_id");
+            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
             entity.Property(e => e.Address)
-                .HasMaxLength(100)
+                .HasMaxLength(15)
                 .IsUnicode(false)
                 .HasColumnName("address");
             entity.Property(e => e.FullName)
@@ -146,13 +135,11 @@ public partial class CafeManagementContext : DbContext
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.OrderId).HasName("PK__Order__465962296E64620D");
+            entity.HasKey(e => e.OrderId).HasName("PK__Order__46596229E6D6B4D1");
 
             entity.ToTable("Order");
 
-            entity.Property(e => e.OrderId)
-                .ValueGeneratedNever()
-                .HasColumnName("order_id");
+            entity.Property(e => e.OrderId).HasColumnName("order_id");
             entity.Property(e => e.CustomerId).HasColumnName("customer_id");
             entity.Property(e => e.Discount)
                 .HasColumnType("decimal(10, 2)")
@@ -175,22 +162,20 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerId)
-                .HasConstraintName("FK__Order__customer___52593CB8");
+                .HasConstraintName("FK__Order__customer___534D60F1");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__Order__staff_id__534D60F1");
+                .HasConstraintName("FK__Order__staff_id__5441852A");
         });
 
         modelBuilder.Entity<OrderItem>(entity =>
         {
-            entity.HasKey(e => e.ItemId).HasName("PK__OrderIte__52020FDD39B5EB1E");
+            entity.HasKey(e => e.ItemId).HasName("PK__OrderIte__52020FDDA0D26B09");
 
             entity.ToTable("OrderItem");
 
-            entity.Property(e => e.ItemId)
-                .ValueGeneratedNever()
-                .HasColumnName("item_id");
+            entity.Property(e => e.ItemId).HasColumnName("item_id");
             entity.Property(e => e.OrderId).HasColumnName("order_id");
             entity.Property(e => e.ProductName)
                 .HasMaxLength(30)
@@ -202,18 +187,16 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderItems)
                 .HasForeignKey(d => d.OrderId)
-                .HasConstraintName("FK__OrderItem__order__5441852A");
+                .HasConstraintName("FK__OrderItem__order__5535A963");
         });
 
         modelBuilder.Entity<Payroll>(entity =>
         {
-            entity.HasKey(e => e.PayrollId).HasName("PK__Payroll__D99FC944D41B98EF");
+            entity.HasKey(e => e.PayrollId).HasName("PK__Payroll__D99FC944693CE0C5");
 
             entity.ToTable("Payroll");
 
-            entity.Property(e => e.PayrollId)
-                .ValueGeneratedNever()
-                .HasColumnName("payroll_id");
+            entity.Property(e => e.PayrollId).HasColumnName("payroll_id");
             entity.Property(e => e.Bonus)
                 .HasColumnType("decimal(10, 2)")
                 .HasColumnName("bonus");
@@ -238,22 +221,20 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Manager).WithMany(p => p.PayrollManagers)
                 .HasForeignKey(d => d.ManagerId)
-                .HasConstraintName("FK__Payroll__manager__5535A963");
+                .HasConstraintName("FK__Payroll__manager__5629CD9C");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.PayrollStaffs)
                 .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__Payroll__staff_i__5629CD9C");
+                .HasConstraintName("FK__Payroll__staff_i__571DF1D5");
         });
 
         modelBuilder.Entity<Product>(entity =>
         {
-            entity.HasKey(e => e.ProductId).HasName("PK__Product__47027DF540231236");
+            entity.HasKey(e => e.ProductId).HasName("PK__Product__47027DF57566BA42");
 
             entity.ToTable("Product");
 
-            entity.Property(e => e.ProductId)
-                .ValueGeneratedNever()
-                .HasColumnName("product_id");
+            entity.Property(e => e.ProductId).HasColumnName("product_id");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
@@ -274,13 +255,11 @@ public partial class CafeManagementContext : DbContext
 
         modelBuilder.Entity<Request>(entity =>
         {
-            entity.HasKey(e => e.ReportId).HasName("PK__Request__779B7C58A27861FF");
+            entity.HasKey(e => e.ReportId).HasName("PK__Request__779B7C589FF96FE9");
 
             entity.ToTable("Request");
 
-            entity.Property(e => e.ReportId)
-                .ValueGeneratedNever()
-                .HasColumnName("report_id");
+            entity.Property(e => e.ReportId).HasColumnName("report_id");
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
@@ -305,22 +284,20 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.ResolvedByNavigation).WithMany(p => p.RequestResolvedByNavigations)
                 .HasForeignKey(d => d.ResolvedBy)
-                .HasConstraintName("FK__Request__resolve__571DF1D5");
+                .HasConstraintName("FK__Request__resolve__5812160E");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.RequestStaffs)
                 .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__Request__staff_i__5812160E");
+                .HasConstraintName("FK__Request__staff_i__59063A47");
         });
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__Role__760965CC5DA842AB");
+            entity.HasKey(e => e.RoleId).HasName("PK__Role__760965CCA3CE6DCD");
 
             entity.ToTable("Role");
 
-            entity.Property(e => e.RoleId)
-                .ValueGeneratedNever()
-                .HasColumnName("role_id");
+            entity.Property(e => e.RoleId).HasColumnName("role_id");
             entity.Property(e => e.Description)
                 .HasMaxLength(100)
                 .HasColumnName("description");
@@ -331,20 +308,18 @@ public partial class CafeManagementContext : DbContext
 
         modelBuilder.Entity<Staff>(entity =>
         {
-            entity.HasKey(e => e.StaffId).HasName("PK__Staff__1963DD9CC05223C2");
+            entity.HasKey(e => e.StaffId).HasName("PK__Staff__1963DD9C913D50CF");
 
-            entity.Property(e => e.StaffId)
-                .ValueGeneratedNever()
-                .HasColumnName("staff_id");
+            entity.Property(e => e.StaffId).HasColumnName("staff_id");
             entity.Property(e => e.Address)
-                .HasMaxLength(100)
+                .HasMaxLength(125)
                 .HasColumnName("address");
             entity.Property(e => e.BirthDate).HasColumnName("birth_date");
             entity.Property(e => e.CreateAt)
                 .HasColumnType("datetime")
                 .HasColumnName("create_at");
             entity.Property(e => e.Email)
-                .HasMaxLength(20)
+                .HasMaxLength(125)
                 .IsUnicode(false)
                 .HasColumnName("email");
             entity.Property(e => e.FullName)
@@ -362,24 +337,23 @@ public partial class CafeManagementContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("phone");
             entity.Property(e => e.RoleId).HasColumnName("role_id");
+            entity.Property(e => e.Status).HasColumnName("status");
             entity.Property(e => e.UserName)
                 .HasMaxLength(20)
                 .HasColumnName("user_name");
 
             entity.HasOne(d => d.Role).WithMany(p => p.Staff)
                 .HasForeignKey(d => d.RoleId)
-                .HasConstraintName("FK__Staff__role_id__59063A47");
+                .HasConstraintName("FK__Staff__role_id__59FA5E80");
         });
 
         modelBuilder.Entity<Task>(entity =>
         {
-            entity.HasKey(e => e.TaskId).HasName("PK__Task__0492148D02D132C4");
+            entity.HasKey(e => e.TaskId).HasName("PK__Task__0492148D4D340497");
 
             entity.ToTable("Task");
 
-            entity.Property(e => e.TaskId)
-                .ValueGeneratedNever()
-                .HasColumnName("task_id");
+            entity.Property(e => e.TaskId).HasColumnName("task_id");
             entity.Property(e => e.AssignTime)
                 .HasColumnType("datetime")
                 .HasColumnName("assign_time");
@@ -398,22 +372,20 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Manager).WithMany(p => p.TaskManagers)
                 .HasForeignKey(d => d.ManagerId)
-                .HasConstraintName("FK__Task__manager_id__59FA5E80");
+                .HasConstraintName("FK__Task__manager_id__5AEE82B9");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.TaskStaffs)
                 .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__Task__staff_id__5AEE82B9");
+                .HasConstraintName("FK__Task__staff_id__5BE2A6F2");
         });
 
         modelBuilder.Entity<WorkSchedule>(entity =>
         {
-            entity.HasKey(e => e.ShiftId).HasName("PK__WorkSche__7B2672201285AEAB");
+            entity.HasKey(e => e.ShiftId).HasName("PK__WorkSche__7B267220E45FA42B");
 
             entity.ToTable("WorkSchedule");
 
-            entity.Property(e => e.ShiftId)
-                .ValueGeneratedNever()
-                .HasColumnName("shift_id");
+            entity.Property(e => e.ShiftId).HasColumnName("shift_id");
             entity.Property(e => e.Date).HasColumnName("date");
             entity.Property(e => e.Description)
                 .HasMaxLength(100)
@@ -427,26 +399,24 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Manager).WithMany(p => p.WorkScheduleManagers)
                 .HasForeignKey(d => d.ManagerId)
-                .HasConstraintName("FK__WorkSched__manag__5BE2A6F2");
+                .HasConstraintName("FK__WorkSched__manag__5CD6CB2B");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.WorkScheduleStaffs)
                 .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__WorkSched__staff__5CD6CB2B");
+                .HasConstraintName("FK__WorkSched__staff__5DCAEF64");
 
             entity.HasOne(d => d.Workshift).WithMany(p => p.WorkSchedules)
                 .HasForeignKey(d => d.WorkshiftId)
-                .HasConstraintName("FK__WorkSched__works__5DCAEF64");
+                .HasConstraintName("FK__WorkSched__works__5EBF139D");
         });
 
         modelBuilder.Entity<WorkShift>(entity =>
         {
-            entity.HasKey(e => e.WorkshiftId).HasName("PK__WorkShif__2E54FD2064D082A9");
+            entity.HasKey(e => e.WorkshiftId).HasName("PK__WorkShif__2E54FD20363698A5");
 
             entity.ToTable("WorkShift");
 
-            entity.Property(e => e.WorkshiftId)
-                .ValueGeneratedNever()
-                .HasColumnName("workshift_id");
+            entity.Property(e => e.WorkshiftId).HasColumnName("workshift_id");
             entity.Property(e => e.EndTime).HasColumnName("end_time");
             entity.Property(e => e.ShiftName)
                 .HasMaxLength(50)
