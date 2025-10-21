@@ -1,9 +1,10 @@
-﻿@{
+﻿@model IEnumerable<dynamic>
+@{
     ViewData["Title"] = "Quản lý ca làm";
 }
 
-<div class="container-fluid">
-    <h1 class="mt-4">Quản lý ca làm - Cafe</h1>
+<div class="container-fluid py-4">
+    <h1 class="mb-2">Quản lý ca làm - Cafe</h1>
     <p class="text-muted">Quản lý lịch làm việc và phân ca cho nhân viên quán cafe</p>
 
     <!-- Summary Cards -->
@@ -13,7 +14,7 @@
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <p class="text-muted mb-1">Tổng ca làm</p>
-                        <h3 class="mb-0">@Model.TotalShifts</h3>
+                        <h3 class="mb-0">@ViewBag.TotalShifts</h3>
                     </div>
                     <div class="bg-warning bg-opacity-10 p-3 rounded">
                         <i class="fa-solid fa-calendar text-warning fs-4"></i>
@@ -27,7 +28,7 @@
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <p class="text-muted mb-1">Nhân viên</p>
-                        <h3 class="mb-0">@Model.TotalEmployees</h3>
+                        <h3 class="mb-0">@ViewBag.TotalEmployees</h3>
                     </div>
                     <div class="bg-info bg-opacity-10 p-3 rounded">
                         <i class="fa-solid fa-users text-info fs-4"></i>
@@ -41,7 +42,7 @@
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <p class="text-muted mb-1">Ca hôm nay</p>
-                        <h3 class="mb-0">@Model.TodayShifts</h3>
+                        <h3 class="mb-0">@ViewBag.TodayShifts</h3>
                     </div>
                     <div class="bg-success bg-opacity-10 p-3 rounded">
                         <i class="fa-solid fa-briefcase text-success fs-4"></i>
@@ -55,7 +56,7 @@
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <p class="text-muted mb-1">Tổng giờ làm</p>
-                        <h3 class="mb-0">@Model.TotalHours h</h3>
+                        <h3 class="mb-0">@($"{ViewBag.TotalHours:0.#}")h</h3>
                     </div>
                     <div class="bg-purple bg-opacity-10 p-3 rounded">
                         <i class="fa-solid fa-clock text-primary fs-4"></i>
@@ -65,57 +66,58 @@
         </div>
     </div>
 
-    <!-- Filter + Add button -->
+    <!-- Filter + Add -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
+            <form class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label">Tìm kiếm</label>
-                    <input type="text" name="search" class="form-control" placeholder="Tên, vị trí..." value="@Model.Search" />
+                    <input type="text" class="form-control" placeholder="Tên, vị trí..." />
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label">Vị trí</label>
-                    <select class="form-select" name="position">
-                        <option value="">Tất cả</option>
-                        <option>Barista</option>
-                        <option>Phục vụ</option>
-                        <option>Quản lý ca</option>
-                        <option>Thu ngân</option>
+                    <select class="form-select">
+                        <option>Tất cả</option>
+                        @foreach (var pos in ViewBag.Positions as List<string>)
+                        {
+                            <option>@pos</option>
+                        }
                     </select>
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label">Loại ca</label>
-                    <select class="form-select" name="shiftType">
-                        <option value="">Tất cả</option>
-                        <option>Ca sáng</option>
-                        <option>Ca chiều</option>
-                        <option>Ca tối</option>
-                        <option>Full ca</option>
+                    <select class="form-select">
+                        <option>Tất cả</option>
+                        @foreach (var shiftType in ViewBag.ShiftTypes as List<string>)
+                        {
+                            <option>@shiftType</option>
+                        }
                     </select>
                 </div>
 
+
                 <div class="col-md-2">
                     <label class="form-label">Từ ngày</label>
-                    <input type="date" name="fromDate" class="form-control" />
+                    <input type="date" class="form-control" />
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label">Đến ngày</label>
-                    <input type="date" name="toDate" class="form-control" />
+                    <input type="date" class="form-control" />
                 </div>
 
                 <div class="col-md-1 text-end">
-                    <a asp-action="Create" class="btn btn-primary w-100">
+                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#addShiftModal">
                         <i class="fa-solid fa-plus"></i> Thêm
-                    </a>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Data Table -->
+    <!-- Table -->
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
             <table class="table table-hover mb-0 align-middle">
@@ -131,32 +133,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.Shifts.Any())
+                    @if (Model.Any())
                     {
-                        foreach (var shift in Model.Shifts)
+                        foreach (var shift in Model)
                         {
                                     <tr>
                                         <td>@shift.Employee</td>
-                                        <td>@shift.Date.ToString("dd/MM/yyyy")</td>
+                                        <td>@shift.Date?.ToString("dd/MM/yyyy")</td>
                                         <td>@shift.Position</td>
                                         <td>
-                                            <span class="badge bg-@(shift.ShiftType switch {
-                                        "Ca sáng" => "warning",
-                                        "Ca chiều" => "info",
-                                        "Ca tối" => "primary",
-                                        "Full ca" => "purple",
-                                        _ => "secondary"
-                                    })">@shift.ShiftType</span>
+                                            <span class="badge bg-secondary">@shift.ShiftType</span>
                                         </td>
                                         <td>@shift.StartTime - @shift.EndTime</td>
-                                        <td>@shift.TotalHours</td>
+                                        <td>@($"{shift.TotalHours:0.#}")</td>
                                         <td class="text-end">
-                                            <a asp-action="Edit" asp-route-id="@shift.Id" class="btn btn-sm btn-outline-primary me-2">
+                                            <button class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editShiftModal">
                                                 <i class="fa-solid fa-pen"></i>
-                                            </a>
-                                            <a asp-action="Delete" asp-route-id="@shift.Id" class="btn btn-sm btn-outline-danger">
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteShiftModal">
                                                 <i class="fa-solid fa-trash"></i>
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
                         }
@@ -171,6 +167,152 @@
                     }
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal fade" id="addShiftModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm ca làm mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Tên nhân viên</label>
+                        <input type="text" class="form-control" placeholder="Nhập tên nhân viên" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ngày làm việc</label>
+                        <input type="date" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Vị trí</label>
+                        <select class="form-select">
+                            <option>Barista</option>
+                            <option>Phục vụ</option>
+                            <option>Quản lý ca</option>
+                            <option>Thu ngân</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Loại ca</label>
+                        <select class="form-select">
+                            <option>Ca sáng</option>
+                            <option>Ca chiều</option>
+                            <option>Ca tối</option>
+                            <option>Full ca</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giờ bắt đầu</label>
+                            <input type="time" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giờ kết thúc</label>
+                            <input type="time" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea class="form-control" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-primary">Thêm ca làm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editShiftModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title">Chỉnh sửa ca làm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Tên nhân viên</label>
+                        <input type="text" class="form-control" value="Nguyễn Văn A" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ngày làm việc</label>
+                        <input type="date" class="form-control" value="2025-10-17" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Vị trí</label>
+                        <select class="form-select">
+                            <option selected>Barista</option>
+                            <option>Phục vụ</option>
+                            <option>Quản lý ca</option>
+                            <option>Thu ngân</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Loại ca</label>
+                        <select class="form-select">
+                            <option selected>Ca sáng</option>
+                            <option>Ca chiều</option>
+                            <option>Ca tối</option>
+                            <option>Full ca</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giờ bắt đầu</label>
+                            <input type="time" class="form-control" value="06:00" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giờ kết thúc</label>
+                            <input type="time" class="form-control" value="14:00" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea class="form-control" rows="2">Chuyên pha chế specialty coffee</textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-primary">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteShiftModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger bg-opacity-10">
+                <h5 class="modal-title text-danger">Xác nhận xóa ca làm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa ca làm này không? Hành động này không thể hoàn tác.</p>
+                <ul class="list-unstyled small">
+                    <li><strong>Nhân viên:</strong> Nguyễn Văn A</li>
+                    <li><strong>Ngày:</strong> 17/10/2025</li>
+                    <li><strong>Vị trí:</strong> Barista</li>
+                    <li><strong>Loại ca:</strong> Ca sáng</li>
+                    <li><strong>Giờ:</strong> 06:00 - 14:00</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-danger">Xóa</button>
+            </div>
         </div>
     </div>
 </div>
