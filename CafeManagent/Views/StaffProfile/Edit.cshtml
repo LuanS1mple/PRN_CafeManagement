@@ -1,0 +1,149 @@
+﻿@model CafeManagent.dto.request.UpdateStaffProfile
+@{
+    ViewData["Title"] = "Sửa hồ sơ";
+    var avatar = (string?)(ViewBag.Avatar ?? "/images/avatars/default.png");
+}
+
+<link rel="stylesheet" href="~/css/EditProfile.css" />
+
+<div class="container profile-wrap">
+    <form asp-controller="StaffProfile" asp-action="Edit" asp-route-id="@Model.StaffId" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="StaffId" />
+
+        <div class="profile-grid">
+            <!-- LEFT CARD -->
+            <aside class="card left-card">
+                <div class="avatar-wrap">
+                    @{
+                        var bust = DateTimeOffset.UtcNow.Ticks;
+                    }
+                    <img class="avatar-circle" id="avatarPreview" src="@avatar?v=@bust" alt="Avatar" />
+
+                </div>
+
+                <label class="btn btn-upload" for="avatarFile">
+                    <span class="icon-up">⌃</span> Tải ảnh lên
+                </label>
+                <input id="avatarFile" type="file" name="avatarFile" accept="image/*" style="display:none" />
+                <div class="label" style="margin-top:8px;">PNG/JPG/WEBP ≤ 2MB</div>
+            </aside>
+
+            <!-- RIGHT CARD -->
+            <section class="card right-card">
+                <div class="tabs">
+                    <span class="tab active">Thông tin</span>
+                    <a class="tab" href="javascript:void(0)">Bảo mật</a>
+                </div>
+
+                <div class="kv2">
+                    @* <div class="kv2-row"> *@
+                    @*     <div class="kv2-label">RoleId</div> *@
+                    @*     <div class="kv2-value"> *@
+                    @*         <input class="input" asp-for="RoleId" type="number" /> *@
+                    @*     </div> *@
+                    @* </div> *@
+
+                    <div class="kv2-row">
+                        <div class="kv2-label">Họ và tên</div>
+                        <div class="kv2-value">
+                            <input class="input" asp-for="FullName" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="kv2-row">
+                        <div class="kv2-label">Giới tính</div>
+                        <div class="kv2-value">
+                            <select class="input" asp-for="Gender">
+                                <option value="">—</option>
+                                <option value="true">Nam</option>
+                                <option value="false">Nữ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="kv2-row">
+                        <div class="kv2-label">Ngày sinh</div>
+                        <div class="kv2-value">
+                            <input class="input" asp-for="BirthDate" type="date" />
+                        </div>
+                    </div>
+
+                    <div class="kv2-row">
+                        <div class="kv2-label">Email</div>
+                        <div class="kv2-value">
+                            <input class="input" asp-for="Email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="kv2-row">
+                        <div class="kv2-label">Điện thoại</div>
+                        <div class="kv2-value">
+                            <input class="input" asp-for="Phone" />
+                            <span asp-validation-for="Phone" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="kv2-row">
+                        <div class="kv2-label">Địa chỉ</div>
+                        <div class="kv2-value">
+                            <input class="input" asp-for="Address" />
+                        </div>
+                    </div>
+
+                    <div class="kv2-row">
+                        <div class="kv2-label">Tên đăng nhập</div>
+                        <div class="kv2-value">
+                            <!-- hiển thị dạng pill, không cho sửa -->
+                            <div class="ro-pill">@Model.UserName</div>
+                            <!-- để form vẫn giữ nguyên giá trị khi POST -->
+                            <input type="hidden" asp-for="UserName" />
+                        </div>
+                    </div>
+
+                    <div class="kv2-row">
+                        <div class="kv2-label">Ngày tạo</div>
+                        <div class="kv2-value">
+                            <!-- hiển thị dạng pill, không cho sửa -->
+                            <div class="ro-pill">@Model.CreateAt</div>
+                            <!-- để form vẫn giữ nguyên giá trị khi POST -->
+                            <input type="hidden" asp-for="CreateAt" />
+                        </div>
+                    </div>
+
+
+                    @* <div class="kv2-row"> *@
+                    @*     <div class="kv2-label">Mật khẩu (để trống nếu không đổi)</div> *@
+                    @*     <div class="kv2-value"> *@
+                    @*         <input class="input" asp-for="Password" type="password" /> *@
+                    @*     </div> *@
+                    @* </div> *@
+                </div>
+
+                <div class="actions">
+                    <a class="btn secondary" asp-controller="StaffProfile" asp-action="Profile" asp-route-id="@Model.StaffId">Hủy</a>
+                    <button class="btn primary" type="submit">Lưu thay đổi</button>
+                </div>
+            </section>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Preview avatar
+        const fileInput = document.getElementById('avatarFile');
+        const avatar = document.getElementById('avatarPreview');
+        if (fileInput && avatar) {
+          fileInput.addEventListener('change', (e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            const url = URL.createObjectURL(f);
+            avatar.src = url;
+          });
+        }
+    </script>
+}

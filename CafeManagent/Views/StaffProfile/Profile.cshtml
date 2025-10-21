@@ -1,0 +1,98 @@
+﻿@model CafeManagent.dto.response.StaffProfile
+@{
+    ViewData["Title"] = "Hồ sơ nhân viên";
+    string GenderText(bool? g) => g is null ? "—" : (g.Value ? "Nam" : "Nữ");
+    string DateOnlyStr(DateOnly? d) => d.HasValue ? d.Value.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy") : "—";
+}
+
+<link rel="stylesheet" href="~/css/Profile.css" />
+
+<div class="container profile-wrap">
+  <div class="profile-grid">
+    <!-- LEFT CARD -->
+    <aside class="card left-card">
+      <div class="avatar-wrap">
+                @{
+                    var bust = DateTimeOffset.UtcNow.Ticks;
+                }
+                <img class="avatar-circle" src="@Model.Img?v=@bust" alt="Avatar">
+
+      </div>
+      <div class="role-chip">@(!string.IsNullOrWhiteSpace(Model.RoleName) ? Model.RoleName : "—")</div>
+
+      <div class="pill">
+        <span class="icon">@Html.Raw("&#9993;")</span>
+        <span class="pill-text">@Model.Email</span>
+      </div>
+      <div class="pill">
+        <span class="icon">@Html.Raw("&#128222;")</span>
+        <span class="pill-text">@Model.Phone</span>
+      </div>
+
+      <a class="btn btn-upload" asp-controller="StaffProfile" asp-action="Edit" asp-route-id="@Model.StaffId">
+        <span class="icon-up">⌃</span> Chỉnh sửa
+      </a>
+    </aside>
+
+    <!-- RIGHT CONTENT -->
+        <section class="card right-card">
+            <div class="tabs">
+                <a class="tab active">Thông tin</a>
+                <a class="tab" href="#">Bảo mật</a>
+            </div>
+
+            <div class="kv2">
+                <div class="kv2-row">
+                    <div class="kv2-label">ID</div>
+                    <div class="kv2-value"><div class="ro-pill">@Model.StaffId</div></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Họ và tên <span class="req">*</span></div>
+                    <div class="kv2-value"><div class="ro-pill">@Model.FullName</div></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Giới tính</div>
+                    <div class="kv2-value"><div class="ro-pill">@(Model.Gender is null ? "—" : (Model.Gender.Value ? "Nam" : "Nữ"))</div></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Ngày sinh</div>
+                    <div class="kv2-value">
+                        <div class="ro-pill ro-icon">📅 @((Model.BirthDate?.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")) ?? "—")</div>
+                    </div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Địa chỉ</div>
+                    <div class="kv2-value"><div class="ro-pill">@Model.Address</div></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Điện thoại <span class="req">*</span></div>
+                    <div class="kv2-value"><div class="ro-pill">@Model.Phone</div></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Email <span class="req">*</span></div>
+                    <div class="kv2-value"><div class="ro-pill">@Model.Email</div></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Tên đăng nhập <span class="req">*</span></div>
+                    <div class="kv2-value"><div class="ro-pill">@Model.UserName</div></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Ngày tạo</div>
+                    <div class="kv2-value"><div class="ro-pill">@((Model.CreateAt?.ToString("dd/MM/yyyy")) ?? "—")</div></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a class="btn primary" asp-controller="StaffProfile" asp-action="Edit" asp-route-id="@Model.StaffId">Chỉnh sửa</a>
+            </div>
+        </section>
+  </div>
+</div>

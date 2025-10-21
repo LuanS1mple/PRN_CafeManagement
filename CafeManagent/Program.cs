@@ -1,6 +1,8 @@
 using CafeManagent.Models;
 using CafeManagent.Services;
 using CafeManagent.Services.Imp;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +12,15 @@ builder.Services.AddControllersWithViews();
 //DI
 builder.Services.AddTransient<IAttendanceService, AttendanceService>();
 builder.Services.AddTransient<IRequestService, RequestService>();
+builder.Services.AddTransient<IStaffProfileService, StaffProfileService>();
 builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
+//builder.Services.AddDbContext<CafeManagementContext>(opt =>
+//    opt.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn")));
+
+builder.Services.AddRazorPages(o =>
+{
+    o.Conventions.ConfigureFilter(new AutoValidateAntiforgeryTokenAttribute());
+});
 
 var app = builder.Build();
 
