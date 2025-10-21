@@ -48,7 +48,6 @@ public partial class CafeManagementContext : DbContext
         {
             optionsBuilder.UseSqlServer(config.GetConnectionString("MyCnn"));
         }
-
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
