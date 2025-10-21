@@ -1,16 +1,24 @@
-using CafeManagent.Models;
+﻿using CafeManagent.Models;
 using CafeManagent.Services;
 using CafeManagent.Services.Imp;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Kết nối database
+builder.Services.AddDbContext<CafeManagementContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn")));
+
+builder.Services.AddSession();
 //DI
+builder.Services.AddScoped<IStaffService, StaffService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddTransient<IAttendanceService, AttendanceService>();
 builder.Services.AddTransient<IRequestService, RequestService>();
-builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
+//builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
 
 var app = builder.Build();
 
@@ -26,6 +34,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseSession();
 
 app.UseAuthorization();
 
