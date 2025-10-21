@@ -1,0 +1,301 @@
+﻿@using CafeManagent.Models;
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách nhân viên</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .dropdown-content {
+            display: none;
+        }
+
+        .dropdown.active .dropdown-content {
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-sans">
+
+    <!-- Header -->
+    <div class="border-b bg-white">
+        <div class="max-w-7xl mx-auto px-6 py-6 flex items-center gap-3">
+            <div class="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                👥
+            </div>
+            <div>
+                <h1 class="text-lg font-semibold">Danh sách nhân viên</h1>
+                <p class="text-gray-500 text-sm">Quản lý thông tin nhân viên trong công ty</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+        <!-- Toolbar -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-2 w-full md:w-auto">
+
+                <form id="searchForm" method="get" asp-action="Index" class="flex items-center gap-2">
+                    <input type="text"
+                           name="searchString"
+                           value="@Context.Request.Query["searchString"]"
+                           placeholder="Tìm kiếm theo tên hoặc email..."
+                           class="border rounded-md px-3 py-2 w-80 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </form>
+
+                <div class="relative dropdown">
+                    <button type="button"
+                            class="border rounded-md px-3 py-2 bg-white hover:bg-gray-100 flex items-center gap-2 min-w-[160px]"
+                            onclick="toggleDropdown(event)">
+                        <span id="selectedRoleText">
+                            @(string.IsNullOrEmpty(Context.Request.Query["RoleFilter"]) ? "Chọn chức vụ" : Context.Request.Query["RoleFilter"].ToString())
+                        </span>
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div class="dropdown-content absolute mt-2 bg-white border rounded-md shadow-lg w-full z-10">
+                        <form method="get" asp-action="Index" class="m-0 p-0">
+                            <input type="hidden" name="searchString" value="@Context.Request.Query["searchString"]" />
+                            @if (ViewBag.Roles != null)
+                            {
+                                foreach (var role in ViewBag.Roles)
+                                {
+                                    <button type="submit" name="RoleFilter" value="@role.RoleName"
+                                            class="block w-full text-left px-4 py-2 hover:bg-gray-100">
+                                        @role.RoleName
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <button type="button" class="block w-full text-left px-4 py-2 text-gray-500">No roles</button>
+                            }
+                            <button type="submit" name="RoleFilter" value=""
+                                    class="block w-full text-left px-4 py-2 text-gray-500 hover:bg-gray-100">
+                                Tất cả chức vụ
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="relative dropdown">
+                    <button type="button"
+                            class="border rounded-md px-3 py-2 bg-white hover:bg-gray-100 flex items-center gap-2 min-w-[150px]"
+                            onclick="toggleDropdown(event)">
+                        <span id="selectedStatusText">
+                            @(string.IsNullOrEmpty(Context.Request.Query["StatusFilter"]) ? "Trạng thái" : Context.Request.Query["StatusFilter"].ToString())
+                        </span>
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div class="dropdown-content absolute mt-2 bg-white border rounded-md shadow-lg w-full z-10">
+                        <form method="get" asp-action="Index" class="m-0 p-0">
+                            <input type="hidden" name="searchString" value="@Context.Request.Query["searchString"]" />
+                            <button type="submit" name="StatusFilter" value="Đang làm việc" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Đang làm việc</button>
+                            <button type="submit" name="StatusFilter" value="Nghỉ việc" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Nghỉ việc</button>
+                            <button type="submit" name="StatusFilter" value="Nghỉ phép" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Nghỉ phép</button>
+                            <button type="submit" name="StatusFilter" value="" class="block w-full text-left px-4 py-2 text-gray-500 hover:bg-gray-100">Tất cả trạng thái</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+
+            <button type="button"
+                    onclick="openAddModal()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium">
+                + Thêm nhân viên
+            </button>
+
+        </div>
+
+
+        <!-- table -->
+        <p class="text-sm text-gray-600">
+            Hiển thị <strong>0</strong> trong tổng số <strong>0</strong> nhân viên
+        </p>
+
+        <div class="overflow-x-auto bg-white shadow rounded-lg">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-100 text-gray-700">
+                    <tr>
+                        <th class="px-4 py-3 text-left"><input type="checkbox" /></th>
+                        <th class="px-4 py-3 text-left">Avatar</th>
+                        <th class="px-4 py-3 text-left">Mã NV</th>
+                        <th class="px-4 py-3 text-left">Họ tên</th>
+                        <th class="px-4 py-3 text-left">Email</th>
+                        <th class="px-4 py-3 text-left">Vai trò</th>
+                        <th class="px-4 py-3 text-left">Trạng thái</th>
+                        <th class="px-4 py-3 text-left">Ngày vào làm</th>
+                        <th class="px-4 py-3 text-left">Hết hạn HĐ</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3"><input type="checkbox" /></td>
+                            <td class="px-4 py-3">
+                                <img src="@s.Img" alt="Avatar" class="w-10 h-10 rounded-full object-cover" />
+                            </td>
+                            <td class="px-4 py-3">@s.StaffId</td>
+                            <td class="px-4 py-3 font-medium text-gray-800">@s.FullName</td>
+                            <td class="px-4 py-3">@s.Email</td>
+                            <td class="px-4 py-3">@s.Role?.RoleName</td>
+                            <td class="px-4 py-3">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                    Hoạt động
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">@s.CreateAt?.ToString("dd/MM/yyyy")</td>
+                            <td class="px-4 py-3 text-gray-400"></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex items-center justify-between mt-4 text-sm text-gray-600">
+            <div>Trang <strong>0</strong> / 0</div>
+            <div class="flex items-center gap-1">
+                <button class="px-3 py-1 border rounded-md text-gray-400 cursor-not-allowed">Trước</button>
+                <button class="px-3 py-1 border rounded-md text-gray-400 cursor-not-allowed">1</button>
+                <button class="px-3 py-1 border rounded-md text-gray-400 cursor-not-allowed">Sau</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addEmployeeModal"
+         class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
+            <h2 class="text-xl font-semibold mb-4">Thêm nhân viên mới</h2>
+
+            <form method="post" asp-action="Create" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Họ tên</label>
+                    <input type="text" name="FullName" required
+                           class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email</label>
+                    <input type="email" name="Email" required
+                           class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">Chức vụ</label>
+                    <select name="RoleId"
+                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        @if (ViewBag.Roles != null)
+                        {
+                            foreach (var role in ViewBag.Roles)
+                            {
+                                <option value="@role.RoleId">@role.RoleName</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">Trạng thái</label>
+                    <select name="Status"
+                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Đang làm việc">Đang làm việc</option>
+                        <option value="Nghỉ phép">Nghỉ phép</option>
+                        <option value="Nghỉ việc">Nghỉ việc</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-1">Ngày vào làm</label>
+                    <input type="date" name="StartDate"
+                           class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button"
+                            onclick="closeAddModal()"
+                            class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100">
+                        Hủy
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Lưu
+                    </button>
+                </div>
+            </form>
+
+            <!-- Nút đóng góc -->
+            <button type="button" onclick="closeAddModal()"
+                    class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl">
+                &times;
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        function toggleDropdown(event) {
+          const dropdown = event.currentTarget.parentElement;
+          document.querySelectorAll(".dropdown").forEach((d) => {
+            if (d !== dropdown) d.classList.remove("active");
+          });
+          dropdown.classList.toggle("active");
+        }
+
+        // Đóng dropdown khi click ra ngoài
+        window.addEventListener("click", function (e) {
+          if (!e.target.closest(".dropdown")) {
+            document.querySelectorAll(".dropdown").forEach((d) =>
+              d.classList.remove("active")
+            );
+          }
+        });
+    </script>
+
+    <script>
+        function toggleDropdown(event) {
+          event.stopPropagation();
+          const btn = event.currentTarget;
+          const wrapper = btn.closest('.dropdown');
+          if (!wrapper) return;
+
+          // đóng tất cả dropdown khác
+          document.querySelectorAll('.dropdown').forEach(d => {
+            if (d !== wrapper) d.classList.remove('active');
+          });
+
+          // toggle cho dropdown hiện tại
+          wrapper.classList.toggle('active');
+        }
+
+        // click ra ngoài => đóng hết
+        window.addEventListener('click', function (e) {
+          if (!e.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+          }
+        });
+    </script>
+
+    <script>
+        function openAddModal() {
+          document.getElementById('addEmployeeModal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+          document.getElementById('addEmployeeModal').classList.add('hidden');
+        }
+    </script>
+
+</body>
+</html>
