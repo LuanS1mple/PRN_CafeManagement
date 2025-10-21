@@ -17,15 +17,14 @@ builder.Services.AddDbContext<CafeManagementContext>(options =>
 
 builder.Services.AddSession();
 //DI
-builder.Services.AddScoped<IStaffService, StaffService>();
-builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddTransient<IStaffService, StaffService>();
+builder.Services.AddTransient<IAccountService, AccountService>();
 builder.Services.AddTransient<IAttendanceService, AttendanceService>();
 builder.Services.AddTransient<IRequestService, RequestService>();
 
 builder.Services.AddTransient<IStaffProfileService, StaffProfileService>();
-builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
-//builder.Services.AddDbContext<CafeManagementContext>(opt =>
-//    opt.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn")));
+//builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
+
 
 builder.Services.AddRazorPages(o =>
 {
