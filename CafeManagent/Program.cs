@@ -1,4 +1,5 @@
-﻿using CafeManagent.Models;
+﻿using CafeManagent.Hubs;
+using CafeManagent.Models;
 using CafeManagent.Services;
 using CafeManagent.Services.Imp;
 
@@ -10,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+//dùng signalR
+builder.Services.AddSignalR();
 
 // Kết nối database
 builder.Services.AddDbContext<CafeManagementContext>(options =>
@@ -53,5 +56,5 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
+app.MapHub<ResponseHub>("/response");
 app.Run();

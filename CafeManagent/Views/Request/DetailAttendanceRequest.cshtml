@@ -7,7 +7,6 @@
     <div class="card shadow-sm p-4 w-100">
         <h2 class="text-center mb-4 fw-semibold">Chi tiết yêu cầu chỉnh giờ điểm danh</h2>
 
-        <form>
             <!-- Thông tin cơ bản -->
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
@@ -54,17 +53,18 @@
                     </div>
                 </div>
             </div>
-
             <!-- Nút hành động -->
             <div class="d-flex justify-content-center gap-3 border-top pt-4">
                 <button type="submit" class="btn btn-success px-4">
-                    <i class="fa-solid fa-check me-2"></i>Duyệt
+                <a href="/Request/AcceptAttendanceRequest?id=@Model.RequestId"
+                   class="fa-solid fa-check me-2">
+                    Duyệt
+                </a>
                 </button>
                 <button type="button" class="btn btn-danger px-4">
                     <i class="fa-solid fa-xmark me-2"></i>Từ chối
                 </button>
             </div>
-        </form>
     </div>
 </div>
 

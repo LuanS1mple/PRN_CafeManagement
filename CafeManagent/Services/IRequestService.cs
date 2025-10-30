@@ -1,4 +1,5 @@
 ﻿using CafeManagent.Models;
+using Task = System.Threading.Tasks.Task;
 
 namespace CafeManagent.Services
 {
@@ -8,5 +9,8 @@ namespace CafeManagent.Services
         public List<Request> GetWaitingAttendanceRequest();
         public List<Request> GetWaitingShiftRequest();
         public Request GetById(int id);
+        public Task AcceptRequest(Request request, Attendance attendance);
+        public Task RejectRequest(Request request);
+
     }
 }

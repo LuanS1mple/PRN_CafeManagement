@@ -1,5 +1,6 @@
 ﻿using CafeManagent.Models;
 using Microsoft.EntityFrameworkCore;
+using Task = System.Threading.Tasks.Task;
 
 namespace CafeManagent.Services.Imp
 {
@@ -10,6 +11,24 @@ namespace CafeManagent.Services.Imp
         {
             _context = context;
         }
+
+        public async Task AcceptRequest(Request request, Attendance attendance)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _context.Requests.Update(request);
+                _context.Attendances.Update(attendance);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
         public void Add(Request request)
         {
             _context.Requests.Add(request); 
@@ -31,6 +50,12 @@ namespace CafeManagent.Services.Imp
         public List<Request> GetWaitingShiftRequest()
         {
             return _context.Requests.Include(r => r.Staff).Where(r => r.ReportType.Equals("Shift")).ToList();
+        }
+
+        public async Task RejectRequest(Request request)
+        {
+            _context.Requests.Update(request);
+            await _context.SaveChangesAsync();
         }
     }
 }

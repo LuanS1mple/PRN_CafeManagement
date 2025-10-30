@@ -13,5 +13,11 @@ namespace CafeManagent.Services.Imp
         {
             return _context.Attendances.FirstOrDefault(s => s.StaffId == staffId && s.Workdate.Equals(date) && s.ShiftId==shift);
         }
+
+        public void Update(Attendance attendance)
+        {
+            _context.Attendances.Update(attendance);
+            _context.SaveChanges();
+        }
     }
 }

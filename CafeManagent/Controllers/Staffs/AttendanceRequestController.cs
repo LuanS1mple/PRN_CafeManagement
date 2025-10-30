@@ -4,7 +4,7 @@ using CafeManagent.Models;
 using CafeManagent.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CafeManagent.Controllers
+namespace CafeManagent.Controllers.Staff
 {
     public class AttendanceRequestController : Controller
     {

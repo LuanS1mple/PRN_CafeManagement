@@ -31,7 +31,7 @@ namespace CafeManagent.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Staff staff)
+        public async Task<IActionResult> Create(Models.Staff staff)
         {
             if (ModelState.IsValid)
             {

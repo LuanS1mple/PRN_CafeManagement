@@ -2,6 +2,7 @@
 {
     public class PendingAttendance
     {
+        public int RequestId { get; set; }
         public int StaffId { get; set; }
         public string StaffName { get; set; }
         public DateOnly Date { get; set; }

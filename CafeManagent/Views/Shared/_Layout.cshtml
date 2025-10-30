@@ -10,6 +10,43 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.0/signalr.min.js"></script>
+
+    <style>
+
+        /* Hộp thông báo nhỏ ở góc phải */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 9999;
+        }
+
+            .toast.show {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            .toast.success {
+                background: #2e7d32; /* xanh lá */
+            }
+
+            .toast.error {
+                background: #c62828; /* đỏ */
+            }
+
+    </style>
 </head>
 <body>
     <div class="d-flex" id="wrapper">
@@ -83,7 +120,49 @@
             $("#wrapper").toggleClass("toggled");
         });
     </script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/response")
+            .build();
 
+        connection.on("ReceiveResponseStatus", (isSuccess, msg) => {
+            // Tạo phần tử thông báo
+            const toast = document.createElement("div");
+            toast.classList.add("toast", isSuccess ? "success" : "error");
+
+            // Biểu tượng
+            const icon = document.createElement("span");
+            icon.textContent = isSuccess ? "O" : "X"; // ký hiệu O/X
+            icon.style.fontWeight = "bold";
+            icon.style.fontSize = "18px";
+
+            // Nội dung tin nhắn
+            const message = document.createElement("span");
+            message.textContent = msg;
+
+            // Gắn vào toast
+            toast.appendChild(icon);
+            toast.appendChild(message);
+
+            // Gắn vào body
+            document.body.appendChild(toast);
+
+            // Hiệu ứng xuất hiện
+            setTimeout(() => toast.classList.add("show"), 10);
+
+            // Tự ẩn sau 3 giây
+            setTimeout(() => {
+                toast.classList.remove("show");
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+
+            console.log(msg);
+        });
+
+        connection.start()
+            .then(() => console.log("Connected to SignalR"))
+            .catch(err => console.error(err));
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
