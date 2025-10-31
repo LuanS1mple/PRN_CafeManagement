@@ -4,8 +4,17 @@
 }
 
 <div class="container-fluid py-4">
-    <h1 class="mb-2">Quản lý ca làm - Cafe</h1>
-    <p class="text-muted">Quản lý lịch làm việc và phân ca cho nhân viên quán cafe</p>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <h1 class="mb-0">Quản lý ca làm - Cafe</h1>
+            <p class="text-muted mb-0">Quản lý lịch làm việc và phân ca cho nhân viên quán cafe</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addShiftModal">
+                <i class="fa-solid fa-plus"></i> Thêm
+            </button>
+        </div>
+    </div>
 
     <!-- Summary Cards -->
     <div class="row g-4 mb-4">
@@ -66,56 +75,60 @@
         </div>
     </div>
 
-    <!-- Filter + Add -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body">
-            <form class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label">Tìm kiếm</label>
-                    <input type="text" class="form-control" placeholder="Tên, vị trí..." />
-                </div>
+    <!-- Filter -->
+   <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form class="row g-3 align-items-end" 
+              asp-controller="WorkShift" 
+              asp-action="FilterWorkShift" 
+              method="post">
 
-                <div class="col-md-2">
-                    <label class="form-label">Vị trí</label>
-                    <select class="form-select">
-                        <option>Tất cả</option>
-                        @foreach (var pos in ViewBag.Positions as List<string>)
-                        {
-                            <option>@pos</option>
-                        }
-                    </select>
-                </div>
+            <div class="col-md-3">
+                <label class="form-label">Tìm kiếm</label>
+                <input type="text" name="Keyword" class="form-control" placeholder="Tên, vị trí..." />
+            </div>
 
-                <div class="col-md-2">
-                    <label class="form-label">Loại ca</label>
-                    <select class="form-select">
-                        <option>Tất cả</option>
-                        @foreach (var shiftType in ViewBag.ShiftTypes as List<string>)
-                        {
-                            <option>@shiftType</option>
-                        }
-                    </select>
-                </div>
+            <div class="col-md-2">
+                <label class="form-label">Vị trí</label>
+                <select name="Position" class="form-select">
+                    <option value="">Tất cả</option>
+                                @foreach (var pos in ViewBag.Positions as List<string>)
+                                {
+                            <option value="@pos">@pos</option>
+                                }
+                </select>
+            </div>
 
+            <div class="col-md-2">
+                <label class="form-label">Loại ca</label>
+                <select name="ShiftType" class="form-select">
+                    <option value="">Tất cả</option>
+                                @foreach (var shiftType in ViewBag.ShiftTypes as List<string>)
+                                {
+                            <option value="@shiftType">@shiftType</option>
+                                }
+                </select>
+            </div>
 
-                <div class="col-md-2">
-                    <label class="form-label">Từ ngày</label>
-                    <input type="date" class="form-control" />
-                </div>
+            <div class="col-md-2">
+                <label class="form-label">Từ ngày</label>
+                <input type="date" name="FromDate" class="form-control" />
+            </div>
 
-                <div class="col-md-2">
-                    <label class="form-label">Đến ngày</label>
-                    <input type="date" class="form-control" />
-                </div>
+            <div class="col-md-2">
+                <label class="form-label">Đến ngày</label>
+                <input type="date" name="ToDate" class="form-control" />
+            </div>
 
-                <div class="col-md-1 text-end">
-                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#addShiftModal">
-                        <i class="fa-solid fa-plus"></i> Thêm
-                    </button>
-                </div>
-            </form>
+            <div class="col-md-1 text-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search
+                </button>
+            </div>
+        </form>        
         </div>
     </div>
+
 
     <!-- Table -->
     <div class="card shadow-sm border-0">
