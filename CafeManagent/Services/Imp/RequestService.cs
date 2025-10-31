@@ -44,14 +44,17 @@ namespace CafeManagent.Services.Imp
         public List<Request> GetWaitingAttendanceRequest()
         {
             return _context.Requests.Include(r => r.Staff)
-                .Where(r => r.ReportType.Equals("Attendance")).ToList();
+                .Where(r => r.ReportType.Equals("Attendance") && r.Status == 0).ToList();
         }
 
         public List<Request> GetWaitingShiftRequest()
         {
-            return _context.Requests.Include(r => r.Staff).Where(r => r.ReportType.Equals("Shift")).ToList();
+            return _context.Requests.Include(r => r.Staff).Where(r => r.ReportType.Equals("Shift") && r.Status ==0).ToList();
         }
-
+        public List<Request> GetDoneRequest()
+        {
+            return _context.Requests.Include(r => r.Staff).Where(r => r.Status!=0).ToList();
+        }
         public async Task RejectRequest(Request request)
         {
             _context.Requests.Update(request);

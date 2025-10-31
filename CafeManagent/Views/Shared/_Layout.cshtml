@@ -90,6 +90,31 @@
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 <div class="ms-auto d-flex align-items-center">
+                    <!-- ICON CHUÔNG -->
+                    <div class="dropdown" style="margin-right: 20px">
+                        <div id="notify-bell"
+                             class="position-relative"
+                             data-bs-toggle="dropdown"
+                             aria-expanded="false"
+                             style="cursor:pointer;">
+                            <i class="fa-solid fa-bell fa-lg text-secondary"></i>
+
+                            <!-- Dấu chấm đỏ / số lượng notify -->
+                            <span id="notify-dot"
+                                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                                  style="font-size: 10px; width:18px; height:18px; display:flex; align-items:center; justify-content:center;">
+                                1
+                            </span>
+                        </div>
+
+                        <!-- DROPDOWN DANH SÁCH THÔNG BÁO -->
+                        <ul id="notify-list" class="dropdown-menu dropdown-menu-end shadow p-2"
+                            style="width: 280px; max-height: 300px; overflow-y: auto;">
+                            <li class="dropdown-header fw-bold text-center">Thông báo</li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="text-center text-muted">Chưa có thông báo nào</li>
+                        </ul>
+                    </div>
                     <span class="me-3 text-muted">Xin chào, Admin</span>
                     <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="rounded-circle" width="35" height="35" alt="User" />
                 </div>
@@ -112,7 +137,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-
+    @* code cho phần thông báo response *@
     <script>
         // Sidebar toggle
         $("#menu-toggle").click(function (e) {
@@ -162,6 +187,54 @@
         connection.start()
             .then(() => console.log("Connected to SignalR"))
             .catch(err => console.error(err));
+    </script>
+    @* code cho phần notify *@
+    <script>
+              let notifyCount = 0;
+
+        const notifyConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/notify")
+            .build();
+
+        notifyConnection.on("ReceiveNotify", (msg, time) => {
+
+            notifyCount++;
+
+            // Hiện badge đỏ
+            const dot = document.getElementById("notify-dot");
+            dot.classList.remove("d-none");
+            dot.textContent = notifyCount;
+
+            // Append notify vào danh sách
+            const list = document.getElementById("notify-list");
+
+            // Xóa "chưa có thông báo"
+            const empty = list.querySelector(".text-muted");
+            if (empty) empty.remove();
+
+            // Tạo item mới
+            const li = document.createElement("li");
+            li.classList.add("dropdown-item", "p-2", "border-bottom");
+
+            li.innerHTML = `
+                <div class="fw-semibold">${msg}</div>
+                <small class="text-muted">${time}</small>
+            `;
+
+            list.appendChild(li);
+        });
+
+        notifyConnection.start()
+            .then(() => console.log("Connected to Notify Hub"))
+            .catch(err => console.error(err));
+
+
+        // Khi bấm chuông => reset badge
+        const bell = document.getElementById("notify-bell");
+        bell.addEventListener("click", () => {
+            notifyCount = 0;
+            document.getElementById("notify-dot").classList.add("d-none");
+        });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -1,7 +1,8 @@
-﻿using CafeManagent.dto.response;
+﻿    using CafeManagent.dto.response;
 using CafeManagent.Hubs;
 using CafeManagent.Models;
 using CafeManagent.Services;
+using CafeManagent.Ulties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Task = System.Threading.Tasks.Task;
@@ -20,8 +21,9 @@ namespace CafeManagent.Controllers.Manager
             this.attendanceService = attendanceService;
             this._hub = hub;
         }
-        public IActionResult Index()
+        public IActionResult Index(int? page)
         {
+            //data cho phần cần phản hồi
             WaitingRequests waitingRequests = new WaitingRequests()
             {
                 AttendanceRequests = requestService.GetWaitingAttendanceRequest().Select(r => new RequestBasic
@@ -41,6 +43,15 @@ namespace CafeManagent.Controllers.Manager
                     Title = r.Title
                 }).ToList(),
             };
+            //paging
+            int pageIndex = 1;
+            if(page != null)
+            {
+                pageIndex = page.Value;
+            }
+            Paging<RequestBasic> paging = PagingUlti.PagingDoneRequest(requestService.GetDoneRequest(), pageIndex);
+            ViewBag.Paging  = paging;
+
             return View("Request_List", waitingRequests);
         }
         public IActionResult DetailAttendanceRequest(int id)
