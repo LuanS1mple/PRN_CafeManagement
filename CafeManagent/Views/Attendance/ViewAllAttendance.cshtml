@@ -1,0 +1,67 @@
+﻿@using CafeManagent.dto.attendance
+@model List<AttendanceDTO>
+
+<div class="container mt-4">
+    <h3 class="mb-3">Danh sách điểm danh</h3>
+
+    <form asp-action="ViewAllAttendance" method="get" class="row g-3 mb-4 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label">Tìm kiếm</label>
+            <input type="text" name="keyword" class="form-control"
+                   placeholder="Nhập tên hoặc mã nhân viên..."
+                   value="@ViewBag.Keyword" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Từ ngày</label>
+            <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Đến ngày</label>
+            <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate" />
+        </div>
+
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100">Lọc</button>
+            <a asp-action="ViewAllAttendance" class="btn btn-secondary w-100">Xóa lọc</a>
+        </div>
+    </form>
+
+    <table class="table table-hover table-bordered align-middle text-center">
+        <thead class="table-light">
+            <tr>
+                <th>Mã điểm danh</th>
+                <th>Tên nhân viên</th>
+                <th>Ca làm</th>
+                <th>Ngày làm</th>
+                <th>Giờ vào</th>
+                <th>Giờ ra</th>
+                <th>Tổng giờ</th>
+                <th>Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model == null || !Model.Any())
+            {
+                    <tr><td colspan="8" class="text-muted text-center">Không có dữ liệu phù hợp</td></tr>
+            }
+            else
+            {
+                foreach (var s in Model)
+                {
+                            <tr>
+                                <td>@s.AttendanceId</td>
+                                <td>@s.StaffName</td>
+                                <td>@s.ShiftName</td>
+                                <td>@s.Workdate?.ToString("dd/MM/yyyy")</td>
+                                <td>@s.CheckIn?.ToString("HH:mm")</td>
+                                <td>@s.CheckOut?.ToString("HH:mm")</td>
+                                <td>@s.TotalHour</td>
+                                <td>@s.Note</td>
+                            </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
