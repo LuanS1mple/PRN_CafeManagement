@@ -1,0 +1,38 @@
+﻿@model CafeManagent.dto.response.StaffDetailDto
+@{ ViewData["Title"] = "Chi tiết nhân viên"; }
+<link rel="stylesheet" href="~/css/Profile.css" />
+
+<div class="container">
+  <a class="link" asp-action="Index">← Danh sách nhân viên</a>
+
+  <div class="grid-2">
+    <section class="card">
+      <h3>Thông tin cá nhân</h3>
+      <div class="profile-center">
+        <img class="avatar-lg" src="@Model.AvatarUrl?v=@DateTimeOffset.UtcNow.Ticks" />
+        <div class="name">@Model.FullName</div>
+        <span class="badge @(Model.Status=="Đang làm việc"?"badge-green": Model.Status=="Nghỉ phép"?"badge-yellow":"badge-gray")">@Model.Status</span>
+      </div>
+      <div class="kv">
+        <div class="kv-row"><div class="k">Email</div><div class="v">@Model.Email</div></div>
+        <div class="kv-row"><div class="k">Số điện thoại</div><div class="v">@Model.Phone</div></div>
+        <div class="kv-row"><div class="k">Địa chỉ</div><div class="v">@Model.Address</div></div>
+        <div class="kv-row"><div class="k">Ngày sinh</div><div class="v">@Model.BirthDate?.ToString("dd/MM/yyyy")</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Thông tin công việc</h3>
+      <div class="kv">
+        <div class="kv-row"><div class="k">Chức danh</div><div class="v">@Model.Title</div></div>
+        <div class="kv-row"><div class="k">Role</div><div class="v">@Model.RoleName</div></div>
+        <div class="kv-row"><div class="k">Ngày vào làm</div><div class="v">@Model.JoinDate?.ToString("dd/MM/yyyy")</div></div>
+        <div class="kv-row"><div class="k">Ngày hết hạn</div><div class="v">@Model.ContractEndDate?.ToString("dd/MM/yyyy")</div></div>
+      </div>
+
+      <div class="actions">
+        <a class="btn" asp-controller="StaffProfile" asp-action="Edit" asp-route-id="@Model.StaffId">Sửa thông tin</a>
+      </div>
+    </section>
+  </div>
+</div>

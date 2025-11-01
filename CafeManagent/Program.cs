@@ -31,6 +31,8 @@ builder.Services.AddTransient<IRequestService, RequestService>();
 builder.Services.AddTransient<IStaffProfileService, StaffProfileService>();
 
 builder.Services.AddSingleton<NotifyUlti>();
+builder.Services.AddTransient<IStaffDirectoryService, StaffDirectoryService>();
+
 //builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
 
 
