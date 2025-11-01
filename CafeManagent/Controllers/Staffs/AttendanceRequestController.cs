@@ -1,9 +1,11 @@
 ﻿using CafeManagent.dto.request;
+using CafeManagent.dto.response;
 using CafeManagent.Enums;
 using CafeManagent.Hubs;
 using CafeManagent.mapper;
 using CafeManagent.Models;
 using CafeManagent.Services;
+using CafeManagent.Ulties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
@@ -15,12 +17,14 @@ namespace CafeManagent.Controllers.Staff
         private readonly IRequestService requestService;
         //hub
         private readonly IHubContext<NotifyHub> _hub;
+        private readonly NotifyUlti notifyUlti;
         public AttendanceRequestController(IAttendanceService attendanceService, IRequestService requestService
-            ,IHubContext<NotifyHub> hub)
+            ,IHubContext<NotifyHub> hub, NotifyUlti notifyUlti)
         {
             this.attendanceService = attendanceService;
             this.requestService = requestService;
             this._hub = hub;
+            this.notifyUlti = notifyUlti;
         }
         public IActionResult Init()
         {
@@ -54,8 +58,12 @@ namespace CafeManagent.Controllers.Staff
             Request request = MapperHelper.GetRequestFromAttendanceRequestDTO(requestDTO);
             requestService.Add(request);
 
-            //thông báo hub
-            await _hub.Clients.All.SendAsync("ReceiveNotify", NotifyMessage.HAVE_REQUEST.Message, DateTime.Now.ToString());
+            //thêm thông báomwis
+            Notify notify = new Notify() {
+                Message = NotifyMessage.HAVE_REQUEST.Message,
+                Time = DateTime.Now,
+            };
+            notifyUlti.Add(notify);
 
             return RedirectToAction("Init");
         }

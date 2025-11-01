@@ -1,8 +1,10 @@
-﻿using CafeManagent.Hubs;
+﻿using CafeManagent.dto.response;
+using CafeManagent.Hubs;
+using CafeManagent.Middlewares;
 using CafeManagent.Models;
 using CafeManagent.Services;
 using CafeManagent.Services.Imp;
-
+using CafeManagent.Ulties;
 using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.EntityFrameworkCore;
@@ -19,13 +21,16 @@ builder.Services.AddDbContext<CafeManagementContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn")));
 
 builder.Services.AddSession();
+//cái này để Hub gọi đc đến httpContext lấy session
+builder.Services.AddHttpContextAccessor();
 //DI
 builder.Services.AddTransient<IStaffService, StaffService>();
 builder.Services.AddTransient<IAccountService, AccountService>();
 builder.Services.AddTransient<IAttendanceService, AttendanceService>();
 builder.Services.AddTransient<IRequestService, RequestService>();
-
 builder.Services.AddTransient<IStaffProfileService, StaffProfileService>();
+
+builder.Services.AddSingleton<NotifyUlti>();
 //builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
 
 
@@ -52,7 +57,8 @@ app.UseRouting();
 app.UseSession();
 
 app.UseAuthorization();
-
+//bất cứ request nào cũng đi qua để thnog báo
+app.UseMiddleware<NotifyMiddleware>();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
