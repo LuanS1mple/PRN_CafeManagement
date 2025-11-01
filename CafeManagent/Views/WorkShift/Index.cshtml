@@ -179,9 +179,15 @@
                                 <td>@($"{shift.TotalHours:0.#}")</td>
                                 <td>@shift.Description</td>
                                 <td class="text-end">
-                                    <button class="btn btn-sm btn-outline-primary me-2" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#editShiftModal">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary me-2"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editShiftModal"
+                                            data-shiftid="@shift.ShiftId"
+                                            data-employee="@shift.Employee"
+                                            data-date="@(shift.Date?.ToString("yyyy-MM-dd") ?? "")"
+                                            data-shifttype="@shift.ShiftType"
+                                            data-note="@(shift.Description ?? "")">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
 
@@ -214,6 +220,29 @@
         </div>
     </div>
 </div>
+@if (ViewBag.TotalPages > 1)
+{
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+
+                <li class="page-item @(ViewBag.Page == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.Page - 1, pageSize = ViewBag.PageSize })">«</a>
+                </li>
+
+            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                        <li class="page-item @(i == ViewBag.Page ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { page = i, pageSize = ViewBag.PageSize })">@i</a>
+                        </li>
+            }
+
+                <li class="page-item @(ViewBag.Page == ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.Page + 1, pageSize = ViewBag.PageSize })">»</a>
+                </li>
+            </ul>
+        </nav>
+}
+
 
 <!-- Add Modal -->
 <div class="modal fade" id="addShiftModal" tabindex="-1" aria-hidden="true">
@@ -281,57 +310,64 @@
                 <h5 class="modal-title">Chỉnh sửa ca làm</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form>
+
+            <form asp-controller="WorkShift" asp-action="UpdateWorkShift" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="ShiftId" id="editShiftId" />
+
                     <div class="mb-3">
                         <label class="form-label">Tên nhân viên</label>
-                        <input type="text" class="form-control" value="Nguyễn Văn A" />
+                        <select name="EmployeeName" id="editEmployeeName" class="form-select" required>
+                            @foreach (var emp in ViewBag.Employees as List<string>)
+                            {
+                                    <option value="@emp">@emp</option>
+                            }
+                        </select>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Ngày làm việc</label>
-                        <input type="date" class="form-control" value="2025-10-17" />
+                        <input type="date" name="Date" id="editDate" class="form-control" required />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Vị trí</label>
-                        <select class="form-select">
-                            <option selected>Barista</option>
-                            <option>Phục vụ</option>
-                            <option>Quản lý ca</option>
-                            <option>Thu ngân</option>
-                        </select>
-                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Loại ca</label>
-                        <select class="form-select">
-                            <option selected>Ca sáng</option>
-                            <option>Ca chiều</option>
-                            <option>Ca tối</option>
-                            <option>Full ca</option>
+                        <select name="ShiftType" id="editShiftType" class="form-select" required>
+                            @foreach (var shiftType in ViewBag.ShiftTypes as List<string>)
+                            {
+                                    <option value="@shiftType">@shiftType</option>
+                            }
                         </select>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Giờ bắt đầu</label>
-                            <input type="time" class="form-control" value="06:00" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Giờ kết thúc</label>
-                            <input type="time" class="form-control" value="14:00" />
-                        </div>
-                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Ghi chú</label>
-                        <textarea class="form-control" rows="2">Chuyên pha chế specialty coffee</textarea>
+                        <textarea name="Note" id="editNote" class="form-control" rows="2"></textarea>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button class="btn btn-primary">Lưu thay đổi</button>
-            </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('editShiftModal').addEventListener('show.bs.modal', function (event) {
+        const btn = event.relatedTarget;
+        document.getElementById('editShiftId').value = btn.dataset.shiftid;
+        document.getElementById('editEmployeeName').value = btn.dataset.employee;
+        document.getElementById('editDate').value = btn.dataset.date;
+        document.getElementById('editShiftType').value = btn.dataset.shifttype;
+        document.getElementById('editNote').value = btn.dataset.note;
+    });
+});
+</script>
 
 
     

@@ -14,31 +14,31 @@ namespace CafeManagent.Hubs
             _notify = notify;
             this._http = httpContextAccessor;
         }
-        public override async Task OnConnectedAsync()
-        {
-            var context = _http.HttpContext;
+        //public override async Task OnConnectedAsync()
+        //{
+        //    var context = _http.HttpContext;
 
-            var staffRole = context.Session.GetString("StaffRole");
-            string group = "";
-            if (string.IsNullOrEmpty(staffRole))
-            {
-                if (staffRole.Equals("Branch Manager"))
-                {
-                    group = "Manager";
-                }
-                else
-                {
-                    group = "Staff";
-                }
-            }
-            else
-            {
-                group = "Manager";
-            }
-            await Groups.AddToGroupAsync(Context.ConnectionId, group);
+        //    var staffRole = context.Session.GetString("StaffRole");
+        //    string group = "";
+        //    if (string.IsNullOrEmpty(staffRole))
+        //    {
+        //        if (staffRole.Equals("Branch Manager"))
+        //        {
+        //            group = "Manager";
+        //        }
+        //        else
+        //        {
+        //            group = "Staff";
+        //        }
+        //    }
+        //    else
+        //    {
+        //        group = "Manager";
+        //    }
+        //    await Groups.AddToGroupAsync(Context.ConnectionId, group);
 
-            await base.OnConnectedAsync();
-        }
+        //    await base.OnConnectedAsync();
+        //}
         public List<Notify> GetAll()
         {
             return _notify.All();
