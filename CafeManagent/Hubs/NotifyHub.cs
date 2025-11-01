@@ -20,7 +20,7 @@ namespace CafeManagent.Hubs
 
             var staffRole = context.Session.GetString("StaffRole");
             string group = "";
-            if (string.IsNullOrEmpty(staffRole))
+            if (!string.IsNullOrEmpty(staffRole))
             {
                 if (staffRole.Equals("Branch Manager"))
                 {
@@ -44,7 +44,7 @@ namespace CafeManagent.Hubs
             var context = _http.HttpContext;
 
             var staffRole = context.Session.GetString("StaffRole");
-            if(staffRole.Equals("Branch Manager"))
+            if(!string.IsNullOrEmpty(staffRole) && staffRole.Equals("Branch Manager"))
             {
                 return GetAllManager();
             }
@@ -54,7 +54,7 @@ namespace CafeManagent.Hubs
         {
             var context = _http.HttpContext;
             var staffRole = context.Session.GetString("StaffRole");
-            if (staffRole.Equals("Branch Manager"))
+            if (!string.IsNullOrEmpty(staffRole) && staffRole.Equals("Branch Manager"))
             {
                 ClearManager();
             }
