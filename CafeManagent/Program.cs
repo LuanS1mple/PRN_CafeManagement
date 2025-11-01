@@ -23,6 +23,8 @@ builder.Services.AddTransient<IAttendanceService, AttendanceService>();
 builder.Services.AddTransient<IRequestService, RequestService>();
 
 builder.Services.AddTransient<IStaffProfileService, StaffProfileService>();
+builder.Services.AddTransient<IStaffDirectoryService, StaffDirectoryService>();
+
 //builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
 
 
