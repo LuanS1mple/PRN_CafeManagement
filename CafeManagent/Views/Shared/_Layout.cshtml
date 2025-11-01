@@ -246,7 +246,7 @@
         .catch(err => console.error(err));
         // click chuong se clear thong bao 
         bell.addEventListener("click", () => {
-            notifyConnection.invoke("ClearAll")
+            notifyConnection.invoke("Clear")
                 .catch(err => console.error("error:", err));
                 dot.classList.add("d-none");
                 notifyCount = 0;

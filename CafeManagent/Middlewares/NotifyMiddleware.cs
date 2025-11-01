@@ -18,14 +18,23 @@ namespace CafeManagent.Middlewares
                                  IHubContext<NotifyHub> hub)
         {
             await _next(context);
-
-            var list = ulti.All();
-
-            if (list.Count > 0)
+            string role = context.Session.GetString("StaffRole");
+            if (!string.IsNullOrEmpty(role))
             {
-                await hub.Clients.All
-                    .SendAsync("ReceiveNotify", list);
+                if (role.Equals("Branch Manager"))
+                {
+                    var list = ulti.AllManager();
+                    await hub.Clients.Group("Manager")
+                   .SendAsync("ReceiveNotify", list);
+                }
+                else
+                {
+                    var list = ulti.AllStaff();
+                    await hub.Clients.Group("Staff")
+                   .SendAsync("ReceiveNotify", list);
+                }
             }
+
         }
     }
 }

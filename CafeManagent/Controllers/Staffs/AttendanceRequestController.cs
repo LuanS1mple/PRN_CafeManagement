@@ -63,7 +63,7 @@ namespace CafeManagent.Controllers.Staff
                 Message = NotifyMessage.HAVE_REQUEST.Message,
                 Time = DateTime.Now,
             };
-            notifyUlti.Add(notify);
+            notifyUlti.AddManager(notify);
 
             return RedirectToAction("Init");
         }

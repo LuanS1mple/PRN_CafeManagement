@@ -41,11 +41,36 @@ namespace CafeManagent.Hubs
         }
         public List<Notify> GetAll()
         {
-            return _notify.All();
+            var context = _http.HttpContext;
+
+            var staffRole = context.Session.GetString("StaffRole");
+            if(staffRole.Equals("Branch Manager"))
+            {
+                return GetAllManager();
+            }
+            return GetAllStaff();
         }
-        public void ClearAll()
+        public void Clear()
         {
-            _notify.Clear();
+            var context = _http.HttpContext;
+            var staffRole = context.Session.GetString("StaffRole");
+            if (staffRole.Equals("Branch Manager"))
+            {
+                ClearManager();
+            }
+
+        }
+        public List<Notify> GetAllStaff()
+        {
+            return _notify.AllStaff();
+        }
+        public List<Notify> GetAllManager()
+        {
+            return _notify.AllManager();
+        }
+        public void ClearManager()
+        {
+            _notify.ClearManager();
         }
     }
 }
