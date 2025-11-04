@@ -27,6 +27,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IStaffService, StaffService>();
 builder.Services.AddTransient<IAccountService, AccountService>();
 builder.Services.AddTransient<IAttendanceService, AttendanceService>();
+builder.Services.AddTransient<IWorkScheduleService, WorkScheduleService>();
 builder.Services.AddTransient<IRequestService, RequestService>();
 builder.Services.AddTransient<IStaffProfileService, StaffProfileService>();
 
@@ -60,7 +61,7 @@ app.UseSession();
 
 app.UseAuthorization();
 //bất cứ request nào cũng đi qua để thnog báo
-app.UseMiddleware<NotifyMiddleware>();
+//app.UseMiddleware<NotifyMiddleware>();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

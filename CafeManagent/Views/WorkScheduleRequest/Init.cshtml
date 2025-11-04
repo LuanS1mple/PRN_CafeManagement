@@ -1,0 +1,135 @@
+﻿@using CafeManagent.dto.response;
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Lấy danh sách WorkScheduleBasicDTO từ ViewBag
+    var schedules = ViewBag.WorkSchedules as List<WorkScheduleBasicDTO>;
+}
+
+<script src="~/js/WorkshiftRequest_Init.js"></script>
+
+<div class="p-4 bg-body-secondary min-vh-100">
+    <div class="page-header mb-4 d-flex align-items-center justify-content-between">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item"><a href="#">Attendance</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Yêu cầu thay đổi ca</li>
+            </ol>
+        </nav>
+        <h5 class="fw-semibold text-primary mb-0">
+            <i class="fa-solid fa-clock-rotate-left me-2"></i> Tạo yêu cầu thay đổi ca làm
+        </h5>
+    </div>
+
+    <div class="container-request">
+        <div class="card shadow-sm p-4">
+            <form id="workshiftForm">
+
+                <!-- CHỌN CA LÀM -->
+                <div class="mb-3">
+                    <label class="form-label">Chọn ca làm *</label>
+                    <select id="scheduleSelect" class="form-select" required>
+                        <option value="">-- Chọn ca làm --</option>
+
+                        @foreach (var s in schedules)
+                        {
+                            <option value="@s.Id">
+                                Ngày @s.Date - Ca @s.WorkShiftId
+                            </option>
+                        }
+                    </select>
+                    <div class="invalid-feedback">Vui lòng chọn ca</div>
+                </div>
+
+                <!-- THÔNG TIN CA SAU KHI LOAD -->
+                <div id="scheduleInfo" class="border rounded p-3 mb-3 bg-light">
+                    <h6 class="fw-bold mb-3">Thông tin ca làm</h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Ca</label>
+                            <input id="wsId" type="text" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Tên ca</label>
+                            <input id="wsShiftName" type="text" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Ngày</label>
+                            <input id="wsDate" type="date" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Nhân viên</label>
+                            <input id="wsStaff" type="text" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Quản lý</label>
+                            <input id="wsManager" type="text" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Ghi chú</label>
+                            <input id="wsDescription" type="text" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Giờ bắt đầu</label>
+                            <input id="wsStart" type="time" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Giờ kết thúc</label>
+                            <input id="wsEnd" type="time" class="form-control" readonly>
+                        </div>
+                    </div>
+                </div>
+                <!-- LOẠI YÊU CẦU -->
+                <div class="mb-3">
+                    <label class="form-label">Loại yêu cầu *</label>
+                    <div>
+                        <label class="form-check form-check-inline">
+                            <input type="radio" name="actionType" value="cancel" class="form-check-input" required>
+                            Xin hủy ca
+                        </label>
+
+                        <label class="form-check form-check-inline">
+                            <input type="radio" name="actionType" value="change" class="form-check-input">
+                            Xin đổi ca
+                        </label>
+                    </div>
+                </div>
+
+                <!-- CHỌN CA MUỐN ĐỔI (ẩn khi chưa chọn) -->
+                <div id="changeShiftSection" class="mb-3 d-none">
+                    <label class="form-label">Ca muốn đổi sang *</label>
+                    <select id="newShiftSelect" class="form-select">
+                        <option value="">-- Chọn ca --</option>
+                    </select>
+                </div>
+
+                <!-- LÝ DO -->
+                <div class="mb-3">
+                    <label class="form-label">Lý do *</label>
+                    <textarea id="reason" rows="4" class="form-control" required></textarea>
+                    <div class="invalid-feedback">Vui lòng nhập lý do</div>
+                </div>
+
+                <div class="d-flex gap-2 border-top pt-3">
+                    <button type="reset" class="btn btn-outline-secondary">Hủy</button>
+                    <button type="submit" class="btn btn-primary ms-auto">Gửi yêu cầu</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
