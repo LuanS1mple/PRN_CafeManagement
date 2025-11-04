@@ -34,6 +34,8 @@ builder.Services.AddSingleton<NotifyUlti>();
 builder.Services.AddTransient<IStaffDirectoryService, StaffDirectoryService>();
 
 //builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 
 builder.Services.AddRazorPages(o =>
