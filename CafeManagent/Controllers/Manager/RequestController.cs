@@ -1,4 +1,5 @@
 ﻿    using CafeManagent.dto.response;
+using CafeManagent.Enums;
 using CafeManagent.Hubs;
 using CafeManagent.Models;
 using CafeManagent.Services;
@@ -117,7 +118,11 @@ namespace CafeManagent.Controllers.Manager
             //serivce
             await requestService.AcceptRequest(request, attendance);
             //hub
-            await _hub.Clients.All.SendAsync("ReceiveResponseStatus", true, "Phản hồi thành công");
+            SystemNotify systemNotify = new SystemNotify() {
+                IsSuccess = true,
+                Message = NotifyMessage.PHAN_HOI_THANH_CONG.Message
+            };
+            await _hub.Clients.All.SendAsync("ReceiveResponseStatus", systemNotify.IsSuccess,systemNotify.Message);
             await Task.Delay(2000); 
             return RedirectToAction("Index");   
         }
@@ -131,9 +136,28 @@ namespace CafeManagent.Controllers.Manager
             //serivce
             await requestService.RejectRequest(request);
             //hub
-            await _hub.Clients.All.SendAsync("ReceiveResponseStatus", false, "Phản hồi thất bại, vui lòng thử lại");
+            SystemNotify systemNotify = new SystemNotify()
+            {
+                IsSuccess = false,
+                Message = NotifyMessage.PHAN_HOI_THANH_CONG.Message
+            };
+            await _hub.Clients.All.SendAsync("ReceiveResponseStatus", systemNotify.IsSuccess,systemNotify.Message);
             return RedirectToAction("Index");
 
         }
+        public IActionResult DetailWorkscheduleRequest(int id)
+        {
+            try
+            {
+                Request request = requestService.GetById(id);
+
+            }
+            catch(Exception e)
+            {
+
+            }
+            return Ok();
+        }
+
     }
 }

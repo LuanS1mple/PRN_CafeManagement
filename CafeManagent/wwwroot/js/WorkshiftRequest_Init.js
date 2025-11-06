@@ -12,13 +12,28 @@
     const wsManager = document.getElementById("wsManager");
     const wsDescription = document.getElementById("wsDescription");
 
-    const actionRadios = document.querySelectorAll("input[name='actionType']");
-    const changeShiftSection = document.getElementById("changeShiftSection");
+    const changeRadio = document.getElementById("actionChange");
+    const cancelRadio = document.getElementById("actionCancel");
+
     const newShiftSelect = document.getElementById("newShiftSelect");
+    const form = document.getElementById("workshiftForm");
 
+    // ✅ Mặc định disable vì chưa chọn loại yêu cầu
+    newShiftSelect.disabled = true;
 
+    // ✅ Khi chọn Xin đổi ca → enable
+    changeRadio.addEventListener("change", () => {
+        newShiftSelect.disabled = false;
+    });
+
+    // ✅ Khi chọn Xin hủy ca → disable
+    cancelRadio.addEventListener("change", () => {
+        newShiftSelect.disabled = true;
+        newShiftSelect.value = ""; // reset dropdown về mặc định
+    });
+
+    // ✅ Load thông tin ca
     scheduleSelect.addEventListener("change", () => {
-
         const val = scheduleSelect.value;
         if (!val) {
             scheduleInfo.classList.add("d-none");
@@ -26,68 +41,23 @@
             return;
         }
 
-        const id = val;
-
-        fetch(`/WorkScheduleRequest/GetWorkSchedule?id=${id}`)
+        fetch(`/WorkScheduleRequest/GetWorkSchedule?id=${val}`)
             .then(res => res.json())
             .then(data => {
 
                 wsId.value = data.id ?? "";
-                wsShiftName.value = data.shiftName ?? "";
+                wsShiftName.value = data.shiftId ?? "";
                 wsDate.value = data.date ?? "";
                 wsDescription.value = data.description ?? "";
-
                 wsStaff.value = data.staffName ?? "";
                 wsManager.value = data.managerName ?? "";
-
                 wsStart.value = data.startTime ?? "";
                 wsEnd.value = data.endTime ?? "";
-
+                document.getElementById("OldShiftId").value = data.shiftId;
                 scheduleInfo.classList.remove("d-none");
-
-                changeShiftSection.classList.add("d-none");
-                newShiftSelect.innerHTML = `<option value="">-- Chọn ca --</option>`;
-                actionRadios.forEach(r => r.checked = false);
-            });
-
+            })
+            .catch(err => console.error("GetWorkSchedule error:", err));
     });
-
-    actionRadios.forEach(radio => {
-        radio.addEventListener("change", () => {
-            if (radio.value === "change") {
-                changeShiftSection.classList.remove("d-none");
-                loadAlternativeShifts();
-            } else {
-                changeShiftSection.classList.add("d-none");
-                newShiftSelect.innerHTML = `<option value="">-- Chọn ca --</option>`;
-            }
-        });
-    });
-
-
-    function loadAlternativeShifts() {
-        const val = scheduleSelect.value;
-        if (!val) return;
-
-        const [staffId, workShiftId, date] = val.split("-");
-
-        newShiftSelect.innerHTML = `<option value="">-- Chọn ca --</option>`;
-
-        document.querySelectorAll("#scheduleSelect option").forEach(opt => {
-            if (!opt.value) return;
-
-            const parts = opt.value.split("-");
-            const optShiftId = parts[1];
-            const optDate = parts[2];
-
-            if (optDate === date && optShiftId !== workShiftId) {
-                newShiftSelect.innerHTML += `
-                    <option value="${optShiftId}">
-                        Ca ${optShiftId} - ${optDate}
-                    </option>`;
-            }
-        });
-    }
 
     function resetFields() {
         wsId.value = "";
@@ -98,6 +68,7 @@
         wsShiftName.value = "";
         wsManager.value = "";
         wsDescription.value = "";
+        document.getElementById("OldShiftId").value = "";
     }
 
 });

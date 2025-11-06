@@ -3,7 +3,7 @@
     public class WorkScheduleDetailDTO
     {
         public int Id { get; set; }
-        public string ShiftName { get; set; }
+        public int ShiftId { get; set; }
         public DateOnly Date { get; set; }
         public string Description { get; set; }
         public string ManagerName { get; set; }

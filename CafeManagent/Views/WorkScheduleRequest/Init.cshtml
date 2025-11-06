@@ -1,4 +1,6 @@
-﻿@using CafeManagent.dto.response;
+﻿@using CafeManagent.dto.request;
+@using CafeManagent.dto.response;
+@model WorkScheduleRequestDTO;
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -8,7 +10,6 @@
 }
 
 <script src="~/js/WorkshiftRequest_Init.js"></script>
-
 <div class="p-4 bg-body-secondary min-vh-100">
     <div class="page-header mb-4 d-flex align-items-center justify-content-between">
         <nav aria-label="breadcrumb">
@@ -25,7 +26,7 @@
 
     <div class="container-request">
         <div class="card shadow-sm p-4">
-            <form id="workshiftForm">
+            <form id="workshiftForm" asp-action="SaveWorkScheduleRequest" asp-controller="WorkScheduleRequest">
 
                 <!-- CHỌN CA LÀM -->
                 <div class="mb-3">
@@ -49,7 +50,7 @@
 
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label">Ca</label>
+                            <label class="form-label">ID</label>
                             <input id="wsId" type="text" class="form-control" readonly>
                         </div>
 
@@ -60,7 +61,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Ngày</label>
-                            <input id="wsDate" type="date" class="form-control" readonly>
+                            <input asp-for="DateChange" id="wsDate" type="date" class="form-control" readonly>
                         </div>
                     </div>
 
@@ -98,32 +99,34 @@
                     <label class="form-label">Loại yêu cầu *</label>
                     <div>
                         <label class="form-check form-check-inline">
-                            <input type="radio" name="actionType" value="cancel" class="form-check-input" required>
+                            <input asp-for="Require" type="radio" id="actionCancel" value="cancel" class="form-check-input" required>
                             Xin hủy ca
                         </label>
 
                         <label class="form-check form-check-inline">
-                            <input type="radio" name="actionType" value="change" class="form-check-input">
+                            <input asp-for="Require" type="radio" id="actionChange" value="change" class="form-check-input">
                             Xin đổi ca
                         </label>
                     </div>
                 </div>
 
-                <!-- CHỌN CA MUỐN ĐỔI (ẩn khi chưa chọn) -->
-                <div id="changeShiftSection" class="mb-3 d-none">
+                <div id="changeShiftSection" class="mb-3">
                     <label class="form-label">Ca muốn đổi sang *</label>
-                    <select id="newShiftSelect" class="form-select">
+                    <select asp-for="NewShiftId" id="newShiftSelect" class="form-select">
                         <option value="">-- Chọn ca --</option>
+                        <option value="1">Ca 1</option>
+                        <option value="2">Ca 2</option>
+                        <option value="3">Ca 3</option>
                     </select>
                 </div>
 
-                <!-- LÝ DO -->
                 <div class="mb-3">
                     <label class="form-label">Lý do *</label>
-                    <textarea id="reason" rows="4" class="form-control" required></textarea>
+                    <textarea asp-for="Description" id="reason" rows="4" class="form-control" required></textarea>
                     <div class="invalid-feedback">Vui lòng nhập lý do</div>
                 </div>
-
+                <input hidden asp-for="Title" value="WorkSchedule" />
+                <input type="hidden" id="OldShiftId" asp-for="OldShiftId" value="">
                 <div class="d-flex gap-2 border-top pt-3">
                     <button type="reset" class="btn btn-outline-secondary">Hủy</button>
                     <button type="submit" class="btn btn-primary ms-auto">Gửi yêu cầu</button>

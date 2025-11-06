@@ -8,5 +8,6 @@ namespace CafeManagent.Services
         public WorkSchedule Get(int staffId, int workShiftId, DateOnly date);
         public List<WorkSchedule> Get(int staffId);
         public WorkSchedule GetById(int id);
+        public void Save(WorkSchedule workSchedule);
     }
 }

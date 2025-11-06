@@ -1,12 +1,47 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using CafeManagent.dto.response;
+using Microsoft.AspNetCore.SignalR;
 
 namespace CafeManagent.Hubs
 {
     public class ResponseHub : Hub
     {
-        public async Task ResponseStatus(bool isSuccess,string msg)
+        public static Dictionary<int, SystemNotify?> Notifies { get; }
+            = new Dictionary<int, SystemNotify?>();
+
+        private static readonly object _lock = new object();
+        public static void SetNotify(int userId, SystemNotify notify)
         {
-            await Clients.Caller.SendAsync("ReceiveResponseStatus",isSuccess,msg);
+            lock (_lock)
+            {
+                Notifies[userId] = notify;
+            }
+        }
+
+        public async Task GetCurrentNotify()
+        {
+            //int userId = int.Parse(Context.GetHttpContext()!
+            //    .Request.Query["userId"]);
+            int userId = 1;
+
+            SystemNotify? notify;
+
+            lock (_lock)
+            {
+                Notifies.TryGetValue(userId, out notify);
+                Notifies[userId] = null; 
+            }
+
+            if (notify == null)
+            {
+                await Clients.Caller.SendAsync("ReceiveResponseStatus", null, null);
+                return;
+            }
+
+            await Clients.Caller.SendAsync(
+                "ReceiveResponseStatus",
+                notify.IsSuccess,
+                notify.Message
+            );
         }
     }
 }

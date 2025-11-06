@@ -28,5 +28,11 @@ namespace CafeManagent.Services.Imp
         {
             return _context.WorkSchedules.Where(w => w.StaffId == staffId && w.Date.Value > DateOnly.FromDateTime(DateTime.Now)).ToList();
         }
+
+        public void Save(WorkSchedule workSchedule)
+        {
+            _context.WorkSchedules.Add(workSchedule);
+            _context.SaveChanges();
+        }
     }
 }

@@ -151,6 +151,9 @@
             .build();
 
         connection.on("ReceiveResponseStatus", (isSuccess, msg) => {
+            if (msg === null || msg === undefined || msg === "") {
+                return;
+             }
             // Tạo phần tử thông báo
             const toast = document.createElement("div");
             toast.classList.add("toast", isSuccess ? "success" : "error");
@@ -185,7 +188,7 @@
         });
 
         connection.start()
-            .then(() => console.log("Connected to SignalR"))
+            .then(() =>  connection.invoke("GetCurrentNotify"))
             .catch(err => console.error(err));
     </script>
     @* code cho phần notify *@

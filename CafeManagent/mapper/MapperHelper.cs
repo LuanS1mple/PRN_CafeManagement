@@ -37,13 +37,35 @@ namespace CafeManagent.mapper
             return new WorkScheduleDetailDTO
             {
                 Id = w.ShiftId, 
-                ShiftName = w.ShiftName ?? w.Workshift?.ShiftName ?? "",
+                ShiftId = w.WorkshiftId!.Value,
                 Date = w.Date ?? default,
                 Description = w.Description ?? "",
                 ManagerName = w.Manager?.FullName ?? "",
                 StaffName = w.Staff?.FullName ?? "",
                 StartTime = w.Workshift?.StartTime ?? default,
                 EndTime = w.Workshift?.EndTime ?? default
+            };
+        }
+        public static Request FromWorkScheduleRequestDTO(WorkScheduleRequestDTO workScheduleRequestDTO,int staffId)
+        {
+            string detail = "";
+            if (!workScheduleRequestDTO.Require.Equals("change"))
+            {
+                detail = workScheduleRequestDTO.DateChange.ToString() + ";" + workScheduleRequestDTO.OldShiftId + ";" + "Cancel";
+            }
+            else
+            {
+                detail = workScheduleRequestDTO.DateChange.ToString() + ";"+workScheduleRequestDTO.OldShiftId + ";"+workScheduleRequestDTO.NewShiftId;
+            }
+            return new Request()
+            {
+                StaffId = staffId,
+                ReportDate = DateTime.Now,
+                ReportType = "WorkSchedule",
+                Title = workScheduleRequestDTO.Title,
+                Description = workScheduleRequestDTO.Description,
+                Status = 0,
+                Detail = detail
             };
         }
 

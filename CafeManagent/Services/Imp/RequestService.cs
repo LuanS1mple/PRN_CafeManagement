@@ -49,7 +49,7 @@ namespace CafeManagent.Services.Imp
 
         public List<Request> GetWaitingShiftRequest()
         {
-            return _context.Requests.Include(r => r.Staff).Where(r => r.ReportType.Equals("Shift") && r.Status ==0).ToList();
+            return _context.Requests.Include(r => r.Staff).Where(r => r.ReportType.Equals("WorkSchedule") && r.Status ==0).ToList();
         }
         public List<Request> GetDoneRequest()
         {
