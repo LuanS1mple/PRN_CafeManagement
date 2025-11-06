@@ -14,13 +14,15 @@ namespace CafeManagent.Controllers.Manager
     {
         private readonly IRequestService requestService;
         private readonly IAttendanceService attendanceService;
+        private readonly IWorkScheduleService workScheduleService;
         //Hub
         private readonly IHubContext<ResponseHub> _hub;
-        public RequestController(IRequestService requestService, IAttendanceService attendanceService,IHubContext<ResponseHub> hub)
+        public RequestController(IRequestService requestService, IAttendanceService attendanceService,IHubContext<ResponseHub> hub, IWorkScheduleService workScheduleService)
         {
             this.requestService = requestService;
             this.attendanceService = attendanceService;
             this._hub = hub;
+            this.workScheduleService = workScheduleService;
         }
         public IActionResult Index(int? page)
         {
@@ -57,6 +59,8 @@ namespace CafeManagent.Controllers.Manager
         }
         public IActionResult DetailAttendanceRequest(int id)
         {
+            //int staffId = int.Parse(HttpContext.Session.Get("StaffId"));
+            int staffId = 1;
             Request request = requestService.GetById(id);
             string detail = request.Detail;
             string[] values = detail.Split(";");
@@ -108,7 +112,11 @@ namespace CafeManagent.Controllers.Manager
                 attendance = new Attendance() {
                     StaffId = request.StaffId,
                     ShiftId = changeData?.WorkShiftId,
-                    WorkshiftId = changeData.WorkShiftId
+                    CheckIn = changeData.NewCheckIn,
+                    CheckOut = changeData.NewCheckOut,
+                    Workdate = changeData.WorkDate,
+                    Status= 1,
+                    TotalHour = (decimal)(changeData.NewCheckOut.ToTimeSpan() - changeData.NewCheckIn.ToTimeSpan()).TotalHours
                 };
             }
             //cập nhập lại request
@@ -116,7 +124,7 @@ namespace CafeManagent.Controllers.Manager
             request.ResolvedBy = 1;
             request.ResolvedDate = DateTime.Now;
             //serivce
-            await requestService.AcceptRequest(request, attendance);
+            await requestService.AcceptAttendanceRequest(request, attendance);
             //hub
             SystemNotify systemNotify = new SystemNotify() {
                 IsSuccess = true,
@@ -145,19 +153,101 @@ namespace CafeManagent.Controllers.Manager
             return RedirectToAction("Index");
 
         }
+        [HttpGet]
         public IActionResult DetailWorkscheduleRequest(int id)
         {
-            try
+            int staffId = 1;
+            //int staffId = int.Parse(HttpContext.Session.Get("StaffId"));
+            Request request = requestService.GetById(id);
+            string detail = request.Detail;
+            string[] values = detail.Split(";");
+            var changeData = new
             {
-                Request request = requestService.GetById(id);
-
-            }
-            catch(Exception e)
+                WorkDate = DateOnly.Parse(values[0]),
+                OldShiftId = int.Parse(values[1]),
+                NewShiftId = values[2].Equals("cancel",StringComparison.OrdinalIgnoreCase) ? 0: int.Parse(values[2]),
+            };
+            WorkSchedule workSchedule = workScheduleService.Get(request.StaffId.Value, changeData.OldShiftId, changeData.WorkDate);
+            //khi lich bi loi (2 request tren 1 lich)
+            if (workSchedule == null)
             {
-
+                requestService.Delele(request);
+                ResponseHub.SetNotify(staffId,new SystemNotify {IsSuccess = false, Message = NotifyMessage.GET_REQUEST_THAT_BAI.Message});
+                return RedirectToAction("Index");
             }
-            return Ok();
+            PendingWorkSchedule pendingWorkSchedule = new PendingWorkSchedule
+            {
+                RequestId = id,
+                Date = changeData.WorkDate,
+                Description = request.Description,
+                StaffId = request.StaffId.Value,
+                StaffName = request.Staff.FullName,
+                Title = request.Title,
+                ShiftId = workSchedule.ShiftId,
+                NewShift = changeData.NewShiftId,
+                OldShift = changeData.OldShiftId,
+            };
+            return View("DetailWorkscheduleRequest",pendingWorkSchedule);
         }
+        public async Task<IActionResult> AcceptWorkScheduleRequest(int id)
+        {
+            //int staffId = int.Parse(HttpContext.Session.Get("StaffId"));
+            int staffId = 1;
+            Request request = requestService.GetById(id);
+            string detail = request.Detail;
+            string[] values = detail.Split(";");
+            var changeData = new
+            {
+                WorkDate = DateOnly.Parse(values[0]),
+                OldShiftId = int.Parse(values[1]),
+                NewShiftId = values[2].Equals("cancel", StringComparison.OrdinalIgnoreCase) ? 0 : int.Parse(values[2]),
+            };
+            //cập nhập lại workschedule
+            WorkSchedule workSchedule = workScheduleService.Get(request.StaffId.Value, changeData.OldShiftId, changeData.WorkDate);
+            if (values[2].Equals("cancel", StringComparison.OrdinalIgnoreCase))
+            {
+                //xoa ca
+                workSchedule.StaffId =0;
+            }
+            else
+            {
+                workSchedule.WorkshiftId = changeData.NewShiftId;
+                workScheduleService.Update(workSchedule);
+            }
+            //cập nhập lại request
+            request.Status = 1;
+            request.ResolvedBy = staffId;
+            request.ResolvedDate = DateTime.Now;
+            //serivce
+            await requestService.AcceptWorkScheduleRequest(request, workSchedule);
+            //hub
+            SystemNotify systemNotify = new SystemNotify()
+            {
+                IsSuccess = true,
+                Message = NotifyMessage.PHAN_HOI_THANH_CONG.Message
+            };
+            await _hub.Clients.All.SendAsync("ReceiveResponseStatus", systemNotify.IsSuccess, systemNotify.Message);
+            await Task.Delay(2000);
+            return RedirectToAction("Index");
+        }
+        public async Task<IActionResult> RejectWorkScheduleRequest(int id)
+        {
+            Request request = requestService.GetById(id);
+            //cập nhập lại request
+            request.Status = 2;
+            request.ResolvedBy = 1;
+            request.ResolvedDate = DateTime.Now;
+            //serivce
+            await requestService.RejectRequest(request);
+            //hub
+            SystemNotify systemNotify = new SystemNotify()
+            {
+                IsSuccess = false,
+                Message = NotifyMessage.PHAN_HOI_THANH_CONG.Message
+            };
+            await _hub.Clients.All.SendAsync("ReceiveResponseStatus", systemNotify.IsSuccess, systemNotify.Message);
+            return RedirectToAction("Index");
 
+        }
     }
 }

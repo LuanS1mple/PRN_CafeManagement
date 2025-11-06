@@ -34,5 +34,17 @@ namespace CafeManagent.Services.Imp
             _context.WorkSchedules.Add(workSchedule);
             _context.SaveChanges();
         }
+
+        public void Update(WorkSchedule workSchedule)
+        {
+            _context.WorkSchedules.Update(workSchedule);
+            _context.SaveChanges();
+        }
+
+        public void Delete(WorkSchedule workSchedule)
+        {
+            _context.WorkSchedules.Remove(workSchedule);
+            _context.SaveChanges();
+        }
     }
 }

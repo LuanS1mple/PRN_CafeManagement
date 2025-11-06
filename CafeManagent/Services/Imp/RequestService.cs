@@ -12,13 +12,15 @@ namespace CafeManagent.Services.Imp
             _context = context;
         }
 
-        public async Task AcceptRequest(Request request, Attendance attendance)
+        public async Task AcceptAttendanceRequest(Request request, Attendance attendance)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                _context.Requests.Update(request);
-                _context.Attendances.Update(attendance);
+                _context.Attach(request);
+                _context.Entry(request).State = EntityState.Modified;
+                _context.Attach(attendance); 
+                _context.Entry(attendance).State = attendance.AttendanceId == 0 ? EntityState.Added : EntityState.Modified;
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
@@ -59,6 +61,36 @@ namespace CafeManagent.Services.Imp
         {
             _context.Requests.Update(request);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task AcceptWorkScheduleRequest(Request request, WorkSchedule workSchedule)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                if(workSchedule.StaffId==0)
+                {
+                    _context.WorkSchedules.Remove(workSchedule);
+                }
+                else
+                {
+                    _context.WorkSchedules.Update(workSchedule);
+                }
+                _context.Requests.Update(request);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public void Delele(Request request)
+        {
+            _context.Requests.Remove(request);
+            _context.SaveChanges();
         }
     }
 }
