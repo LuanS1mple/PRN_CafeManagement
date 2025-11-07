@@ -1,0 +1,191 @@
+﻿@{
+    ViewData["Title"] = "Bartender View";
+    var waitingOrders = (List<CafeManagent.dto.order.OrderDto>)ViewBag.Waiting;
+    var preparingOrders = (List<CafeManagent.dto.order.OrderDto>)ViewBag.Preparing;
+    var completedOrders = (List<CafeManagent.dto.order.OrderDto>)ViewBag.Completed;
+}
+
+<h2 class="text-center mb-4">Màn hình Bartender 🍹</h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card bg-light mb-4 shadow-sm">
+            <div class="card-header bg-warning text-white fw-bold">Đơn Chờ (Waiting)</div>
+            <div class="card-body" id="waiting-list-bartender">
+                @if (waitingOrders.Any())
+                {
+                    @foreach (var order in waitingOrders)
+                    {
+                        @Html.Partial("_OrderCardPartial", order, new ViewDataDictionary(ViewData) { { "Role", "Bartender" } })
+                    }
+                }
+                else
+                {
+                    <p class="text-muted text-center" id="waiting-empty-bartender">Không có đơn nào.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-light mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white fw-bold">Đang Thực Hiện (Preparing)</div>
+            <div class="card-body" id="preparing-list-bartender">
+                @if (preparingOrders.Any())
+                {
+                    @foreach (var order in preparingOrders)
+                    {
+                        @Html.Partial("_OrderCardPartial", order, new ViewDataDictionary(ViewData) { { "Role", "Bartender" } })
+                    }
+                }
+                else
+                {
+                    <p class="text-muted text-center" id="preparing-empty-bartender">Không có đơn nào.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-light mb-4 shadow-sm">
+            <div class="card-header bg-secondary text-white fw-bold">Đơn Đã Hoàn Thành (Lịch sử)</div>
+            <div class="card-body" id="completed-list-bartender">
+                @if (completedOrders.Any())
+                {
+                    @foreach (var order in completedOrders)
+                    {
+                        @Html.Partial("_OrderCardPartial", order, new ViewDataDictionary(ViewData) { { "Role", "Bartender" } })
+                    }
+                }
+                else
+                {
+                    <p class="text-muted text-center" id="completed-empty-bartender">Không có đơn nào.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const orderHub = new signalR.HubConnectionBuilder()
+            .withUrl("/orderHub")
+            .build();
+
+        orderHub.start().then(() => console.log("Connected to OrderHub")).catch(err => console.error(err));
+
+        // Hàm chung để render Order Card (Sử dụng cho Bartender)
+        function renderOrderCardBartender(order) {
+            let buttonHtml = '';
+            if (order.status === 0) { // Waiting
+                buttonHtml = `
+                    <button class="btn btn-sm btn-primary prepare-btn" data-id="${order.orderId}">
+                        <i class="fa-solid fa-play me-1"></i> Bắt đầu chuẩn bị
+                    </button>
+                `;
+            } else if (order.status === 1) { // Preparing
+                buttonHtml = `
+                    <button class="btn btn-sm btn-success ready-btn" data-id="${order.orderId}">
+                        <i class="fa-solid fa-check me-1"></i> Hoàn thành đơn
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="card mb-2" id="order-${order.orderId}">
+                    <div class="card-body p-2">
+                        <h6 class="card-title mb-1">#${order.orderId} - ${order.customerName}</h6>
+                        <p class="card-text mb-1"><small class="text-muted">${order.orderTime}</small></p>
+                        <p class="card-text mb-1"><strong>${order.totalAmount.toLocaleString('vi-VN')} VND</strong></p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge ${order.status === 0 ? 'bg-warning' : order.status === 1 ? 'bg-primary' : order.status === 2 ? 'bg-success' : 'bg-secondary'}">${order.statusText}</span>
+                            <div>
+                                <a href="/Order/Details/${order.orderId}" class="btn btn-sm btn-info me-1">Xem chi tiết</a>
+                                ${buttonHtml}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Xử lý Bắt đầu Chuẩn bị (Waiting - Status 0)
+        $(document).on('click', '.prepare-btn', function() {
+            const id = $(this).data('id');
+            $.post("/Order/StartPreparing", { id: id })
+                .done(function(response) {
+                    if (response.success) {
+                        // SignalR sẽ xử lý việc di chuyển/cập nhật trạng thái
+                        console.log(`Đơn hàng #${id} đang được chuẩn bị.`);
+                    } else {
+                        alert("Lỗi khi chuyển trạng thái.");
+                    }
+                });
+        });
+
+        // Xử lý Hoàn thành (Preparing - Status 1)
+        $(document).on('click', '.ready-btn', function() {
+            if (!confirm("Xác nhận hoàn thành đơn hàng này?")) return;
+            const id = $(this).data('id');
+            $.post("/Order/MarkReady", { id: id })
+                .done(function(response) {
+                    if (response.success) {
+                        // SignalR sẽ xử lý việc di chuyển/cập nhật trạng thái
+                        alert(`Đơn hàng #${id} đã xong và sẵn sàng phục vụ!`);
+                    } else {
+                        alert("Lỗi khi hoàn thành đơn hàng.");
+                    }
+                });
+        });
+
+
+        // --- SignalR Real-time Updates ---
+
+        // 1. OrderCreated: Đơn mới tạo -> Cột Waiting
+        orderHub.on("OrderCreated", (orderDto) => {
+            const list = $("#waiting-list-bartender");
+            const card = renderOrderCardBartender(orderDto);
+            list.prepend(card); // Thêm lên đầu danh sách
+            $("#waiting-empty-bartender").remove(); // Xóa thông báo rỗng nếu có
+        });
+
+        // 2. OrderPreparing: Đơn chuyển sang Preparing -> Di chuyển từ Waiting sang Preparing
+        orderHub.on("OrderPreparing", (orderId) => {
+            const card = $(`#order-${orderId}`);
+            const list = $("#preparing-list-bartender");
+
+            // Cập nhật trạng thái và nút bấm
+            card.remove(); // Loại bỏ card cũ
+            const newCard = renderOrderCardBartender({ orderId: orderId, status: 1, statusText: 'Preparing', customerName: card.find('.card-title').text().split(' - ')[1], orderTime: card.find('small').text(), totalAmount: parseFloat(card.find('strong').text().replace(/[^0-9,]/g, '').replace(',', '.')) }); // Tái tạo DTO tối thiểu
+            list.prepend(newCard); // Đưa lên đầu danh sách Preparing
+
+            $("#preparing-empty-bartender").remove();
+        });
+
+        // 3. OrderReady: Bartender hoàn thành -> Đơn ở Ready không hiển thị trên màn hình Bartender
+        orderHub.on("OrderReady", (orderDto) => {
+            $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
+                $(this).remove(); // Bartender loại bỏ khỏi list Preparing
+            });
+        });
+
+        // 4. OrderConfirmed: Waiter xác nhận đã giao hàng -> Di chuyển đơn sang cột Completed
+        orderHub.on("OrderConfirmed", (orderDto) => {
+            // Đảm bảo đơn đã mất khỏi Preparing (nếu chưa mất do lỗi logic)
+            $(`#order-${orderDto.orderId}`).remove();
+
+            const list = $("#completed-list-bartender");
+            const card = renderOrderCardBartender(orderDto); // Trạng thái là 3 (Completed)
+
+            list.prepend(card); // Thêm vào danh sách Completed
+            $("#completed-empty-bartender").remove();
+        });
+
+        // 5. OrderCanceled: Đơn bị hủy -> Loại bỏ khỏi tất cả cột
+        orderHub.on("OrderCanceled", (orderId) => {
+            $(`#order-${orderId}`).fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+    </script>
+}

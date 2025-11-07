@@ -54,11 +54,11 @@ namespace CafeManagent.Controllers
                 }
                 else if(staff.Role.RoleName.Equals("Cashier"))
                 {
-                    return RedirectToAction("Index", "Cashier");
+                    return RedirectToAction("waiter", "Order");
                 }
                 else
                 {
-                    return RedirectToAction("Index", "Barista");
+                    return RedirectToAction("Bartender", "Order");
                 }
                 
             }
