@@ -3,6 +3,9 @@
     public interface IAccountService
     {
         Task<bool> SendPasswordResetEmailAsync(string email);
-        Task<bool> ResetPasswordAsync(string email, string token, string newPassword);
+        Task<string> ResetPasswordAsync(string email, string token, string newPassword);
+        bool IsValidResetToken(string email, string token);
     }
 }
+
+
