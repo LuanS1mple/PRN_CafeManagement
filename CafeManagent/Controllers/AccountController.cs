@@ -19,48 +19,82 @@ namespace CafeManagent.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgotPassword(string email)
         {
             if (string.IsNullOrEmpty(email))
             {
-                ViewBag.Error = "Vui lòng nhập email.";
-                return View();
+                ViewData["Error"] = "Vui lòng nhập email.";
+                return View(); // trả về trực tiếp View, không redirect
             }
 
             bool sent = await _accountService.SendPasswordResetEmailAsync(email);
+
             if (sent)
             {
-                ViewBag.Success = "Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư!";
+                ViewData["Success"] = " Đã gửi email xác nhận khôi phục mật khẩu! Vui lòng kiểm tra hộp thư của bạn.";
             }
             else
             {
-                ViewBag.Error = "Không thể gửi email. Kiểm tra lại địa chỉ hoặc cấu hình.";
+                ViewData["Error"] = " Email không tồn tại hoặc tài khoản đã bị khóa.";
             }
-            return View();
+
+            return View(); // trả về View trực tiếp
         }
+
 
         [HttpGet]
         public IActionResult ResetPassword(string email, string token)
         {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+            {
+                return RedirectToAction("Login", "Home");
+            }
+
+            if (!_accountService.IsValidResetToken(email, token))
+            {
+                return RedirectToAction("Login", "Home");
+            }
+
             ViewBag.Email = email;
             ViewBag.Token = token;
             return View();
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
         {
-            bool ok = await _accountService.ResetPasswordAsync(email, token, newPassword);
-            if (ok)
+            string result = await _accountService.ResetPasswordAsync(email, token, newPassword);
+
+            switch (result)
             {
-                ViewBag.Success = "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập.";
+                case "Success":
+                    TempData["SuccessReset"] = "✅ Đặt lại mật khẩu thành công!";
+                    return RedirectToAction("ResetPassword", new { email, token });
+
+                case "SameAsOld":
+                    ModelState.AddModelError("", "Mật khẩu mới không được trùng mật khẩu cũ.");
+                    break;
+
+                case "InvalidToken":
+                    TempData["ErrorReset"] = "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.";
+                    return RedirectToAction("ForgotPassword");
+
+                case "UserNotFound":
+                    TempData["ErrorReset"] = "Không tìm thấy tài khoản tương ứng với email này.";
+                    return RedirectToAction("ForgotPassword");
+
+                default:
+                    ModelState.AddModelError("", "Đã xảy ra lỗi trong quá trình đặt lại mật khẩu. Vui lòng thử lại.");
+                    break;
             }
-            else
-            {
-                ViewBag.Error = "Không thể đặt lại mật khẩu.";
-            }
+            ViewBag.Email = email;
+            ViewBag.Token = token;
             return View();
         }
-    
+
+    }
 }
-}
+
+

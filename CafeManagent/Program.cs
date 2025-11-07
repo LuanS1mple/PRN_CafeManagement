@@ -29,11 +29,14 @@ builder.Services.AddTransient<IAccountService, AccountService>();
 builder.Services.AddTransient<IAttendanceService, AttendanceService>();
 builder.Services.AddTransient<IRequestService, RequestService>();
 builder.Services.AddTransient<IStaffProfileService, StaffProfileService>();
+builder.Services.AddTransient<IOrderService, OrderService>();
 
 builder.Services.AddSingleton<NotifyUlti>();
 builder.Services.AddTransient<IStaffDirectoryService, StaffDirectoryService>();
 
 //builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 
 builder.Services.AddRazorPages(o =>
@@ -66,4 +69,9 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapHub<ResponseHub>("/response");
 app.MapHub<NotifyHub>("/notify");
+
+app.MapHub<OrderHub>("/orderHub");
+
 app.Run();
+
+

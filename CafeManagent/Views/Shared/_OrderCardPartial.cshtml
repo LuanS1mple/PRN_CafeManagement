@@ -1,0 +1,56 @@
+﻿@model CafeManagent.dto.order.OrderDto
+@{
+    var role = ViewData["Role"]?.ToString();
+    string badgeClass = Model.Status switch
+    {
+        0 => "bg-warning text-dark",
+        1 => "bg-primary",
+        2 => "bg-success",
+        3 => "bg-secondary",
+        _ => "bg-info"
+    };
+}
+
+<div class="card mb-2 order-card" id="order-@Model.OrderId">
+    <div class="card-body p-2">
+        <h6 class="card-title mb-1">#@Model.OrderId - @Model.CustomerName</h6>
+        <p class="card-text mb-1"><small class="text-muted">@Model.OrderTime</small></p>
+        <p class="card-text mb-1"><strong>@Model.TotalAmount?.ToString("N0") VND</strong></p>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <span class="badge @badgeClass">@Model.StatusText</span>
+            <div>
+                <a href="/Order/Details/@Model.OrderId" class="btn btn-sm btn-info me-1">Xem chi tiết</a>
+
+                @if (role == "Waiter")
+                {
+                    @if (Model.Status == 0) // Waiting
+                    {
+                        <button class="btn btn-sm btn-danger cancel-btn" data-id="@Model.OrderId">Hủy</button>
+                    }
+                    else if (Model.Status == 2) // Ready
+                    {
+                        <button class="btn btn-sm btn-success confirm-btn" data-id="@Model.OrderId">
+                            <i class="fa-solid fa-check me-1"></i> Confirm
+                        </button>
+                    }
+                }
+                else if (role == "Bartender")
+                {
+                    @if (Model.Status == 0) // Waiting
+                    {
+                        <button class="btn btn-sm btn-primary prepare-btn" data-id="@Model.OrderId">
+                            <i class="fa-solid fa-play me-1"></i> Bắt đầu chuẩn bị
+                        </button>
+                    }
+                    else if (Model.Status == 1) // Preparing
+                    {
+                        <button class="btn btn-sm btn-success ready-btn" data-id="@Model.OrderId">
+                            <i class="fa-solid fa-check me-1"></i> Hoàn thành đơn
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
