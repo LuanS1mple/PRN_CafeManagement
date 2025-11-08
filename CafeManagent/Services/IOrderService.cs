@@ -13,5 +13,6 @@ namespace CafeManagent.Services
         bool SetPreparing(int id);
         bool SetReady(int id);
         bool ConfirmDelivered(int id);
+        bool SetRefunded(int id);
     }
 }

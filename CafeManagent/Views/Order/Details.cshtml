@@ -1,0 +1,689 @@
+﻿@model CafeManagent.dto.order.OrderDetailsDto
+@{
+    ViewData["Title"] = $"Chi tiết Order #{Model.OrderId}";
+
+    // Lấy Role từ ViewData (Được thiết lập trong Controller)
+    var role = ViewData["Role"]?.ToString();
+
+    var totalWithoutDiscount = Model.Items.Sum(i => i.Quantity * i.UnitPrice);
+    var grandTotal = Model.TotalAmount;
+
+    // Logic CSS cho badge trạng thái
+    var badgeClass = Model.Status switch
+    {
+        -2 => "bg-danger", // Đã hoàn tiền
+        -1 => "bg-danger", // Đã hủy
+        0 => "bg-warning text-dark", // Chờ
+        1 => "bg-primary text-white", // Đang chuẩn bị
+        2 => "bg-success", // Đã sẵn sàng
+        3 => "bg-secondary", // Hoàn thành
+        _ => "bg-info"
+    };
+
+    string FormatCurrency(decimal? amount)
+    {
+        return (amount ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN")) + " VND";
+    }
+}
+
+<style>
+    body {
+        background-color: #f8f9fa;
+        color: #212529;
+        font-family: "Segoe UI", sans-serif;
+    }
+
+    .card-details {
+        background: #fff;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .card-header-custom {
+        background-color: #343a40;
+        color: #fff;
+        font-weight: 600;
+        padding: 12px 20px;
+    }
+
+    .badge {
+        border-radius: 4px;
+        padding: 6px 10px;
+        font-size: 0.95rem;
+    }
+
+    .table-order-items {
+        margin-bottom: 0;
+    }
+
+        .table-order-items thead {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        .table-order-items tbody tr:hover {
+            background-color: #f2f2f2;
+        }
+
+    .total-row {
+        background-color: #e9ecef !important;
+        border-top: 3px solid #000;
+    }
+
+    .btn-outline-secondary {
+        color: #000;
+        border-color: #000;
+        transition: all 0.2s ease;
+    }
+
+        .btn-outline-secondary:hover {
+            background-color: #000;
+            color: #fff;
+        }
+
+    .btn-action-group {
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    h2.fw-bold.text-main-dark {
+        color: #000 !important;
+        font-weight: 700 !important;
+    }
+
+        h2.fw-bold.text-main-dark i {
+            color: #000 !important;
+        }
+
+    .divider {
+        border-bottom: 1px solid #dee2e6;
+        opacity: 1;
+        margin-bottom: 20px;
+    }
+
+    .text-main-dark {
+        color: #212529 !important;
+    }
+</style>
+
+    <div class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 divider">
+        <h2 class="fw-bold text-main-dark">
+            <i class="fa-solid fa-receipt me-2"></i> Chi tiết Đơn hàng #@Model.OrderId
+        </h2>
+
+        <a href="javascript:void(0)" class="btn btn-outline-secondary" onclick="history.back()">
+            <i class="fa-solid fa-arrow-left me-2"></i> Quay lại
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(role))
+    {
+        <div class="d-flex justify-content-end mb-4" id="action-buttons-container">
+            <div class="btn-group btn-action-group shadow-sm" role="group">
+
+
+                @if (role == "Cashier")
+                {
+                    <a href="javascript:void(0)" class="btn btn-outline-secondary" onclick="window.print()">
+                        <i class="fa-solid fa-print"></i> In Order
+                    </a>
+                }
+
+
+                @if (role == "Cashier")
+                {
+                    if (Model.Status == 0)
+                    {
+                        <button class="btn btn-danger action-btn" data-action="cancel" data-id="@Model.OrderId" data-bs-toggle="modal" data-bs-target="#confirmCancelModal" title="Hủy đơn">
+                            <i class="fa-solid fa-xmark me-1"></i> Hủy Order
+                        </button>
+                    }
+                    else if (Model.Status == 2) // Đã sẵn sàng -> Xác nhận (Hoàn thành)
+                    {
+                        <button class="btn btn-success action-btn" data-action="confirm" data-id="@Model.OrderId" data-bs-toggle="modal" data-bs-target="#confirmWaiterModal" title="Xác nhận giao hàng & thanh toán">
+                            <i class="fa-solid fa-check me-1"></i> Xác nhận Đã Giao
+                        </button>
+                    }
+                }
+
+                @if (role == "Barista")
+                {
+                    if (Model.Status == 0)
+                    {
+                        <button class="btn btn-primary action-btn" data-action="prepare" data-id="@Model.OrderId" data-status-text="Bắt đầu Chuẩn bị" data-bs-toggle="modal" data-bs-target="#confirmBartenderModal" title="Chuyển sang Đang chuẩn bị">
+                            <i class="fa-solid fa-hourglass-start me-1"></i> Bắt đầu Chuẩn bị
+                        </button>
+                    }
+                    else if (Model.Status == 1)
+                    {
+                        <button class="btn btn-success action-btn" data-action="ready" data-id="@Model.OrderId" data-status-text="Hoàn thành" data-bs-toggle="modal" data-bs-target="#confirmBartenderModal" title="Xác nhận hoàn thành">
+                            <i class="fa-solid fa-check me-1"></i> Hoàn thành
+                        </button>
+                    }
+                }
+
+                {{-- REFUND: Dành cho Admin/Quản lý hoặc Waiter trên màn hình lịch sử (Status 3) --}}
+                @if (Model.Status == 3)
+                {
+                    <button class="btn btn-warning text-dark action-btn" data-action="refund" data-id="@Model.OrderId" data-bs-toggle="modal" data-bs-target="#confirmRefundModal" title="Hoàn tiền và chuyển trạng thái">
+                        <i class="fa-solid fa-undo me-1"></i> Hoàn tiền
+                    </button>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="card card-details mb-4">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa-solid fa-info-circle me-2"></i> Thông tin chung</h5>
+            <span class="badge @badgeClass" id="order-status-badge">@Model.StatusText</span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Thông tin chung bên trái -->
+                <div class="col-md-6 border-end border-dark-subtle">
+                    <p><strong><i class="fa-solid fa-user me-2"></i> Khách hàng:</strong> @Model.CustomerName</p>
+                    <p><strong><i class="fa-solid fa-phone me-2"></i> Điện thoại:</strong> @(string.IsNullOrEmpty(Model.CustomerPhone) ? "Chưa có" : Model.CustomerPhone)</p>
+                    <p><strong><i class="fa-solid fa-clock me-2"></i> Thời gian tạo:</strong> @Model.OrderTime</p>
+                </div>
+
+                <!-- Ghi chú bên phải -->
+                <div class="col-md-6">
+                    <p style="white-space: pre-wrap;"><strong><i class="fa-solid fa-sticky-note me-2"></i> Ghi chú:</strong> @(string.IsNullOrEmpty(Model.Note) ? "Không có" : Model.Note)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="card card-details mb-4">
+        <div class="card-header-custom">
+            <h5 class="mb-0"><i class="fa-solid fa-list-ul me-2"></i> Danh sách món (@Model.Items.Count)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-order-items">
+                    <thead>
+                        <tr>
+                            <th>Tên món</th>
+                            <th class="text-center">Số lượng</th>
+                            <th class="text-end">Đơn giá</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td class="fw-semibold text-dark">@item.ProductName</td>
+                                <td class="text-center">@item.Quantity</td>
+                                <td class="text-end">@FormatCurrency(item.UnitPrice)</td>
+                                <td class="text-end fw-semibold">@FormatCurrency(item.Subtotal)</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold text-main-dark">Tổng phụ:</td>
+                            <td class="text-end fw-bold">@FormatCurrency(totalWithoutDiscount)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold text-main-dark">Giảm giá:</td>
+                            <td class="text-end fw-bold text-danger">- @FormatCurrency(Model.Discount)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold text-main-dark">VAT (10%):</td>
+                            <td class="text-end fw-bold">@((Model.Vat ? "Áp dụng" : "Không áp dụng"))</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td colspan="3" class="text-end fw-bolder text-main-dark fs-5">TỔNG THANH TOÁN:</td>
+                            <td class="text-end fw-bolder fs-5 text-main-dark">@FormatCurrency(grandTotal)</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+@* Modals (Giữ nguyên) *@
+<div class="modal fade" id="confirmBartenderModal" tabindex="-1" aria-labelledby="confirmBartenderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="confirmBartenderModalLabel"><i class="fa-solid fa-sync-alt me-2"></i> Xác nhận hành động</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn thực hiện hành động này với đơn hàng **#<span id="bartender-order-id-confirm-detail"></span>** không?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-primary" id="confirmBartenderBtnActionDetail">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmCancelModal" tabindex="-1" aria-labelledby="confirmCancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmCancelModalLabel"><i class="fa-solid fa-xmark me-2"></i> Xác nhận Hủy Order</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn **HỦY** đơn hàng **#<span id="cancel-order-id-confirm-detail"></span>** này không? Hành động này không thể hoàn tác.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Không</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelBtnDetail">Xác nhận Hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmWaiterModal" tabindex="-1" aria-labelledby="confirmWaiterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="confirmWaiterModalLabel"><i class="fa-solid fa-check me-2"></i> Xác nhận Giao hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn đơn hàng **#<span id="waiter-order-id-confirm-detail"></span>** đã được giao và thanh toán **Hoàn thành** không?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-success" id="confirmWaiterBtnDetail">Hoàn thành</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmRefundModal" tabindex="-1" aria-labelledby="confirmRefundModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="confirmRefundModalLabel"><i class="fa-solid fa-undo me-2"></i> Xác nhận Hoàn tiền</h5>
+                <button type="button" class="btn-close btn-close-dark" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn đã **Hoàn tiền** cho đơn hàng **#<span id="refund-order-id-confirm-detail"></span>** này không?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-warning text-dark" id="confirmRefundBtnDetail">Xác nhận Hoàn tiền</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script>
+        $(function () {
+
+            const currentOrderId = @Model.OrderId;
+            const role = '@role';
+            let currentStatus = @Model.Status;
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/orderHub")
+                .build();
+
+            connection.start().catch(err => console.error("SignalR Connection Error: " + err.toString()));
+
+            // =======================================================
+            // Hàm tiện ích: Định dạng tiền tệ trong JavaScript
+            // =======================================================
+            function formatCurrency(amount) {
+                if (amount == null || isNaN(amount)) return "0 VND";
+                // Sử dụng Intl.NumberFormat cho định dạng tiền tệ Việt Nam
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+            }
+
+            // =======================================================
+            // Hàm tiện ích: Tải lại trang hiện tại (Dùng Query Parameter)
+            // =======================================================
+            window.reloadCurrentPage = function() {
+                // Lấy URL hiện tại, xóa mọi tham số truy vấn cũ
+                const currentUrl = window.location.href.split('?')[0];
+                // Thêm tham số truy vấn mới dựa trên thời gian (timestamp) để BỎ QUA CACHE
+                const newUrl = currentUrl + '?v=' + new Date().getTime();
+
+                // Sử dụng replace để tải lại cứng, tránh vấn đề cache
+                window.location.replace(newUrl);
+            };
+
+            // Hàm chuyển Status code sang Status text và CSS class
+            function getStatusInfo(newStatus) {
+                let statusText;
+                let badgeClass;
+                switch (newStatus) {
+                    case -2: statusText = "Đã hoàn tiền"; badgeClass = "bg-danger"; break;
+                    case -1: statusText = "Đã hủy"; badgeClass = "bg-danger"; break;
+                    case 0: statusText = "Chờ"; badgeClass = "bg-warning text-dark"; break;
+                    case 1: statusText = "Đang chuẩn bị"; badgeClass = "bg-primary text-white"; break;
+                    case 2: statusText = "Đã sẵn sàng"; badgeClass = "bg-success"; break;
+                    case 3: statusText = "Hoàn thành"; badgeClass = "bg-secondary"; break;
+                    default: statusText = "Không rõ"; badgeClass = "bg-info"; break;
+                }
+                return { statusText, badgeClass };
+            }
+
+            // =======================================================
+            // Hàm cập nhật trạng thái UI và Actions
+            // =======================================================
+            function updateStatusUi(newStatus) {
+                currentStatus = newStatus;
+                const { statusText: newStatusText, badgeClass } = getStatusInfo(newStatus);
+
+                const $badge = $('#order-status-badge');
+                $badge.text(newStatusText);
+                $badge.removeClass((index, className) => {
+                    return (className.match(/(^|\s)bg-\S+/g) || []).join(' ');
+                }).addClass(badgeClass);
+
+                updateActions(newStatus);
+            }
+
+            // =======================================================
+            // Hàm cập nhật Thông tin Chi tiết Order (Discount, Total, Note)
+            // =======================================================
+            function updateOrderInfo(dto) {
+                // Cập nhật Giảm giá
+                $('#action-buttons-container').closest('.container').find('.text-danger.fw-bold').text(formatCurrency(dto.discount));
+
+                // Cập nhật Tổng tiền thanh toán
+                $('#action-buttons-container').closest('.container').find('.total-row .fs-5.text-main-dark').text(formatCurrency(dto.totalAmount));
+
+                // Cập nhật Ghi chú
+                const $noteP = $('#action-buttons-container').closest('.container').find('p:contains("Ghi chú") strong').closest('p');
+                const newNoteContent = dto.note && dto.note.trim() !== "" ? dto.note : "Không có";
+                $noteP.html(`<strong><i class="fa-solid fa-sticky-note me-2"></i> Ghi chú:</strong> ${newNoteContent}`);
+
+                // Cập nhật tổng phụ và giảm giá trong bảng (nếu có)
+                const $footer = $('.table-order-items tfoot');
+                $footer.find('tr:eq(0) td:last').text(formatCurrency(dto.totalWithoutDiscount)); // Tổng phụ
+                $footer.find('tr:eq(1) td:last').text("- " + formatCurrency(dto.discount)); // Giảm giá
+                $footer.find('tr:eq(2) td:last').text(formatCurrency(dto.totalAmount)); // Tổng thanh toán
+
+                // Vì các thông tin này nằm trong phần Razor View, để đảm bảo tính chính xác
+                // và cập nhật danh sách món (nếu có), chúng ta VẪN CẦN RELOAD
+                // Tuy nhiên, việc cập nhật UI trực tiếp giúp giảm độ trễ thấy trạng thái mới
+                // trước khi reload hoàn tất.
+            }
+
+
+            // Hàm tạo/cập nhật các nút hành động dựa trên trạng thái mới (Giữ nguyên)
+            function updateActions(newStatus) {
+                const $container = $('#action-buttons-container');
+                const $actionGroup = $container.find('.btn-group');
+
+                let printButton = '';
+                // Lấy nút In cũ nếu có
+                const $oldPrintButton = $actionGroup.find('.fa-print').closest('a');
+                if ($oldPrintButton.length > 0) {
+                    printButton = $oldPrintButton.prop('outerHTML');
+                } else if (role === "Cashier") {
+                    // Tạo lại nút In nếu nó không tồn tại (chỉ cần cho Cashier)
+                    printButton = `
+                        <a href="javascript:void(0)" class="btn btn-outline-secondary" onclick="window.print()">
+                            <i class="fa-solid fa-print"></i> In Order
+                        </a>
+                    `;
+                }
+
+                $actionGroup.empty();
+                if (printButton) {
+                    $actionGroup.append(printButton);
+                }
+
+                let buttonsHtml = '';
+
+                // --- Logic cho Cashier ---
+                if (role === "Cashier") {
+                    if (newStatus === 0) { // Chờ -> Hủy
+                        buttonsHtml += `
+                            <button class="btn btn-danger action-btn" data-action="cancel" data-id="${currentOrderId}" data-bs-toggle="modal" data-bs-target="#confirmCancelModal" title="Hủy đơn">
+                                <i class="fa-solid fa-xmark me-1"></i> Hủy Order
+                            </button>
+                        `;
+                    } else if (newStatus === 2) { // Đã sẵn sàng -> Xác nhận (Hoàn thành)
+                        buttonsHtml += `
+                            <button class="btn btn-success action-btn" data-action="confirm" data-id="${currentOrderId}" data-bs-toggle="modal" data-bs-target="#confirmWaiterModal" title="Xác nhận giao hàng & thanh toán">
+                                <i class="fa-solid fa-check me-1"></i> Xác nhận Đã Giao
+                            </button>
+                        `;
+                    }
+                }
+
+                // --- Logic cho Barista ---
+                if (role === "Barista") {
+                    if (newStatus === 0) { // Chờ -> Đang chuẩn bị
+                        buttonsHtml += `
+                            <button class="btn btn-primary action-btn" data-action="prepare" data-id="${currentOrderId}" data-status-text="Bắt đầu Chuẩn bị" data-bs-toggle="modal" data-bs-target="#confirmBartenderModal" title="Chuyển sang Đang chuẩn bị">
+                                <i class="fa-solid fa-hourglass-start me-1"></i> Bắt đầu Chuẩn bị
+                            </button>
+                        `;
+                    } else if (newStatus === 1) { // Đang chuẩn bị -> Sẵn sàng
+                        buttonsHtml += `
+                            <button class="btn btn-success action-btn" data-action="ready" data-id="${currentOrderId}" data-status-text="Hoàn thành" data-bs-toggle="modal" data-bs-target="#confirmBartenderModal" title="Xác nhận hoàn thành">
+                                <i class="fa-solid fa-check me-1"></i> Hoàn thành
+                            </button>
+                        `;
+                    }
+                }
+
+                // REFUND: Dành cho Status 3 (Hoàn thành)
+                if (newStatus === 3) {
+                    buttonsHtml += `
+                        <button class="btn btn-warning text-dark action-btn" data-action="refund" data-id="${currentOrderId}" data-bs-toggle="modal" data-bs-target="#confirmRefundModal" title="Hoàn tiền và chuyển trạng thái">
+                            <i class="fa-solid fa-undo me-1"></i> Hoàn tiền
+                        </button>
+                    `;
+                }
+
+                $actionGroup.append(buttonsHtml);
+
+                // Gán lại sự kiện cho các nút hành động mới
+                attachModalEvents();
+            }
+
+            // Gán sự kiện ban đầu
+            updateActions(currentStatus);
+
+            // --- Modal Setup (Giữ nguyên) ---
+            function attachModalEvents() {
+                // ... (Các sự kiện modal giữ nguyên) ...
+                $('#confirmWaiterModal').off('show.bs.modal').on('show.bs.modal', function() {
+                    $('#waiter-order-id-confirm-detail').text(currentOrderId);
+                });
+
+                $('#confirmCancelModal').off('show.bs.modal').on('show.bs.modal', function() {
+                    $('#cancel-order-id-confirm-detail').text(currentOrderId);
+                });
+
+                $('#confirmRefundModal').off('show.bs.modal').on('show.bs.modal', function() {
+                    $('#refund-order-id-confirm-detail').text(currentOrderId);
+                });
+
+                $('#confirmBartenderModal').off('show.bs.modal').on('show.bs.modal', function (event) {
+                    const button = $(event.relatedTarget);
+
+                    if (button.data('id') !== currentOrderId || !button.data('action')) return;
+
+                    const action = button.data('action');
+                    const statusText = button.data('status-text');
+
+                    $(this).data('order-id', currentOrderId);
+                    $(this).data('action', action);
+
+                    const isReady = action === 'ready';
+                    const modalHeaderColor = isReady ? 'bg-success' : 'bg-primary';
+                    const modalIcon = isReady ? 'fa-check-circle' : 'fa-hourglass-start';
+
+                    $('#bartender-order-id-confirm-detail').text(currentOrderId);
+                    $('#confirmBartenderModal .modal-header').removeClass('bg-primary bg-success').addClass(modalHeaderColor);
+                    $('#confirmBartenderModalLabel').html(`<i class="fa-solid ${modalIcon} me-2"></i> Xác nhận ${statusText}`);
+                    $('#confirmBartenderModal .modal-body').html(`Bạn có chắc chắn muốn xác nhận **${statusText}** đơn hàng **#<span id="bartender-order-id-confirm-body">${currentOrderId}</span>** này không?`);
+                    $('#confirmBartenderBtnActionDetail').text(statusText).removeClass().addClass(`btn btn-${isReady ? 'success' : 'primary'}`);
+                });
+            }
+
+            // =======================================================
+            // Xử lý các Modal Button Action (Đã sửa lỗi actionUrl cho 'ready')
+            // =======================================================
+            // 1. Bartender Action (Prepare/Ready)
+            $("#confirmBartenderBtnActionDetail").off('click').on('click', function() {
+                const modal = $('#confirmBartenderModal');
+                const id = modal.data('order-id');
+                const action = modal.data('action');
+                let actionUrl = '';
+
+                if (id !== currentOrderId) return;
+
+                if (action === 'prepare') {
+                    actionUrl = "/Order/StartPreparing";
+                } else if (action === 'ready') {
+                    // SỬA LỖI: Cần gán giá trị vào actionUrl
+                    actionUrl = "/Order/MarkReady";
+                }
+
+                if (actionUrl) {
+                    $.post(actionUrl, { id: id })
+                        .done(function(response) {
+                            modal.modal('hide');
+                            if (response.success) {
+                                // toastr.success(`Order #${id} đã cập nhật trạng thái.`); // ĐÃ XÓA
+                                reloadCurrentPage();
+                            } else {
+                                // toastr.error("Không thể thay đổi trạng thái. Đã có lỗi xảy ra."); // ĐÃ XÓA
+                            }
+                        })
+                        .fail(function() {
+                            modal.modal('hide');
+                            // toastr.error("Lỗi kết nối máy chủ!"); // ĐÃ XÓA
+                        });
+                } else {
+                    modal.modal('hide');
+                }
+            });
+
+            // 2. Waiter/Cashier Confirm Delivered (Hoàn thành)
+            $('#confirmWaiterBtnDetail').off('click').on('click', function () {
+                const id = $('#waiter-order-id-confirm-detail').text();
+                if (parseInt(id) !== currentOrderId) return;
+
+                $.post('/Order/ConfirmByWaiter', { id: id })
+                    .done(function (res) {
+                        $('#confirmWaiterModal').modal('hide');
+                        if (res.success) {
+                            // toastr.success(`Order #${id} đã hoàn thành.`); // ĐÃ XÓA
+                            reloadCurrentPage();
+                        } else {
+                            // toastr.error("Không thể hoàn thành đơn hàng."); // ĐÃ XÓA
+                        }
+                    })
+                    .fail(function () {
+                        $('#confirmWaiterModal').modal('hide');
+                        // toastr.error("Lỗi kết nối."); // ĐÃ XÓA
+                    });
+            });
+
+            // 3. Cashier Cancel
+            $('#confirmCancelBtnDetail').off('click').on('click', function () {
+                const id = $('#cancel-order-id-confirm-detail').text();
+                if (parseInt(id) !== currentOrderId) return;
+
+                $.post('/Order/Cancel', { id: id })
+                    .done(function (res) {
+                        $('#confirmCancelModal').modal('hide');
+                        if (res.success) {
+                            // toastr.warning(`Order #${id} đã hủy.`); // ĐÃ XÓA
+                            reloadCurrentPage();
+                        } else {
+                            // toastr.error("Không thể hủy đơn hàng."); // ĐÃ XÓA
+                        }
+                    })
+                    .fail(function () {
+                        $('#confirmCancelModal').modal('hide');
+                        // toastr.error("Lỗi kết nối."); // ĐÃ XÓA
+                    });
+            });
+
+            // 4. Cashier Refund
+            $('#confirmRefundBtnDetail').off('click').on('click', function () {
+                const id = $('#refund-order-id-confirm-detail').text();
+                if (parseInt(id) !== currentOrderId) return;
+
+                $.post('/Order/Refund', { id: id })
+                    .done(function (res) {
+                        $('#confirmRefundModal').modal('hide');
+                        if (res.success) {
+                            // toastr.warning(`Order #${id} đã hoàn tiền.`); // ĐÃ XÓA
+                            reloadCurrentPage();
+                        } else {
+                            // toastr.error("Chỉ có thể hoàn tiền đơn hàng Đã hoàn thành."); // ĐÃ XÓA
+                        }
+                    })
+                    .fail(function () {
+                        $('#confirmRefundModal').modal('hide');
+                        // toastr.error("Lỗi kết nối."); // ĐÃ XÓA
+                    });
+            });
+
+            // --- SignalR Handlers (Giữ nguyên, không dùng toastr) ---
+
+            // Hủy (Nhận Order ID)
+            connection.on("OrderCanceled", (id) => {
+                if (id === currentOrderId) {
+                    // toastr.warning(`Order #${id} đã bị hủy bởi người dùng khác.`); // ĐÃ XÓA
+                    updateStatusUi(-1);
+                    reloadCurrentPage(); // Buộc tải lại
+                }
+            });
+
+            // Hoàn tiền (Nhận Order ID)
+            connection.on("OrderRefunded", (id) => {
+                if (id === currentOrderId) {
+                    // toastr.warning(`Order #${id} đã được hoàn tiền bởi người dùng khác.`); // ĐÃ XÓA
+                    updateStatusUi(-2);
+                    reloadCurrentPage(); // Buộc tải lại
+                }
+            });
+
+            // Chuẩn bị (Nhận Order DTO)
+            connection.on("OrderPreparing", (dto) => {
+                if (dto.orderId === currentOrderId) {
+                    // toastr.info(`Order #${dto.orderId} đang được chuẩn bị bởi người dùng khác.`); // ĐÃ XÓA
+                    updateStatusUi(dto.status);
+                    reloadCurrentPage(); // Buộc tải lại
+                }
+            });
+
+            // Sẵn sàng (Nhận Order DTO)
+            connection.on("OrderReady", (dto) => {
+                if (dto.orderId === currentOrderId) {
+                    // toastr.success(`Order #${dto.orderId} đã SẴN SÀNG bởi người dùng khác.`); // ĐÃ XÓA
+                    updateStatusUi(dto.status);
+                    reloadCurrentPage(); // Buộc tải lại
+                }
+            });
+
+            // Hoàn thành (Nhận Order DTO)
+            connection.on("OrderConfirmed", (dto) => {
+                if (dto.orderId === currentOrderId) {
+                    // toastr.success(`Order #${dto.orderId} đã HOÀN THÀNH bởi người dùng khác.`); // ĐÃ XÓA
+                    updateOrderInfo(dto);
+                    updateStatusUi(dto.status);
+                    reloadCurrentPage(); // Buộc tải lại
+                }
+            })
+        });
+    </script>
+}

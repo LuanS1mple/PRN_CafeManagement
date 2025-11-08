@@ -1,0 +1,111 @@
+﻿@* File: Views/Order/CreateOrder.cshtml (Ví dụ trong ASP.NET MVC/Razor Pages) *@
+@model IEnumerable<CafeManagent.Models.Product>
+@{
+    ViewData["Title"] = "Tạo Hóa Đơn Mới";
+}
+
+<style>
+    /* Styling cơ bản cho bố cục 2 cột */
+    .order-container {
+        display: flex;
+        gap: 20px;
+    }
+
+    .menu-panel, .cart-panel {
+        flex: 1;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .product-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dashed #eee;
+    }
+
+    .cart-item {
+        margin-bottom: 10px;
+        padding: 5px;
+        border-bottom: 1px solid #ddd;
+    }
+</style>
+
+<h2>📋 Tạo Hóa Đơn</h2>
+<div class="order-container">
+
+    <div class="menu-panel">
+        <h3>Menu Sản Phẩm</h3>
+        @foreach (var product in Model)
+        {
+            <div class="product-item" data-product-id="@product.ProductId" data-price="@product.Price" data-name="@product.ProductName">
+                <div>
+                    <strong>@product.ProductName</strong>
+                    <br><small>@product.Price.Value.ToString("N0") VNĐ</small>
+                </div>
+                <button class="btn btn-sm btn-success btn-add-to-cart">+</button>
+            </div>
+        }
+    </div>
+
+    <div class="cart-panel">
+        <h3>🛒 Giỏ Hàng (Bản Nháp)</h3>
+        <div id="cart-items">
+            <p id="empty-cart-message">Giỏ hàng trống.</p>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between">
+            <strong>Tổng Tiền:</strong> <span id="cart-total" class="text-danger">0 VNĐ</span>
+        </div>
+        <hr>
+        <button id="btn-submit-draft" class="btn btn-primary btn-block" disabled>Xác Nhận Order</button>
+        <button id="btn-cancel-draft" class="btn btn-secondary btn-block mt-2">Hủy/Xóa Giỏ Hàng</button>
+    </div>
+</div>
+
+@* Modal cho Bản Nháp Hóa Đơn Chi Tiết *@
+<div class="modal fade" id="draftModal" tabindex="-1" role="dialog" aria-labelledby="draftModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="draftModalLabel">📝 Chi Tiết Hóa Đơn Nháp</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-order-details"></div>
+                <hr>
+
+                <h4>Thông Tin Khách Hàng</h4>
+                <div class="form-group">
+                    <label for="customer-phone">SĐT Khách Hàng:</label>
+                    <input type="text" class="form-control" id="customer-phone" placeholder="Nhập SĐT (Đăng ký thành viên)">
+                    <small id="customer-info" class="form-text text-muted"></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="discount-percent">Giảm Giá (1-100%):</label>
+                    <input type="number" class="form-control" id="discount-percent" min="0" max="100" value="0">
+                </div>
+
+                <p>Tổng tiền phải trả: <strong id="final-total" class="text-danger">0 VNĐ</strong></p>
+                <p id="loyalty-points-info"></p>
+
+                <div class="form-group">
+                    <label>Phương Thức Thanh Toán:</label>
+                    <select class="form-control" id="payment-method">
+                        <option value="Cash">Tiền Mặt</option>
+                        <option value="Transfer">Chuyển Khoản (VNPAY)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" onclick="cancelEditAndCloseModal()">Hủy (Quay lại chỉnh sửa)</button>
+                <button type="button" class="btn btn-success" id="btn-finalize-order">Hoàn Tất & Thanh Toán</button>
+            </div>
+        </div>
+    </div>
+</div>

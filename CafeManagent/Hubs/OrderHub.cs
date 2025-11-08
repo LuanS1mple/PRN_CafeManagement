@@ -5,7 +5,7 @@ namespace CafeManagent.Hubs
 {
     public class OrderHub : Hub
     {
-        // Gửi thông báo tới tất cả client bartender
+        
         public async Task SendNewOrder(object order)
         {
             await Clients.All.SendAsync("ReceiveNewOrder", order);
@@ -14,6 +14,10 @@ namespace CafeManagent.Hubs
         public async Task SendOrderCanceled(int orderId)
         {
             await Clients.All.SendAsync("OrderCanceled", orderId);
+        }
+        public async Task SendOrderStatusUpdate(int orderId, int newStatus, string newStatusText)
+        {
+            await Clients.All.SendAsync("ReceiveOrderStatusUpdate", orderId, newStatus, newStatusText);
         }
     }
 }

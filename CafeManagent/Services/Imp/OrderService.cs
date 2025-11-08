@@ -47,7 +47,7 @@ namespace CafeManagent.Services
         public Order Add(Order order)
         {
             order.OrderDate = DateTime.Now;
-            order.Status = 0; // waiting
+            order.Status = 0; 
             _db.Orders.Add(order);
             _db.SaveChanges();
             return order;
@@ -57,7 +57,7 @@ namespace CafeManagent.Services
         {
             var o = _db.Orders.Find(id);
             if (o == null) return false;
-            o.Status = -1;
+            o.Status = -1; // Đã hủy
             _db.SaveChanges();
             return true;
         }
@@ -66,7 +66,7 @@ namespace CafeManagent.Services
         {
             var o = _db.Orders.Find(id);
             if (o == null) return false;
-            o.Status = 1;
+            o.Status = 1; // Đang chuẩn bị
             _db.SaveChanges();
             return true;
         }
@@ -75,7 +75,7 @@ namespace CafeManagent.Services
         {
             var o = _db.Orders.Find(id);
             if (o == null) return false;
-            o.Status = 2;
+            o.Status = 2; // Đã sẵn sàng
             _db.SaveChanges();
             return true;
         }
@@ -84,11 +84,20 @@ namespace CafeManagent.Services
         {
             var o = _db.Orders.Find(id);
             if (o == null) return false;
-            o.Status = 3;
+            o.Status = 3; // Hoàn thành
+            _db.SaveChanges();
+            return true;
+        }
+
+       
+        public bool SetRefunded(int id)
+        {
+            var o = _db.Orders.Find(id);
+            if (o == null || o.Status != 3) return false;
+
+            o.Status = -2; // Đã hoàn tiền
             _db.SaveChanges();
             return true;
         }
     }
 }
-
-

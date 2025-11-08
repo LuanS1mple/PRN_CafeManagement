@@ -1,192 +1,448 @@
-﻿@{
-    ViewData["Title"] = "Bartender View";
-    var waitingOrders = (List<CafeManagent.dto.order.OrderDto>)ViewBag.Waiting;
-    var preparingOrders = (List<CafeManagent.dto.order.OrderDto>)ViewBag.Preparing;
-    var completedOrders = (List<CafeManagent.dto.order.OrderDto>)ViewBag.Completed;
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Màn hình Bartender";
+    var activeOrders = ViewBag.ActiveOrders as List<CafeManagent.dto.order.OrderDto> ?? new List<CafeManagent.dto.order.OrderDto>();
+
+    // Sắp xếp mặc định: Đang chuẩn bị (1) > Chờ (0)
+    var sortedOrders = activeOrders.OrderByDescending(o => o.Status).ToList();
 }
 
-<h2 class="text-center mb-4">Màn hình Bartender 🍹</h2>
+<h2 class="text-center mb-4">Màn hình Bartender </h2>
+
+<div class="d-flex justify-content-between mb-3">
+    <a href="/Order/BartenderHistory" class="btn btn-secondary">
+        <i class="fa-solid fa-history me-2"></i>Xem Lịch sử Đã hoàn tất
+    </a>
+</div>
+
+
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <form id="bartenderFilterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label">Tìm kiếm (Tên KH, Note, ID):</label>
+                    <input type="text" name="query" id="bartender-query" class="form-control" placeholder="Nhập từ khóa..." />
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Lọc theo Trạng thái:</label>
+                    <select name="statusFilter" id="bartender-status-filter" class="form-select">
+                        <option value="99">Tất cả (Chờ & Đang chuẩn bị)</option>
+                        <option value="1">Đang chuẩn bị</option>
+                        <option value="0">Chờ</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" id="bartender-search-btn" class="btn btn-primary w-100"><i class="fa-solid fa-filter me-1"></i> Lọc</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
 
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-12">
         <div class="card bg-light mb-4 shadow-sm">
-            <div class="card-header bg-warning text-white fw-bold">Đơn Chờ (Waiting)</div>
-            <div class="card-body" id="waiting-list-bartender">
-                @if (waitingOrders.Any())
+            <div class="card-header bg-dark text-white fw-bold">Đơn Hàng Đang Xử Lý</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col" style="width: 5%;">ID</th>
+                                <th scope="col" style="width: 20%;">Khách hàng</th>
+                                <th scope="col" style="width: 15%;">Tổng tiền</th>
+                                <th scope="col" style="width: 20%;">Thời gian</th>
+                                <th scope="col" style="width: 15%;">Trạng thái</th>
+                                <th scope="col" style="width: 25%;" class="text-end">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-list-bartender">
+                            @if (sortedOrders.Any())
+                            {
+                                @foreach (var order in sortedOrders)
+                                {
+                                    @* Sử dụng logic nút bấm mới trong JS thay vì Partial View *@
+                                    <tr class="order-row" id="order-@order.OrderId" data-status="@(order.Status ?? 0)">
+                                        <th scope="row">#@order.OrderId</th>
+                                        <td>@order.CustomerName</td>
+                                        <td><strong data-amount="@order.TotalAmount">@order.TotalAmount.ToString() VND</strong></td>
+                                        <td>@order.OrderTime</td>
+                                        <td>
+                                            @{
+                                                string badgeClass = (order.Status == 0) ? "bg-warning text-dark" : (order.Status == 1) ? "bg-primary" : "";
+                                            }
+                                            <span class="badge @badgeClass">@order.StatusText</span>
+                                        </td>
+                                        <td class="text-end" data-order-status="@(order.Status ?? 0)">
+                                            <a href="/Order/Details/@order.OrderId" class="btn btn-sm btn-info me-1" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></a>
+                                            @if (order.Status == 0)
+                                            {
+                                                <button class="btn btn-sm btn-primary action-btn"
+                                                        data-id="@order.OrderId"
+                                                        data-action="prepare"
+                                                        data-status-text="Bắt đầu chuẩn bị"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#confirmBartenderModal"
+                                                        title="Chuyển sang Đang chuẩn bị">
+                                                    <i class="fa-solid fa-hourglass-start"></i> Chuẩn bị
+                                                </button>
+                                            }
+                                            else if (order.Status == 1)
+                                            {
+                                                <button class="btn btn-sm btn-success action-btn"
+                                                        data-id="@order.OrderId"
+                                                        data-action="ready"
+                                                        data-status-text="Hoàn thành"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#confirmBartenderModal"
+                                                        title="Xác nhận hoàn thành">
+                                                    <i class="fa-solid fa-check"></i> Hoàn thành
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (!sortedOrders.Any())
                 {
-                    @foreach (var order in waitingOrders)
-                    {
-                        @Html.Partial("_OrderCardPartial", order, new ViewDataDictionary(ViewData) { { "Role", "Bartender" } })
-                    }
-                }
-                else
-                {
-                    <p class="text-muted text-center" id="waiting-empty-bartender">Không có đơn nào.</p>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card bg-light mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white fw-bold">Đang Thực Hiện (Preparing)</div>
-            <div class="card-body" id="preparing-list-bartender">
-                @if (preparingOrders.Any())
-                {
-                    @foreach (var order in preparingOrders)
-                    {
-                        @Html.Partial("_OrderCardPartial", order, new ViewDataDictionary(ViewData) { { "Role", "Bartender" } })
-                    }
-                }
-                else
-                {
-                    <p class="text-muted text-center" id="preparing-empty-bartender">Không có đơn nào.</p>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card bg-light mb-4 shadow-sm">
-            <div class="card-header bg-secondary text-white fw-bold">Đơn Đã Hoàn Thành (Lịch sử)</div>
-            <div class="card-body" id="completed-list-bartender">
-                @if (completedOrders.Any())
-                {
-                    @foreach (var order in completedOrders)
-                    {
-                        @Html.Partial("_OrderCardPartial", order, new ViewDataDictionary(ViewData) { { "Role", "Bartender" } })
-                    }
-                }
-                else
-                {
-                    <p class="text-muted text-center" id="completed-empty-bartender">Không có đơn nào.</p>
+                    <p class="text-muted text-center mt-3" id="active-empty-bartender">Không có đơn hàng nào đang hoạt động.</p>
                 }
             </div>
         </div>
     </div>
 </div>
 
+
+<div class="modal fade" id="confirmBartenderModal" tabindex="-1" aria-labelledby="confirmBartenderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="confirmBartenderModalLabel"><i class="fa-solid fa-sync-alt me-2"></i>Xác nhận hành động</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn thực hiện hành động này với đơn hàng **#<span id="bartender-order-id-confirm"></span>** không?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-primary" id="confirmBartenderBtnAction">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
     <script>
+        // --- SignalR Setup ---
         const orderHub = new signalR.HubConnectionBuilder()
             .withUrl("/orderHub")
             .build();
 
-        orderHub.start().then(() => console.log("Connected to OrderHub")).catch(err => console.error(err));
+        orderHub.start().then(() => console.log("Đã kết nối tới OrderHub")).catch(err => console.error("Lỗi kết nối OrderHub:", err));
 
-        // Hàm chung để render Order Card (Sử dụng cho Bartender)
-        function renderOrderCardBartender(order) {
+        // --- Helper Functions ---
+
+        function renderOrderCardBartender(orderDto) {
+            const customerName = orderDto.customerName && orderDto.customerName.trim() !== '' && orderDto.customerName !== 'Khách lẻ' ? orderDto.customerName : 'Khách vãng lai';
+
             let buttonHtml = '';
-            if (order.status === 0) { // Waiting
+            let badgeClass = '';
+            const status = orderDto.status ?? 0;
+            const orderId = orderDto.orderId ?? 0;
+            // Định dạng tiền tệ
+            const formattedAmount = (orderDto.totalAmount ?? 0).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            const statusTextDisplay = orderDto.statusText;
+
+            // Logic nút bấm mới cho Bartender
+            if (status === 0) { // Chờ -> Nút Chuẩn bị
+                badgeClass = 'bg-warning text-dark';
                 buttonHtml = `
-                    <button class="btn btn-sm btn-primary prepare-btn" data-id="${order.orderId}">
-                        <i class="fa-solid fa-play me-1"></i> Bắt đầu chuẩn bị
-                    </button>
-                `;
-            } else if (order.status === 1) { // Preparing
+                    <button class="btn btn-sm btn-primary action-btn"
+                            data-id="${orderId}"
+                            data-action="prepare"
+                            data-status-text="Bắt đầu chuẩn bị"
+                            data-bs-toggle="modal"
+                            data-bs-target="#confirmBartenderModal"
+                            title="Chuyển sang Đang chuẩn bị">
+                        <i class="fa-solid fa-hourglass-start"></i> Chuẩn bị
+                    </button>`;
+            } else if (status === 1) { // Đang chuẩn bị -> Nút Hoàn thành
+                badgeClass = 'bg-primary';
                 buttonHtml = `
-                    <button class="btn btn-sm btn-success ready-btn" data-id="${order.orderId}">
-                        <i class="fa-solid fa-check me-1"></i> Hoàn thành đơn
-                    </button>
-                `;
+                    <button class="btn btn-sm btn-success action-btn"
+                            data-id="${orderId}"
+                            data-action="ready"
+                            data-status-text="Hoàn thành"
+                            data-bs-toggle="modal"
+                            data-bs-target="#confirmBartenderModal"
+                            title="Xác nhận hoàn thành">
+                        <i class="fa-solid fa-check"></i> Hoàn thành
+                    </button>`;
+            } else if (status === 2 || status === 3 || status < 0) {
+                 // Không hiển thị nút bấm nếu đã Sẵn sàng, Hoàn thành, Hủy, Hoàn tiền
+                 buttonHtml = '';
+                 badgeClass = (status === 2) ? 'bg-success' : (status === 3) ? 'bg-dark' : 'bg-danger';
             }
 
             return `
-                <div class="card mb-2" id="order-${order.orderId}">
-                    <div class="card-body p-2">
-                        <h6 class="card-title mb-1">#${order.orderId} - ${order.customerName}</h6>
-                        <p class="card-text mb-1"><small class="text-muted">${order.orderTime}</small></p>
-                        <p class="card-text mb-1"><strong>${order.totalAmount.toLocaleString('vi-VN')} VND</strong></p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge ${order.status === 0 ? 'bg-warning' : order.status === 1 ? 'bg-primary' : order.status === 2 ? 'bg-success' : 'bg-secondary'}">${order.statusText}</span>
-                            <div>
-                                <a href="/Order/Details/${order.orderId}" class="btn btn-sm btn-info me-1">Xem chi tiết</a>
-                                ${buttonHtml}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <tr class="order-row" id="order-${orderId}" data-status="${status}">
+                    <th scope="row">#${orderId}</th>
+                    <td>${customerName}</td>
+                    <td><strong data-amount="${orderDto.totalAmount}">${formattedAmount} VND</strong></td>
+                    <td>${orderDto.orderTime}</td>
+                    <td>
+                        <span class="badge ${badgeClass}">${statusTextDisplay}</span>
+                    </td>
+                    <td class="text-end" data-order-status="${status}">
+                        <a href="/Order/Details/${orderId}" class="btn btn-sm btn-info me-1" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></a>
+                        ${buttonHtml}
+                    </td>
+                </tr>
             `;
         }
 
-        // Xử lý Bắt đầu Chuẩn bị (Waiting - Status 0)
-        $(document).on('click', '.prepare-btn', function() {
-            const id = $(this).data('id');
-            $.post("/Order/StartPreparing", { id: id })
-                .done(function(response) {
-                    if (response.success) {
-                        // SignalR sẽ xử lý việc di chuyển/cập nhật trạng thái
-                        console.log(`Đơn hàng #${id} đang được chuẩn bị.`);
-                    } else {
-                        alert("Lỗi khi chuyển trạng thái.");
-                    }
-                });
+        function sortAndInsertBartender(orderDto) {
+            const list = $("#active-list-bartender");
+            const cardHtml = renderOrderCardBartender(orderDto);
+            const newStatus = orderDto.status ?? 0;
+
+            // Loại bỏ đơn hàng cũ (nếu có)
+            $(`#order-${orderDto.orderId}`).remove();
+
+            // Nếu đơn hàng không phải trạng thái 0 hoặc 1 thì không chèn
+            if (newStatus !== 0 && newStatus !== 1) {
+                // Đảm bảo thông báo rỗng xuất hiện nếu danh sách trống
+                 if (list.children('.order-row').length === 0) {
+                    list.parent().parent().parent().append('<p class="text-muted text-center mt-3" id="active-empty-bartender">Không có đơn hàng nào đang hoạt động.</p>');
+                }
+                return;
+            }
+
+            let inserted = false;
+            list.children('.order-row').each(function() {
+                const currentStatus = parseInt($(this).data('status')) || 0;
+
+                // Sắp xếp: 1 (Đang chuẩn bị) > 0 (Chờ)
+                if (newStatus > currentStatus) {
+                    $(this).before(cardHtml);
+                    inserted = true;
+                    return false;
+                }
+            });
+
+            if (!inserted) {
+                list.append(cardHtml);
+            }
+            // Xóa thông báo rỗng nếu có đơn hàng
+            $("#active-empty-bartender").remove();
+        }
+
+        // --- Lọc/Tìm kiếm bằng nút bấm (Giữ nguyên) ---
+        let isFilteringBartender = false;
+
+        function checkIsFilteringBartender() {
+            const query = $('#bartender-query').val().trim();
+            const status = $('#bartender-status-filter').val();
+            // Lọc đang hoạt động nếu có query hoặc status không phải 'Tất cả' (99)
+            isFilteringBartender = query !== '' || status !== '99';
+            return isFilteringBartender;
+        }
+
+        async function filterAndSearchBartender() {
+            const query = $('#bartender-query').val().trim();
+            const status = $('#bartender-status-filter').val();
+
+            checkIsFilteringBartender();
+
+            const apiUrl = "/Order/SearchActiveOrdersApi";
+            const params = new URLSearchParams();
+            params.append('query', query);
+
+            // Truyền statusFilter là list (0 và 1) cho Bartender
+            if (status === '99') {
+                params.append('statusFilter', '0');
+                params.append('statusFilter', '1');
+            } else {
+                params.append('statusFilter', status);
+            }
+
+            const url = `${apiUrl}?${params.toString()}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Lỗi khi tải dữ liệu lọc');
+                }
+                const data = await response.json();
+
+                const tbody = $('#active-list-bartender');
+                tbody.empty();
+                $("#active-empty-bartender").remove();
+
+                // Bartender chỉ xử lý status 0 và 1, API đã lọc nhưng ta sắp xếp lại.
+                let activeOrders = data.orders.filter(o => o.status === 0 || o.status === 1);
+
+                // Sắp xếp: 1 > 0
+                activeOrders.sort((a, b) => b.status - a.status);
+
+                if (activeOrders.length > 0) {
+                    activeOrders.forEach(order => {
+                        tbody.append(renderOrderCardBartender(order));
+                    });
+                } else {
+                    tbody.parent().parent().parent().append('<p class="text-muted text-center mt-3" id="active-empty-bartender">Không có đơn hàng nào đang hoạt động.</p>');
+                }
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                alert("Đã xảy ra lỗi khi tìm kiếm!");
+            }
+        }
+
+        $('#bartender-search-btn').click(filterAndSearchBartender);
+        $('#bartender-query').keypress(function(e) {
+            if(e.which === 13) {
+                e.preventDefault();
+                filterAndSearchBartender();
+            }
+        });
+        $('#bartender-status-filter').change(filterAndSearchBartender);
+
+
+        let selectedOrderId = null;
+        let selectedAction = null;
+
+        $('#confirmBartenderModal').on('show.bs.modal', function (event) {
+            const button = $(event.relatedTarget);
+            selectedOrderId = button.data('id');
+            selectedAction = button.data('action');
+            const statusText = button.data('status-text');
+
+            // Cập nhật nội dung modal
+            const isReady = selectedAction === 'ready';
+            const modalHeaderColor = isReady ? 'bg-success' : 'bg-primary';
+            const modalIcon = isReady ? 'fa-check-circle' : 'fa-hourglass-start';
+
+            // Xử lý lỗi nếu không tìm thấy phần tử
+            if ($('#bartender-order-id-confirm').length) {
+                 $('#bartender-order-id-confirm').text(selectedOrderId);
+            }
+
+            $('#confirmBartenderModal .modal-header').removeClass('bg-primary bg-success').addClass(modalHeaderColor);
+            $('#confirmBartenderModalLabel').html(`<i class="fa-solid ${modalIcon} me-2"></i>Xác nhận ${statusText}`);
+            $('#confirmBartenderModal .modal-body').html(`Bạn có chắc chắn muốn xác nhận **${statusText}** đơn hàng **#<span id="bartender-order-id-confirm-body">${selectedOrderId}</span>** này không?`);
+            $('#confirmBartenderBtnAction').text(statusText).removeClass().addClass(`btn btn-${isReady ? 'success' : 'primary'}`);
         });
 
-        // Xử lý Hoàn thành (Preparing - Status 1)
-        $(document).on('click', '.ready-btn', function() {
-            if (!confirm("Xác nhận hoàn thành đơn hàng này?")) return;
-            const id = $(this).data('id');
-            $.post("/Order/MarkReady", { id: id })
-                .done(function(response) {
-                    if (response.success) {
-                        // SignalR sẽ xử lý việc di chuyển/cập nhật trạng thái
-                        alert(`Đơn hàng #${id} đã xong và sẵn sàng phục vụ!`);
-                    } else {
-                        alert("Lỗi khi hoàn thành đơn hàng.");
-                    }
-                });
+        $("#confirmBartenderBtnAction").click(function() {
+            if (selectedOrderId && selectedAction) {
+                let actionUrl = '';
+                if (selectedAction === 'prepare') {
+                    actionUrl = "/Order/StartPreparing";
+                } else if (selectedAction === 'ready') {
+                    actionUrl = "/Order/MarkReady";
+                }
+
+                if (actionUrl) {
+                    $.post(actionUrl, { id: selectedOrderId })
+                        .done(function(response) {
+                            if (!response.success) {
+                                alert(`Lỗi khi thực hiện hành động ${selectedAction}!`);
+                            }
+                            // SignalR sẽ tự động cập nhật UI
+                        })
+                        .fail(function() {
+                            alert("Lỗi kết nối máy chủ!");
+                        });
+                }
+
+                $('#confirmBartenderModal').modal('hide');
+                selectedOrderId = null;
+                selectedAction = null;
+            }
         });
 
 
-        // --- SignalR Real-time Updates ---
+        // --- SignalR Real-time Updates (ĐÃ CẬP NHẬT để nhận DTO) ---
 
-        // 1. OrderCreated: Đơn mới tạo -> Cột Waiting
         orderHub.on("OrderCreated", (orderDto) => {
-            const list = $("#waiting-list-bartender");
-            const card = renderOrderCardBartender(orderDto);
-            list.prepend(card); // Thêm lên đầu danh sách
-            $("#waiting-empty-bartender").remove(); // Xóa thông báo rỗng nếu có
+            // Mặc định statusText là 'Chờ' (0)
+            if (orderDto.status === 0 && !checkIsFilteringBartender()) {
+                sortAndInsertBartender(orderDto);
+            }
         });
 
-        // 2. OrderPreparing: Đơn chuyển sang Preparing -> Di chuyển từ Waiting sang Preparing
-        orderHub.on("OrderPreparing", (orderId) => {
-            const card = $(`#order-${orderId}`);
-            const list = $("#preparing-list-bartender");
-
-            // Cập nhật trạng thái và nút bấm
-            card.remove(); // Loại bỏ card cũ
-            const newCard = renderOrderCardBartender({ orderId: orderId, status: 1, statusText: 'Preparing', customerName: card.find('.card-title').text().split(' - ')[1], orderTime: card.find('small').text(), totalAmount: parseFloat(card.find('strong').text().replace(/[^0-9,]/g, '').replace(',', '.')) }); // Tái tạo DTO tối thiểu
-            list.prepend(newCard); // Đưa lên đầu danh sách Preparing
-
-            $("#preparing-empty-bartender").remove();
+        orderHub.on("OrderPreparing", (orderDto) => {
+            // OrderDto có status = 1
+            if (!checkIsFilteringBartender()) {
+                // Sử dụng DTO được truyền để chèn lại và sắp xếp
+                sortAndInsertBartender(orderDto);
+            } else {
+                // Nếu đang lọc, gọi lại hàm lọc để cập nhật danh sách
+                filterAndSearchBartender();
+            }
         });
 
-        // 3. OrderReady: Bartender hoàn thành -> Đơn ở Ready không hiển thị trên màn hình Bartender
         orderHub.on("OrderReady", (orderDto) => {
+            // Đơn hàng hoàn thành (status=2) cần được xóa khỏi danh sách đang xử lý
             $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
-                $(this).remove(); // Bartender loại bỏ khỏi list Preparing
+                $(this).remove();
+                if ($("#active-list-bartender").children('.order-row').length === 0) {
+                    $("#active-list-bartender").parent().parent().parent().append('<p class="text-muted text-center mt-3" id="active-empty-bartender">Không có đơn hàng nào đang hoạt động.</p>');
+                }
             });
         });
 
-        // 4. OrderConfirmed: Waiter xác nhận đã giao hàng -> Di chuyển đơn sang cột Completed
-        orderHub.on("OrderConfirmed", (orderDto) => {
-            // Đảm bảo đơn đã mất khỏi Preparing (nếu chưa mất do lỗi logic)
-            $(`#order-${orderDto.orderId}`).remove();
-
-            const list = $("#completed-list-bartender");
-            const card = renderOrderCardBartender(orderDto); // Trạng thái là 3 (Completed)
-
-            list.prepend(card); // Thêm vào danh sách Completed
-            $("#completed-empty-bartender").remove();
+        orderHub.on("OrderCanceled", (orderDto) => {
+            // Đơn hàng bị hủy (status=-1) cần được xóa khỏi danh sách đang xử lý
+            $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
+                $(this).remove();
+                if ($("#active-list-bartender").children('.order-row').length === 0) {
+                    $("#active-list-bartender").parent().parent().parent().append('<p class="text-muted text-center mt-3" id="active-empty-bartender">Không có đơn hàng nào đang hoạt động.</p>');
+                }
+            });
         });
 
-        // 5. OrderCanceled: Đơn bị hủy -> Loại bỏ khỏi tất cả cột
-        orderHub.on("OrderCanceled", (orderId) => {
-            $(`#order-${orderId}`).fadeOut(300, function() {
+        // Thêm xử lý cho các trạng thái kết thúc (Waiter Confirmed / Refunded)
+        orderHub.on("OrderConfirmed", (orderDto) => {
+            // Xóa đơn hàng hoàn thành (status=3) khỏi danh sách đang hoạt động (Bartender chỉ thấy 0, 1)
+            $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
                 $(this).remove();
             });
         });
+
+        orderHub.on("OrderRefunded", (orderDto) => {
+            // Xóa đơn hàng hoàn tiền (status=-2) khỏi danh sách đang hoạt động
+            $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+
+         window.addEventListener("pageshow", function (event) {
+            // Nếu back/forward
+            if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+                if (typeof connection !== "undefined") {
+                    if (connection.state !== "Connected") {
+                        connection.start()
+                            .then(() => console.log("✅ SignalR reconnected"))
+                            .catch(() => {
+                                console.log(" Reconnect failed → reload page");
+                                window.location.reload();
+                            });
+                    }
+                } else {
+                    // Không có connection (chưa khởi tạo) → reload lại luôn
+                    window.location.reload();
+                }
+            }
+        });
     </script>
 }
-

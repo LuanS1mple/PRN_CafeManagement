@@ -1,0 +1,242 @@
+﻿@model List<CafeManagent.dto.order.OrderDto>
+@{
+    ViewData["Title"] = "Lịch sử tất cả Order";
+    // Lấy giá trị lọc từ ViewBag để giữ lại trên Form
+    var query = ViewBag.Query as string;
+    var statusFilter = ViewBag.StatusFilter as int?;
+    var dateFilter = ViewBag.DateFilter as string;
+}
+
+<h2 class="text-center mb-4">Lịch sử tất cả Order (Waiter) 📜</h2>
+<hr />
+<div class="d-flex justify-content-start mb-3">
+    <a href="/Order/Waiter" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Quay lại màn hình Order (Waiter)
+    </a>
+</div>
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <form id="filterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Tìm kiếm (Tên KH, Note, ID):</label>
+                    <input type="text" name="query" id="query" class="form-control" value="@query" placeholder="Nhập từ khóa..." />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Lọc theo Trạng thái:</label>
+                    <select name="statusFilter" id="statusFilter" class="form-select">
+                        @{
+                            // Khối code C# xử lý lỗi RZ1031 (Không thay đổi)
+                            string selected99 = (statusFilter == 99 || !statusFilter.HasValue) ? "selected" : "";
+                            string selected3 = (statusFilter == 3) ? "selected" : "";
+                            string selectedNegative1 = (statusFilter == -1) ? "selected" : "";
+                            string selectedNegative2 = (statusFilter == -2) ? "selected" : "";
+                            string selected0 = (statusFilter == 0) ? "selected" : "";
+                            string selected1 = (statusFilter == 1) ? "selected" : "";
+                            string selected2 = (statusFilter == 2) ? "selected" : "";
+                        }
+
+                        <option value="99" selected="@selected99">Tất cả</option>
+                        <option value="3" selected="@selected3">Hoàn thành</option>
+                        <option value="-1" selected="@selectedNegative1">Đã hủy</option>
+                        <option value="-2" selected="@selectedNegative2">Đã hoàn tiền</option>
+                        <option value="0" selected="@selected0">Chờ</option>
+                        <option value="1" selected="@selected1">Đang chuẩn bị</option>
+                        <option value="2" selected="@selected2">Đã sẵn sàng</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Lọc theo Ngày:</label>
+                    <input type="date" name="dateFilter" id="dateFilter" class="form-control" value="@dateFilter" />
+                </div>
+                <div class="col-md-2">
+                    <button type="button" id="searchBtn" class="btn btn-primary w-100"><i class="fa-solid fa-search me-1"></i> Tìm kiếm</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white fw-bold">Danh sách Order</div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col" style="width: 5%;">ID</th>
+                        <th scope="col" style="width: 20%;">Khách hàng</th>
+                        <th scope="col" style="width: 15%;">Tổng tiền</th>
+                        <th scope="col" style="width: 20%;">Thời gian</th>
+                        <th scope="col" style="width: 15%;">Trạng thái</th>
+                        <th scope="col" style="width: 25%;" class="text-end">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="history-list">
+                    @if (Model.Any())
+                    {
+                        @foreach (var order in Model)
+                        {
+                            // Truyền Role: History để kích hoạt nút Refund trong Partial View
+                            @Html.Partial("_OrderCardPartial", order, new ViewDataDictionary(ViewData) { { "Role", "History" } })
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Không tìm thấy đơn hàng nào khớp với tiêu chí.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmRefundModal" tabindex="-1" aria-labelledby="confirmRefundModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmRefundModalLabel"><i class="fa-solid fa-undo me-2"></i>Xác nhận Hoàn tiền</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn **Hoàn tiền** và thay đổi trạng thái đơn hàng **#<span id="refund-order-id-display"></span>** này không? (Đơn sẽ chuyển sang trạng thái "**Đã hoàn tiền**").
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-danger" id="confirmRefundBtnAction">Xác nhận Hoàn tiền</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script>
+        // Khởi tạo SignalR
+        const orderHub = new signalR.HubConnectionBuilder()
+            .withUrl("/orderHub")
+            .build();
+
+        orderHub.start().catch(err => console.error("Lỗi kết nối OrderHub:", err));
+
+        // --- Xử lý Hoàn tiền (Refund) ---
+        let selectedOrderId = null;
+
+        // Bắt sự kiện mở Modal Hoàn tiền (refund-btn được định nghĩa trong Partial View)
+        $(document).on('click', '.refund-btn', function(event) {
+            selectedOrderId = $(this).data('id');
+            $('#refund-order-id-display').text(selectedOrderId);
+            $('#confirmRefundModal').modal('show');
+        });
+
+        // Bắt sự kiện xác nhận Hoàn tiền
+        $("#confirmRefundBtnAction").click(function() {
+            if (selectedOrderId) {
+                $.post("/Order/Refund", { id: selectedOrderId })
+                    .fail(function() {
+                        alert("Lỗi kết nối server khi hoàn tiền.");
+                    });
+
+                $('#confirmRefundModal').modal('hide');
+                // Giữ nguyên selectedOrderId để JS bên dưới xử lý update UI qua SignalR
+            }
+        });
+
+        // Hàm render row cho màn hình History (Giữ nguyên)
+        function renderOrderRow(order) {
+            const formattedAmount = new Intl.NumberFormat('vi-VN').format(order.totalAmount);
+
+            let badgeClass = 'bg-info';
+            switch(order.status) {
+                case -2: badgeClass = 'bg-danger'; break; // Đã hoàn tiền
+                case -1: badgeClass = 'bg-danger'; break; // Đã hủy
+                case 0: badgeClass = 'bg-warning text-dark'; break; // Chờ
+                case 1: badgeClass = 'bg-primary'; break; // Đang chuẩn bị
+                case 2: badgeClass = 'bg-success'; break; // Đã sẵn sàng
+                case 3: badgeClass = 'bg-secondary'; break; // Hoàn thành
+            }
+
+            // Xây dựng chuỗi HTML
+            return `
+                <tr class="order-row" id="order-${order.orderId}" data-status="${order.status}">
+                    <th scope="row">#${order.orderId}</th>
+                    <td>${order.customerName}</td>
+                    <td><strong>${formattedAmount} VND</strong></td>
+                    <td>${order.orderTime}</td>
+                    <td><span class="badge ${badgeClass}">${order.statusText}</span></td>
+                    <td class="text-end" data-order-status="${order.status}">
+                        <a href="/Order/Details/${order.orderId}" class="btn btn-sm btn-info me-1" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></a>
+                        ${order.status === 3 ?
+                            `<button class="btn btn-sm btn-danger refund-btn" data-id="${order.orderId}" title="Hoàn tiền và chuyển trạng thái">
+                                <i class="fa-solid fa-undo"></i> Hoàn tiền
+                            </button>`
+                            : ''}
+                    </td>
+                </tr>
+            `;
+        }
+
+        // THAY ĐỔI: Hàm tìm kiếm chỉ gọi khi có lệnh rõ ràng (click/enter)
+        async function searchOrders() {
+            const query = $('#query').val();
+            const status = $('#statusFilter').val();
+            const date = $('#dateFilter').val();
+
+            // Dùng API endpoint mới
+            const url = `/Order/SearchHistoryApi?query=${encodeURIComponent(query)}&statusFilter=${status}&dateFilter=${date}`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Lỗi khi tải dữ liệu');
+                }
+                const data = await response.json();
+
+                const tbody = $('#history-list');
+                tbody.empty(); // Xóa nội dung cũ
+
+                if (data.orders && data.orders.length > 0) {
+                    data.orders.forEach(order => {
+                        tbody.append(renderOrderRow(order));
+                    });
+                } else {
+                    tbody.append('<tr><td colspan="6" class="text-center text-muted">Không tìm thấy đơn hàng nào khớp với tiêu chí.</td></tr>');
+                }
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                alert("Đã xảy ra lỗi khi tìm kiếm!");
+            }
+        }
+
+        // Gắn sự kiện vào nút Tìm kiếm
+        $('#searchBtn').click(searchOrders);
+
+        // Xử lý Enter trên các trường form
+        $('#query, #dateFilter, #statusFilter').keypress(function(e) {
+            if(e.which === 13) {
+                e.preventDefault();
+                searchOrders();
+            }
+        });
+
+
+        // --- SignalR Real-time Updates (Cập nhật sau khi Refund) ---
+
+        orderHub.on("OrderRefunded", (orderDto) => {
+            const row = $(`#order-${orderDto.orderId}`);
+            if (row.length) {
+                // Cập nhật thẻ trạng thái và class
+                row.find('.badge').removeClass().addClass('badge bg-danger').text(orderDto.statusText);
+                row.attr('data-status', orderDto.status);
+                row.find('[data-order-status]').attr('data-order-status', orderDto.status);
+
+                // Ẩn nút Hoàn tiền
+                row.find('.refund-btn').remove();
+            }
+        });
+
+    </script>
+}
