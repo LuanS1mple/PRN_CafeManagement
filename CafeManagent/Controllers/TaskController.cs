@@ -13,14 +13,14 @@ namespace CafeManagent.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index(
-    string searchStaff,
-    string searchManager,
-    DateTime? searchStartDate,
-    DateTime? searchEndDate)
+        public async Task<IActionResult> Index(string searchStaff,
+                                               string searchManager,
+                                               DateTime? searchStartDate,
+                                               DateTime? searchEndDate)
         {
             ViewData["CurrentStaffFilter"] = searchStaff;
             ViewData["CurrentManagerFilter"] = searchManager;
+
             if (searchStartDate.HasValue)
                 ViewData["CurrentStartDateFilter"] = searchStartDate.Value.ToString("yyyy-MM-dd");
             if (searchEndDate.HasValue)
@@ -53,7 +53,6 @@ namespace CafeManagent.Controllers
             return View(tasks);
         }
 
-
         //[HttpPost]
         //public async Task<IActionResult> Create(CafeManagent.Models.Task newTask)
         //{
@@ -79,6 +78,7 @@ namespace CafeManagent.Controllers
         //    return RedirectToAction("Index");
         //}
 
+        // Test
         [HttpPost]
         public async Task<IActionResult> Create(CafeManagent.Models.Task newTask)
         {
@@ -140,6 +140,46 @@ namespace CafeManagent.Controllers
             }
 
             return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ReportTask (string searchStaff,
+                                                     string searchManager,
+                                                     DateTime? startDate,
+                                                     DateTime? endDate)
+        {
+            ViewData["CurrentStaffFilter"] = searchStaff;
+            ViewData["CurrentManagerFilter"] = searchManager;
+
+            if (startDate.HasValue)
+                ViewData["CurrentStartDateFilter"] = startDate.Value.ToString("yyyy-MM-dd");
+            if (endDate.HasValue)
+                ViewData["CurrentEndDateFilter"] = endDate.Value.ToString("yyyy-MM-dd");
+
+            var query = _context.Tasks.Include(t => t.Staff)
+                                      .Include(t => t.Manager)
+                                      .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchStaff))
+            {
+                query = query.Where(t => t.Staff != null && t.Staff.FullName.Contains(searchStaff));
+            }
+            if (!string.IsNullOrEmpty(searchManager))
+            {
+                query = query.Where(t => t.Manager != null && t.Manager.FullName.Contains(searchManager));
+            }
+            if (startDate.HasValue)
+            {
+                query = query.Where(t => t.AssignTime.HasValue && t.AssignTime.Value.Date >= startDate.Value.Date);
+            }
+            if (endDate.HasValue)
+            {
+                query = query.Where(t => t.AssignTime.HasValue && t.AssignTime.Value.Date <= endDate.Value.Date);
+            }
+
+            var tasks = await query.ToListAsync();
+
+            return View("ReportTask", tasks);
         }
     }
 }
