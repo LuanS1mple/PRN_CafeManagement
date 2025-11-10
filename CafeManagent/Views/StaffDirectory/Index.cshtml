@@ -1,7 +1,11 @@
 ﻿@model CafeManagent.dto.response.PagedResult<CafeManagent.dto.response.StaffListItemDto>
 @{
-    var q = (CafeManagent.dto.response.StaffListQuery)ViewBag.Query;
+    var q = (CafeManagent.dto.response.StaffListQuery)ViewBag.Query ?? new CafeManagent.dto.response.StaffListQuery();
     ViewData["Title"] = "Danh sách nhân viên";
+
+    var totalPages = (int)Math.Ceiling((double)(Model.TotalItems) / Math.Max(1, Model.Size));
+    var prevDisabled = Model.Page <= 1 ? "disabled" : "";
+    var nextDisabled = Model.Page >= totalPages ? "disabled" : "";
 }
 <link rel="stylesheet" href="~/css/Profile.css" />
 
@@ -11,18 +15,19 @@
             <h2 class="title">Danh sách nhân viên</h2>
             <div class="sub">Quản lý thông tin nhân viên trong công ty</div>
         </div>
-        <a class="btn primary" asp-controller="StaffProfile" asp-action="Create">+ Thêm nhân viên</a>
+        <a class="btn primary" asp-controller="StaffDirectory" asp-action="Create">+ Thêm nhân viên</a>
     </div>
 
     <form method="get" action="@Url.Action("Index","StaffDirectory")" class="toolbar">
-        <input class="input search" type="text" name="q" value="@q?.Q" placeholder="Tìm theo tên/email..." />
-        <select class="input" name="status">
-            <option value="" selected="@(q?.Status==null)">Trạng thái</option>
-            <option value="1" selected="@(q?.Status==1)">Đang làm việc</option>
-            <option value="2" selected="@(q?.Status==2)">Nghỉ phép</option>
-            <option value="3" selected="@(q?.Status==3)">Nghỉ việc</option>
+        <input class="input search" type="text" name="q.Q" value="@q.Q" placeholder="Tìm theo tên/email..." />
+        <select class="input" name="Status">
+            <option value="" selected="@(q.Status == null ? "selected" : null)">Trạng thái</option>
+            <option value="1" selected="@(q.Status == 1 ? "selected" : null)">Đang làm việc</option>
+            <option value="2" selected="@(q.Status == 2 ? "selected" : null)">Nghỉ phép</option>
+            <option value="3" selected="@(q.Status == 3 ? "selected" : null)">Nghỉ việc</option>
         </select>
-        <input type="hidden" name="page" value="1" />  <!-- quan trọng: khi bấm Lọc, về page 1 -->
+        <input type="hidden" name="Page" value="1" />
+        <input type="hidden" name="Size" value="@Model.Size" />
         <button class="btn">Lọc</button>
     </form>
 
@@ -49,7 +54,11 @@
                         <td>@s.FullName</td>
                         <td>@s.Email</td>
                         <td>@s.Title</td>
-                        <td><span class="badge @(s.Status=="Đang làm việc"?"badge-green": s.Status=="Nghỉ phép"?"badge-yellow":"badge-gray")">@s.Status</span></td>
+                        <td>
+                            <span class="badge @(s.Status=="Đang làm việc"?"badge-green": s.Status=="Nghỉ phép"?"badge-yellow":"badge-gray")">
+                                @s.Status
+                            </span>
+                        </td>
                         <td>@(s.JoinDate?.ToString("dd/MM/yyyy"))</td>
                         <td>@(s.ContractEndDate?.ToString("dd/MM/yyyy"))</td>
                     </tr>
@@ -58,13 +67,19 @@
         </table>
 
         <div class="pager">
-            @{
-                var prevDisabled = Model.Page <= 1 ? "disabled" : "";
-                var nextDisabled = Model.Page >= Model.TotalPages ? "disabled" : "";
-            }
-            <a class="pager-btn @prevDisabled" href="@Url.Action("Index", new { q = q.Q, status = q.Status, page = Model.Page-1, size = Model.Size })">‹ Previous</a>
-            <span class="pager-num">@Model.Page</span>
-            <a class="pager-btn @nextDisabled" href="@Url.Action("Index", new { q = q.Q, status = q.Status, page = Model.Page+1, size = Model.Size })">Next ›</a>
+            <a class="pager-btn @prevDisabled"
+               @(Model.Page <= 1 ? "tabindex=\"-1\" aria-disabled=\"true\"" : "")
+               href="@(Model.Page <= 1 ? "#" : Url.Action("Index", new { q = q.Q, status = q.Status, page = Model.Page - 1, size = Model.Size }))">
+                ‹ Previous
+            </a>
+
+            <span class="pager-num">@Model.Page / @totalPages</span>
+
+            <a class="pager-btn @nextDisabled"
+               @((Model.Page >= totalPages || totalPages==0) ? "tabindex=\"-1\" aria-disabled=\"true\"" : "")
+               href="@((Model.Page >= totalPages || totalPages==0) ? "#" : Url.Action("Index", new { q = q.Q, status = q.Status, page = Model.Page + 1, size = Model.Size }))">
+                Next ›
+            </a>
         </div>
     </div>
 </div>

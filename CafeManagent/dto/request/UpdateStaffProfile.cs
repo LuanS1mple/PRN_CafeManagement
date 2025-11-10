@@ -8,7 +8,8 @@ namespace CafeManagent.dto.request;
 public class UpdateStaffProfile
 {
     public int StaffId { get; set; }
-   
+    public int? RoleId { get; set; }
+
     public string? FullName { get; set; }
     public bool? Gender { get; set; }          // true: Nam, false: Nữ
     public DateOnly? BirthDate { get; set; }

@@ -1,0 +1,119 @@
+﻿@model CafeManagent.dto.request.CreateStaffRequest
+@{
+    ViewData["Title"] = "Thêm nhân viên";
+    var roles = ViewBag.Roles as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new();
+}
+
+<link rel="stylesheet" href="~/css/Profile.css" />
+
+<div class="container profile-wrap">
+    <h2>Thêm nhân viên mới</h2>
+
+    <form asp-action="Create" asp-controller="StaffDirectory" method="post" enctype="multipart/form-data" class="profile-grid">
+        @Html.AntiForgeryToken()
+
+        <!-- LEFT: avatar -->
+        <aside class="card left-card">
+            <div class="avatar-wrap">
+                <img id="avatarPreview" class="avatar-circle" src="/images/avatars/default.png" alt="Avatar preview" />
+            </div>
+
+            <label class="btn btn-upload" for="AvatarFile">
+                <span class="icon-up">⌃</span> Tải ảnh lên
+            </label>
+            <input id="AvatarFile" type="file" name="AvatarFile" accept="image/*" style="display:none" />
+            <div class="label" style="margin-top:8px;">PNG/JPG/WEBP ≤ 2MB</div>
+        </aside>
+
+        <!-- RIGHT: form fields -->
+        <section class="card right-card">
+            <h3>Thông tin</h3>
+
+            <div class="kv2" style="grid-template-columns:1fr 1fr;">
+                <div class="kv2-row">
+                    <div class="kv2-label">Role</div>
+                    <div class="kv2-value">
+                        <select name="RoleId" class="input">
+                            <option value="">— Chọn vai trò —</option>
+                            @foreach (var r in roles)
+                            {
+                                <option value="@r.Value">@r.Text</option>
+                            }
+                        </select>
+                        <span asp-validation-for="RoleId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Họ và tên</div>
+                    <div class="kv2-value">
+                        <input class="input" name="FullName" value="@Model.FullName" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Giới tính</div>
+                    <div class="kv2-value">
+                        <select class="input" name="Gender">
+                            <option value="">—</option>
+                            <option value="true">Nam</option>
+                            <option value="false">Nữ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Ngày sinh</div>
+                    <div class="kv2-value"><input class="input" type="date" name="BirthDate" value="@(Model.BirthDate?.ToString("yyyy-MM-dd"))" /></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Email</div>
+                    <div class="kv2-value"><input class="input" name="Email" value="@Model.Email" /></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Điện thoại</div>
+                    <div class="kv2-value"><input class="input" name="Phone" value="@Model.Phone" /></div>
+                </div>
+
+                <div style="grid-column:1/-1" class="kv2-row">
+                    <div class="kv2-label">Địa chỉ</div>
+                    <div class="kv2-value"><input class="input" name="Address" value="@Model.Address" /></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Tên đăng nhập</div>
+                    <div class="kv2-value"><input class="input" name="UserName" value="@Model.UserName" /></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Mật khẩu</div>
+                    <div class="kv2-value"><input class="input" type="password" name="Password" /></div>
+                </div>
+            </div>
+
+            <div style="margin-top:12px;">
+                <a class="btn secondary" asp-action="Index" asp-controller="StaffDirectory">Hủy</a>
+                <button class="btn primary" type="submit">Tạo nhân viên</button>
+            </div>
+        </section>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        const fileInput = document.getElementById('AvatarFile');
+        const avatar = document.getElementById('avatarPreview');
+        if (fileInput && avatar) {
+            fileInput.addEventListener('change', (e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                const url = URL.createObjectURL(f);
+                avatar.src = url;
+            });
+        }
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}

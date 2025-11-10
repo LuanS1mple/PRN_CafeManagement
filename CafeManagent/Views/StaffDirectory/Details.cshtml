@@ -1,38 +1,106 @@
 ﻿@model CafeManagent.dto.response.StaffDetailDto
-@{ ViewData["Title"] = "Chi tiết nhân viên"; }
+@{
+    ViewData["Title"] = "Chi tiết nhân viên";
+}
 <link rel="stylesheet" href="~/css/Profile.css" />
 
-<div class="container">
-  <a class="link" asp-action="Index">← Danh sách nhân viên</a>
+<div class="container profile-wrap">
+    <a class="link" asp-action="Index">← Danh sách nhân viên</a>
 
-  <div class="grid-2">
-    <section class="card">
-      <h3>Thông tin cá nhân</h3>
-      <div class="profile-center">
-        <img class="avatar-lg" src="@Model.AvatarUrl?v=@DateTimeOffset.UtcNow.Ticks" />
-        <div class="name">@Model.FullName</div>
-        <span class="badge @(Model.Status=="Đang làm việc"?"badge-green": Model.Status=="Nghỉ phép"?"badge-yellow":"badge-gray")">@Model.Status</span>
-      </div>
-      <div class="kv">
-        <div class="kv-row"><div class="k">Email</div><div class="v">@Model.Email</div></div>
-        <div class="kv-row"><div class="k">Số điện thoại</div><div class="v">@Model.Phone</div></div>
-        <div class="kv-row"><div class="k">Địa chỉ</div><div class="v">@Model.Address</div></div>
-        <div class="kv-row"><div class="k">Ngày sinh</div><div class="v">@Model.BirthDate?.ToString("dd/MM/yyyy")</div></div>
-      </div>
-    </section>
+    <div class="profile-grid">
+        <!-- LEFT column: same as profile -->
+        <aside class="left-card">
+            <div class="avatar-wrap">
+                <img class="avatar-circle" src="@Model.AvatarUrl?v=@DateTimeOffset.UtcNow.Ticks" alt="Avatar of @Model.FullName" />
+            </div>
 
-    <section class="card">
-      <h3>Thông tin công việc</h3>
-      <div class="kv">
-        <div class="kv-row"><div class="k">Chức danh</div><div class="v">@Model.Title</div></div>
-        <div class="kv-row"><div class="k">Role</div><div class="v">@Model.RoleName</div></div>
-        <div class="kv-row"><div class="k">Ngày vào làm</div><div class="v">@Model.JoinDate?.ToString("dd/MM/yyyy")</div></div>
-        <div class="kv-row"><div class="k">Ngày hết hạn</div><div class="v">@Model.ContractEndDate?.ToString("dd/MM/yyyy")</div></div>
-      </div>
+            <div class="name">@Model.FullName</div>
 
-      <div class="actions">
-        <a class="btn" asp-controller="StaffProfile" asp-action="Edit" asp-route-id="@Model.StaffId">Sửa thông tin</a>
-      </div>
-    </section>
-  </div>
+            @if (!string.IsNullOrEmpty(Model.RoleName))
+            {
+                <div class="role-chip">@Model.RoleName</div>
+            }
+
+            <div class="pill" style="justify-content:center;">
+                <span class="icon">●</span>
+                <span>@Model.Status</span>
+            </div>
+
+            <button class="btn-upload" disabled>
+                <span class="icon-up">⇪</span>
+                Cập nhật ảnh
+            </button>
+        </aside>
+
+        <!-- RIGHT column: mirror profile format, filled with details -->
+        <main class="right-card">
+            <!-- optional tabs area kept identical to profile (hidden if not needed) -->
+            <div class="tabs" role="tablist" aria-hidden="true" style="margin-bottom:16px;">
+                <a class="tab active">Tổng quan</a>
+                <a class="tab">Hoạt động</a>
+            </div>
+
+            <!-- PERSONAL INFO -->
+            <h3>Thông tin cá nhân</h3>
+
+            <div class="form-grid" style="margin-bottom:12px;">
+                <div class="field">
+                    <div class="label">Email</div>
+                    <div class="ro-input" aria-readonly="true">
+                        <input readonly value="@Model.Email" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="label">Số điện thoại</div>
+                    <div class="ro-input">
+                        <input readonly value="@Model.Phone" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="label">Địa chỉ</div>
+                    <div class="ro-input">
+                        <input readonly value="@Model.Address" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="label">Ngày sinh</div>
+                    <div class="ro-input">
+                        <input readonly value="@Model.BirthDate?.ToString("dd/MM/yyyy")" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORK INFO -->
+            <h3>Thông tin công việc</h3>
+
+            <div class="kv2" style="margin-top:8px;">
+                <div class="kv2-row">
+                    <div class="kv2-label">Chức danh</div>
+                    <div class="kv2-value"><div class="ro-pill">@Model.Title</div></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Vai trò</div>
+                    <div class="kv2-value"><div class="ro-pill">@Model.RoleName</div></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Ngày vào làm</div>
+                    <div class="kv2-value"><div class="ro-pill">@Model.JoinDate?.ToString("dd/MM/yyyy")</div></div>
+                </div>
+
+                <div class="kv2-row">
+                    <div class="kv2-label">Ngày hết hạn</div>
+                    <div class="kv2-value"><div class="ro-pill">@Model.ContractEndDate?.ToString("dd/MM/yyyy")</div></div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a class="btn primary" asp-controller="StaffProfile" asp-action="Edit" asp-route-id="@Model.StaffId">Sửa thông tin</a>
+            </div>
+        </main>
+    </div>
 </div>
