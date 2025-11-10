@@ -29,6 +29,7 @@ builder.Services.AddTransient<IAccountService, AccountService>();
 builder.Services.AddTransient<IAttendanceService, AttendanceService>();
 builder.Services.AddTransient<IRequestService, RequestService>();
 builder.Services.AddTransient<IStaffProfileService, StaffProfileService>();
+builder.Services.AddTransient<IWorkScheduleService, WorkScheduleService>();
 
 builder.Services.AddSingleton<NotifyUlti>();
 builder.Services.AddTransient<IStaffDirectoryService, StaffDirectoryService>();

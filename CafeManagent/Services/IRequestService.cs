@@ -13,5 +13,7 @@ namespace CafeManagent.Services
         public Task AcceptRequest(Request request, Attendance attendance);
         public Task RejectRequest(Request request);
 
+  
+
     }
 }

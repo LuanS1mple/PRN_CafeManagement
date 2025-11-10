@@ -1,0 +1,137 @@
+﻿@model List<CafeManagent.dto.attendance.MonthlyReport>
+
+@{
+    ViewBag.Title = "Báo cáo tháng";
+    var month = ViewBag.SelectedMonth ?? DateTime.Now.Month;
+    var year = ViewBag.SelectedYear ?? DateTime.Now.Year;
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-4 p-4" style="background-color: #e3f2fd;">
+        <div class="text-center mb-4">
+            <i class="bi bi-bar-chart-line text-primary display-5"></i>
+            <h2 class="text-primary fw-bold mt-2">Báo cáo tháng @month/@year</h2>
+            <p class="text-secondary">Tổng hợp giờ làm, số ngày công, ca đi trễ, rời sớm và nghỉ phép</p>
+        </div>
+
+
+        <form method="get" asp-action="MonthlyAttendanceReport" class="row justify-content-center mb-4 g-3">
+            <div class="col-md-3 col-sm-6">
+                <label for="month" class="form-label fw-semibold">Chọn tháng</label>
+                <select id="month" name="month" class="form-select rounded-pill border-primary">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                            <option value="@m" selected="@(m == month)">Tháng @m</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label for="year" class="form-label fw-semibold">Chọn năm</label>
+                <select id="year" name="year" class="form-select rounded-pill border-primary">
+                    @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 1; y++)
+                    {
+                            <option value="@y" selected="@(y == year)">@y</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-6 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm">
+                    <i class="bi bi-search"></i> Xem
+                </button>
+            </div>
+        </form>
+
+        <!-- Bảng báo cáo -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle text-center border shadow-sm">
+                <thead style="background-color: #1565c0; color: white;">
+                    <tr>
+                        <th>STT</th>
+                        <th>Tên nhân viên</th>
+                        <th>Ngày công</th>
+                        <th>Giờ làm</th>
+                        <th>Ca trễ</th>
+                        <th>Rời sớm</th>
+                        <th>Nghỉ phép</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        var count = 1;
+
+                        // Khởi tạo biến tổng
+                        int totalWorkingDays = 0;
+                        decimal? totalHours = 0;
+                        int totalLate = 0;
+                        int totalLeaveEarly = 0;
+                        int totalLeaveDays = 0;
+
+                        foreach (var r in Model)
+                        {
+                    <tr>
+                        <td>@count</td>
+                        <td class="text-start ps-3">@r.StaffName</td>
+                        <td>@r.workingDays</td>
+                        <td>@r.TotalHours</td>
+                        <td>@r.LateCount</td>
+                        <td>@r.LeaveEarlyCount</td>
+                        <td>@r.LeaveDays</td>
+                    </tr>
+
+                            // Cộng dồn vào tổng
+                            totalWorkingDays += r.workingDays;
+                            totalHours += r.TotalHours;
+                            totalLate += r.LateCount;
+                            totalLeaveEarly += r.LeaveEarlyCount;
+                            totalLeaveDays += r.LeaveDays;
+
+                            count++;
+                        }
+
+                        // Dòng tổng hợp cuối cùng
+            <tr style="font-weight:bold; background-color: #bbdefb;">
+                <td colspan="2" class="text-center">Tổng</td>
+                <td>@totalWorkingDays</td>
+                <td>@totalHours</td>
+                <td>@totalLate</td>
+                <td>@totalLeaveEarly</td>
+                <td>@totalLeaveDays</td>
+            </tr>
+                    }
+                    else
+                    {
+            <tr>
+                <td colspan="7" class="text-muted py-4">Không có dữ liệu trong tháng này</td>
+            </tr>
+                    }
+</tbody>
+            </table>
+        </div>
+
+        <!-- Button xuất Excel -->
+        <div class="text-end mt-3">
+            <a href="@Url.Action("ExportMonthlyReport", "AttendanceReport", new { month = month, year = year })"
+               class="btn btn-primary shadow-sm rounded-pill">
+                <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-primary { color: #1565c0 !important; }
+    .btn-primary {
+        background-color: #1976d2;
+        border: none;
+        transition: 0.3s;
+    }
+    .btn-primary:hover {
+        background-color: #1565c0;
+        color: white;
+    }
+    .border-primary { border-color: #1976d2 !important; }
+    .table-hover tbody tr:hover { background-color: #bbdefb; }
+    .rounded-4 { border-radius: 1rem !important; }
+    .form-label { font-weight: 600; color: #1565c0; }
+</style>

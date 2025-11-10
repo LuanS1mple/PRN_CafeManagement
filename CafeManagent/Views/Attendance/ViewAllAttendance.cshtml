@@ -48,18 +48,23 @@
             }
             else
             {
+                var count = 1;
                 foreach (var s in Model)
                 {
-                            <tr>
-                                <td>@s.AttendanceId</td>
-                                <td>@s.StaffName</td>
-                                <td>@s.ShiftName</td>
-                                <td>@s.Workdate?.ToString("dd/MM/yyyy")</td>
-                                <td>@s.CheckIn?.ToString("HH:mm")</td>
-                                <td>@s.CheckOut?.ToString("HH:mm")</td>
-                                <td>@s.TotalHour</td>
-                                <td>@s.Note</td>
-                            </tr>
+                   
+                    @if(s.Status >= 1){
+                                      <tr>
+                                            <td>@count</td>
+                                            <td>@s.StaffName</td>
+                                            <td>@s.ShiftName</td>
+                                            <td>@s.Workdate?.ToString("dd/MM/yyyy")</td>
+                                            <td>@s.CheckIn?.ToString("HH:mm")</td>
+                                            <td>@s.CheckOut?.ToString("HH:mm")</td>
+                                            <td>@s.TotalHour</td>
+                                            <td>@s.Note</td>
+                                        </tr>
+                        count++;
+                    }
                 }
             }
         </tbody>
