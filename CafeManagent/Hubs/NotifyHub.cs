@@ -18,34 +18,59 @@ namespace CafeManagent.Hubs
         //{
         //    var context = _http.HttpContext;
 
-        //    var staffRole = context.Session.GetString("StaffRole");
-        //    string group = "";
-        //    if (string.IsNullOrEmpty(staffRole))
-        //    {
-        //        if (staffRole.Equals("Branch Manager"))
-        //        {
-        //            group = "Manager";
-        //        }
-        //        else
-        //        {
-        //            group = "Staff";
-        //        }
-        //    }
-        //    else
-        //    {
-        //        group = "Manager";
-        //    }
-        //    await Groups.AddToGroupAsync(Context.ConnectionId, group);
+            var staffRole = context.Session.GetString("StaffRole");
+            string group = "";
+            if (!string.IsNullOrEmpty(staffRole))
+            {
+                if (staffRole.Equals("Branch Manager"))
+                {
+                    group = "Manager";
+                }
+                else
+                {
+                    group = "Staff";
+                }
+            }
+            else
+            {
+                group = "Manager";
+            }
+            await Groups.AddToGroupAsync(Context.ConnectionId, group);
 
         //    await base.OnConnectedAsync();
         //}
         public List<Notify> GetAll()
         {
-            return _notify.All();
+            var context = _http.HttpContext;
+
+            var staffRole = context.Session.GetString("StaffRole");
+            if(!string.IsNullOrEmpty(staffRole) && staffRole.Equals("Branch Manager"))
+            {
+                return GetAllManager();
+            }
+            return GetAllStaff();
         }
-        public void ClearAll()
+        public void Clear()
         {
-            _notify.Clear();
+            var context = _http.HttpContext;
+            var staffRole = context.Session.GetString("StaffRole");
+            if (!string.IsNullOrEmpty(staffRole) && staffRole.Equals("Branch Manager"))
+            {
+                ClearManager();
+            }
+
+        }
+        public List<Notify> GetAllStaff()
+        {
+            return _notify.AllStaff();
+        }
+        public List<Notify> GetAllManager()
+        {
+            return _notify.AllManager();
+        }
+        public void ClearManager()
+        {
+            _notify.ClearManager();
         }
     }
 }

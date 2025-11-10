@@ -4,23 +4,33 @@ namespace CafeManagent.Ulties
 {
     public class NotifyUlti
     {
-        private readonly List<Notify> notifies = new();
-        public void Add(Notify notify)
+        private readonly List<Notify> StaffNotify = new();
+        private readonly List<Notify> ManagerNotify = new();
+        public void AddStaff(Notify notify)
         {
-            notifies.Add(notify);
+            StaffNotify.Add(notify);
         }
-        public void Remove(Notify notify)
+        public void AddManager(Notify notify)
         {
-            notifies.Remove(notify);
+            ManagerNotify.Add(notify);
         }
-        public void Clear()
+        public void ClearStaff()
         {
-            notifies.Clear();
+            StaffNotify.Clear();
         }
-        public List<Notify> All()
+        public void ClearManager()
         {
-            return notifies;
+            ManagerNotify.Clear();
         }
+        public List<Notify> AllStaff()
+        {
+            return StaffNotify;
+        }
+        public List<Notify> AllManager()
+        {
+            return ManagerNotify;
+        }
+
 
     }
 }

@@ -1,0 +1,109 @@
+﻿@{
+    ViewData["Title"] = "Chi tiết yêu cầu thay đổi ca làm";
+}
+@using CafeManagent.dto.response;
+@model PendingWorkSchedule
+
+<div class="request-detail-page bg-body-secondary min-vh-100 p-4">
+    <div class="card shadow-sm p-4 w-100">
+        <h2 class="text-center mb-4 fw-semibold">Chi tiết yêu cầu thay đổi ca làm</h2>
+
+        <!-- Thông tin cơ bản -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Tên nhân viên</label>
+                <input type="text" class="form-control" value="@Model.StaffName" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Ngày làm việc</label>
+                <input type="text" class="form-control" value="@Model.Date" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Ca hiện tại</label>
+                <input type="text" class="form-control" value="@Model.OldShift" readonly>
+            </div>
+        </div>
+
+        <!-- Tiêu đề + Mô tả -->
+        <div class="mb-3">
+            <label class="form-label">Tiêu đề yêu cầu</label>
+            <input type="text" class="form-control" value="@Model.Title" readonly>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Mô tả chi tiết</label>
+            <textarea class="form-control" rows="3" readonly>@Model.Description</textarea>
+        </div>
+
+        <!-- Ca làm cũ => ca làm mới -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-12">
+                <label class="form-label">Thay đổi ca làm</label>
+                <div class="d-flex align-items-center gap-3">
+
+                    <div class="flex-grow-1">
+                        <input type="text" class="form-control text-center"
+                               value="Ca @Model.OldShift" readonly>
+                    </div>
+
+                    <span class="arrow text-primary fs-5 fw-bold">→</span>
+
+                    <div class="flex-grow-1">
+                        @if (Model.NewShift == 0)
+                        {
+                            <input type="text" class="form-control text-center text-danger fw-bold"
+                                   value="Hủy ca" readonly>
+                        }
+                        else
+                        {
+                            <input type="text" class="form-control text-center"
+                                   value="Ca @Model.NewShift" readonly>
+                        }
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Nút hành động -->
+        <div class="d-flex justify-content-center gap-3 border-top pt-4">
+            <a href="/Request/AcceptWorkScheduleRequest?id=@Model.RequestId"
+               class="btn btn-success px-4 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-check"></i> Duyệt
+            </a>
+
+            <a href="/Request/RejectWorkScheduleRequest?id=@Model.RequestId"
+               class="btn btn-danger px-4 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-xmark"></i> Từ chối
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .request-detail-page {
+        width: 100%;
+    }
+
+    .card {
+        border-radius: 14px;
+        background: #fff;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+    .arrow {
+        font-size: 22px;
+    }
+
+    input[readonly], textarea[readonly] {
+        background-color: #f8f9fa !important;
+    }
+</style>
