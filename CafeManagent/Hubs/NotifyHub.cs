@@ -14,9 +14,9 @@ namespace CafeManagent.Hubs
             _notify = notify;
             this._http = httpContextAccessor;
         }
-        //public override async Task OnConnectedAsync()
-        //{
-        //    var context = _http.HttpContext;
+        public override async Task OnConnectedAsync()
+        {
+            var context = _http.HttpContext;
 
             var staffRole = context.Session.GetString("StaffRole");
             string group = "";
@@ -37,8 +37,8 @@ namespace CafeManagent.Hubs
             }
             await Groups.AddToGroupAsync(Context.ConnectionId, group);
 
-        //    await base.OnConnectedAsync();
-        //}
+            await base.OnConnectedAsync();
+        }
         public List<Notify> GetAll()
         {
             var context = _http.HttpContext;

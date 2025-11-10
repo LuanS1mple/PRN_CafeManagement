@@ -45,6 +45,7 @@ namespace CafeManagent.Services.Imp
         {
             _context.WorkSchedules.Remove(workSchedule);
             _context.SaveChanges();
+        }
         public List<WorkSchedule> GetWorkSchedulesToday()
         {
             var today = DateOnly.FromDateTime(DateTime.Now);
