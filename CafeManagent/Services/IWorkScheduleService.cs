@@ -11,5 +11,6 @@ namespace CafeManagent.Services
         public void Save(WorkSchedule workSchedule);
         public void Update(WorkSchedule workSchedule);
         public void Delete(WorkSchedule workSchedule);
+        public List<WorkSchedule> GetWorkSchedulesToday();
     }
 }

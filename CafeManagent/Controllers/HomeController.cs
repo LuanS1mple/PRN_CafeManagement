@@ -76,5 +76,14 @@ namespace CafeManagent.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
+            if (Request.Cookies["RememberUsername"] != null)
+            {
+                Response.Cookies.Delete("RememberUsername");
+            }
+            return RedirectToAction("Login", "Home");
+        }
     }
 }

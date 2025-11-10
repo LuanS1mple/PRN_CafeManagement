@@ -1,0 +1,137 @@
+﻿@model IEnumerable<CafeManagent.Models.Attendance>
+@{
+    ViewBag.Title = "Lịch sử điểm danh";
+    int selectedMonth = ViewBag.SelectedMonth ?? DateTime.Now.Month;
+    int selectedYear = ViewBag.SelectedYear ?? DateTime.Now.Year;
+    int totalDays = ViewBag.TotalDays ?? 0;
+    decimal totalHours = ViewBag.TotalHours ?? 0;
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 rounded-4 p-4" style="background-color: #f5fbfc;">
+        <div class="text-center mb-4">
+            <i class="bi bi-calendar-check text-teal display-5"></i>
+            <h2 class="text-teal fw-bold mt-2">Lịch sử điểm danh</h2>
+            <p class="text-secondary">Theo dõi thời gian làm việc của nhân viên trong tháng</p>
+        </div>
+
+        <!-- Bộ lọc tháng / năm -->
+        <form method="get" asp-action="AttendanceDetail" class="row justify-content-center mb-4">
+            <div class="col-md-3 col-sm-6 mb-2">
+                <label for="month" class="form-label text-teal fw-semibold">Chọn tháng</label>
+                <select id="month" name="month" class="form-select rounded-pill border-teal">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                            <option value="@m" selected="@(m == selectedMonth)">
+                            @($"Tháng {m}")
+                            </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3 col-sm-6 mb-2">
+                <label for="year" class="form-label text-teal fw-semibold">Chọn năm</label>
+                <select id="year" name="year" class="form-select rounded-pill border-teal">
+                    @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 1; y++)
+                    {
+                            <option value="@y" selected="@(y == selectedYear)">
+                            @y
+                            </option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2 col-sm-6 mb-2 align-self-end">
+                <button type="submit" class="btn btn-teal w-100 rounded-pill shadow-sm">
+                    <i class="bi bi-search"></i> Xem
+                </button>
+            </div>
+        </form>
+
+        <!-- Thông tin tổng -->
+        <div class="row text-center mb-4">
+            <div class="col-md-6 mb-3">
+                <div class="p-3 rounded-4 shadow-sm bg-white border-start border-4 border-teal">
+                    <h5 class="text-secondary mb-1">Số ngày làm</h5>
+                    <h4 class="text-teal fw-bold">@totalDays</h4>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="p-3 rounded-4 shadow-sm bg-white border-start border-4 border-teal">
+                    <h5 class="text-secondary mb-1">Tổng giờ làm</h5>
+                    <h4 class="text-teal fw-bold">@totalHours.ToString("0.##") giờ</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bảng lịch sử -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle text-center">
+                <thead class="table-teal text-white">
+                    <tr>
+                        <th>Ngày làm</th>
+                        <th>Ca</th>
+                        <th>Giờ Check-in</th>
+                        <th>Giờ Check-out</th>
+                        <th>Tổng giờ</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                                    <tr>
+                                        <td>@item.Workdate</td>
+                                        <td>@item.Shift?.ShiftName</td>
+                                        <td>@(item.CheckIn?.ToString("HH:mm") ?? "-")</td>
+                                        <td>@(item.CheckOut?.ToString("HH:mm") ?? "-")</td>
+                                        <td>@(item.TotalHour?.ToString("0.##") ?? "0")</td>
+                                        <td>
+                                    @if (item.CheckOut != null)
+                                    {
+                                                    <span class="badge bg-success rounded-pill">Hoàn tất</span>
+                                    }
+                                    else if (item.CheckIn != null)
+                                    {
+                                                    <span class="badge bg-warning text-dark rounded-pill">Chưa hoàn tất ca làm</span>
+                                    }
+                                    else
+                                    {
+                                                    <span class="badge bg-secondary rounded-pill">Chưa làm</span>
+                                    }
+                                        </td>
+                                    </tr>
+                        }
+                    }
+                    else
+                    {
+                            <tr>
+                                <td colspan="6" class="text-muted py-4">Không có dữ liệu trong tháng này</td>
+                            </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-teal { color: #009688 !important; }
+    .border-teal { border-color: #009688 !important; }
+    .bg-teal { background-color: #009688 !important; }
+    .btn-teal {
+        background-color: #009688;
+        color: white;
+        transition: 0.3s;
+    }
+    .btn-teal:hover {
+        background-color: #00796b;
+        color: white;
+    }
+    .table-teal {
+        background-color: #009688;
+    }
+    .rounded-4 { border-radius: 1rem !important; }
+</style>

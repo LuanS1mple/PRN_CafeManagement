@@ -1,0 +1,61 @@
+﻿@model List<CafeManagent.Models.WorkSchedule>
+
+<div class="container mt-4">
+    <h3 class="mb-3 text-center">Danh sách ca làm việc hôm nay (@DateTime.Now.ToString("dd/MM/yyyy"))</h3>
+    @if (TempData["success"] != null)
+    {
+                <div class="alert alert-success">@TempData["success"]</div>
+    }
+    @if (TempData["error"] != null)
+    {
+                <div class="alert alert-danger">@TempData["error"]</div>
+    }
+
+    <table class="table table-hover table-bordered align-middle text-center">
+        <thead class="table-light">
+            <tr>
+                <th>STT</th>
+                <th>Tên nhân viên</th>
+                <th>Ca làm</th>
+                <th>Giờ bắt đầu</th>
+                <th>Giờ kết thúc</th>
+                <th>Quản lý</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model == null || !Model.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-muted text-center">Không có ca làm nào trong ngày hôm nay</td>
+                </tr>
+            }
+            else
+            {
+                var count = 1;
+                foreach (var ws in Model)
+                {
+                    <tr>
+                        <td>@count</td>
+                        <td>@ws.Staff?.FullName</td>
+                        <td>@ws.Workshift?.ShiftName</td>
+                        <td>@ws.Workshift?.StartTime?.ToString(@"hh\:mm")</td>
+                        <td>@ws.Workshift?.EndTime?.ToString(@"hh\:mm")</td>
+                        <td>@ws.Manager?.FullName</td>
+                        <td>
+                                    <a asp-controller="Attendance" asp-action="CheckInPage"
+                            asp-route-shiftId="@ws.ShiftId"
+                            asp-route-workshiftId="@ws.WorkshiftId"
+                            asp-route-date="@ws.Date"
+                                    asp-route-staffId="@ws.StaffId"
+                            class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-people"></i> Check In
+                            </a>
+                        </td>
+                    </tr>
+                    count++;
+                }
+            }
+        </tbody>
+    </table>
+</div>
