@@ -16,14 +16,12 @@ namespace CafeManagent.Controllers.Staff
         private readonly IAttendanceService attendanceService;
         private readonly IRequestService requestService;
         //hub
-        private readonly IHubContext<NotifyHub> _hub;
         private readonly NotifyUlti notifyUlti;
         public AttendanceRequestController(IAttendanceService attendanceService, IRequestService requestService
             ,IHubContext<NotifyHub> hub, NotifyUlti notifyUlti)
         {
             this.attendanceService = attendanceService;
             this.requestService = requestService;
-            this._hub = hub;
             this.notifyUlti = notifyUlti;
         }
         public IActionResult Init()
