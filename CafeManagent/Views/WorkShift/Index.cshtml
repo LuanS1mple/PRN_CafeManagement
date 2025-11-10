@@ -164,10 +164,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.Any())
+                    @foreach (var shift in Model)
                     {
-                        foreach (var shift in Model)
-                        {
                             <tr>
                                 <td>@shift.Employee</td>
                                 <td>@shift.Date?.ToString("dd/MM/yyyy")</td>
@@ -191,12 +189,12 @@
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
 
-                                    <form asp-controller="WorkShift" 
-                                          asp-action="DeleteWorkShift" 
-                                          method="post" 
+                                    <form asp-controller="WorkShift"
+                                          asp-action="DeleteWorkShift"
+                                          method="post"
                                           style="display:inline;">
                                         <input type="hidden" name="id" value="@shift.ShiftId" />
-                                        <button type="submit" 
+                                        <button type="submit"
                                                 class="btn btn-sm btn-outline-danger"
                                                 onclick="return confirm('Bạn có chắc muốn xóa ca làm này không?');">
                                             <i class="fa-solid fa-trash"></i>
@@ -204,18 +202,9 @@
                                     </form>
                                 </td>
                             </tr>
-                        }
-                    }
-
-                    else
-                    {
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                Không tìm thấy ca làm nào
-                            </td>
-                        </tr>
                     }
                 </tbody>
+
             </table>
         </div>
     </div>
