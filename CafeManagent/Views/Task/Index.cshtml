@@ -115,8 +115,8 @@
                         {
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="px-4 py-3">@task.TaskId</td>
-                                <td class="px-4 py-3 font-medium text-gray-800">@task.TaskName</td>
-                                <td class="px-4 py-3 text-gray-600">@task.Description</td>
+                                @* <td class="px-4 py-3 font-medium text-gray-800">@task.TaskName</td> *@
+                                @* <td class="px-4 py-3 text-gray-600">@task.Description</td> *@
 
                                 <td class="px-4 py-3">@((task.Staff?.FullName) ?? "—")</td>
                                 <td class="px-4 py-3">@((task.Manager?.FullName) ?? "—")</td>
@@ -161,8 +161,8 @@
                                                 class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs font-medium"
                                                 onclick="openEditModal(this)"
                                                 data-task-id="@task.TaskId"
-                                                data-task-name="@task.TaskName"
-                                                data-description="@task.Description"
+                                                @* data-task-name="@task.TaskName" *@
+                                                @* data-description="@task.Description" *@
                                                 data-manager-id="@task.ManagerId"
                                                 data-staff-id="@task.StaffId"
                                                 data-due-time="@(task.DueTime?.ToString("yyyy-MM-ddTHH:mm"))">

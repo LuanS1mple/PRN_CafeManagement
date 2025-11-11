@@ -172,7 +172,7 @@
                                     // Thêm data-task-status để JS có thể lọc
                                     <tr class="border-b hover:bg-gray-50" data-task-status="@task.Status">
                                         <td class="px-4 py-3">@task.TaskId</td>
-                                        <td class="px-4 py-3 font-medium text-gray-800">@task.TaskName</td>
+                                        @* <td class="px-4 py-3 font-medium text-gray-800">@task.TaskName</td> *@
                                         <td class="px-4 py-3">@((task.Staff?.FullName) ?? "—")</td>
                                         <td class="px-4 py-3">@((task.Manager?.FullName) ?? "—")</td>
                                         <td class="px-4 py-3">@((task.DueTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td>

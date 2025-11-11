@@ -114,8 +114,8 @@ namespace CafeManagent.Controllers
                 return RedirectToAction("Index");
             }
 
-            taskToUpdate.TaskName = updateTask.TaskName;
-            taskToUpdate.Description = updateTask.Description;
+            //taskToUpdate.TaskName = updateTask.TaskName;
+            //taskToUpdate.Description = updateTask.Description;
             taskToUpdate.ManagerId = updateTask.ManagerId;
             taskToUpdate.StaffId = updateTask.StaffId == 0 ? null : updateTask.StaffId;
             taskToUpdate.DueTime = updateTask.DueTime;

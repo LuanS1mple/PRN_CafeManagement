@@ -2,6 +2,7 @@
 using CafeManagent.Models;
 using CafeManagent.Services;
 using CafeManagent.Services.Imp;
+using DocumentFormat.OpenXml.InkML;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CafeManagent.Controllers
@@ -9,10 +10,12 @@ namespace CafeManagent.Controllers
     public class HomeController : Controller
     {
         private readonly IStaffService staffService;
+        private readonly IAuthenticationService authenticationService;
 
-        public HomeController(IStaffService staffService)
+        public HomeController(IStaffService staffService, IAuthenticationService authenticationService)
         {
             this.staffService = staffService;
+            this.authenticationService = authenticationService;
         }
         public IActionResult Index()
         {
@@ -34,7 +37,7 @@ namespace CafeManagent.Controllers
                 HttpContext.Session.SetInt32("StaffId", staff.StaffId);
                 HttpContext.Session.SetString("StaffName", staff.FullName ?? "");
                 HttpContext.Session.SetString("StaffRole", staff.Role?.RoleName ?? "");
-
+                CreateToken(staff, HttpContext);
 
                 // Nếu RememberMe được chọn, có thể set cookie (tùy bạn)
                 if (RememberMe)
@@ -64,6 +67,14 @@ namespace CafeManagent.Controllers
             }
             ViewBag.ErrorMessage = "Email hoặc mật khẩu không đúng!";
             return View("Login");
+        }
+
+        private void CreateToken(Models.Staff staff,HttpContext context)
+        {
+            string accessToken = authenticationService.CreateAccessToken(staff);
+            string refreshToken = authenticationService.CreateRefreshToken(staff);
+            context.Response.Cookies.Append("RefreshToken", refreshToken);
+            context.Response.Cookies.Append("AccessToken", accessToken);
         }
 
         public IActionResult Privacy()

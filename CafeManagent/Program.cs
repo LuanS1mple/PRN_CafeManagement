@@ -32,6 +32,7 @@ builder.Services.AddTransient<IRequestService, RequestService>();
 builder.Services.AddTransient<IStaffProfileService, StaffProfileService>();
 builder.Services.AddTransient<IOrderService, OrderService>();
 builder.Services.AddTransient<IWorkScheduleService, WorkScheduleService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 builder.Services.AddSingleton<NotifyUlti>();
 builder.Services.AddTransient<IStaffDirectoryService, StaffDirectoryService>();
@@ -62,7 +63,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSession();
-
+app.UseMiddleware<AuthenticationMiddleware>();
 app.UseAuthorization();
 //bất cứ request nào cũng đi qua để thnog báo
 app.UseMiddleware<NotifyMiddleware>();
