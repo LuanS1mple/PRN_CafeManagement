@@ -3,21 +3,21 @@ using System.Collections.Generic;
 
 namespace CafeManagent.Models;
 
-public partial class Product
+public partial class Ingredient
 {
-    public int ProductId { get; set; }
+    public int IngredientId { get; set; }
 
-    public string? ProductName { get; set; }
+    public string? IngredientName { get; set; }
 
-    public decimal? Price { get; set; }
+    public string? Unit { get; set; }
 
-    public string? ProductImage { get; set; }
+    public double? QuantityInStock { get; set; }
+
+    public double? CostPerUnit { get; set; }
 
     public bool? Status { get; set; }
 
     public DateTime? CreatedAt { get; set; }
-
-    public string? Description { get; set; }
 
     public virtual ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();
 }

@@ -21,6 +21,8 @@ public partial class CafeManagementContext : DbContext
 
     public virtual DbSet<Customer> Customers { get; set; }
 
+    public virtual DbSet<Ingredient> Ingredients { get; set; }
+
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<OrderItem> OrderItems { get; set; }
@@ -29,6 +31,10 @@ public partial class CafeManagementContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
+    public virtual DbSet<Recipe> Recipes { get; set; }
+
+    public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
+
     public virtual DbSet<Request> Requests { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
@@ -36,6 +42,8 @@ public partial class CafeManagementContext : DbContext
     public virtual DbSet<Staff> Staff { get; set; }
 
     public virtual DbSet<Task> Tasks { get; set; }
+
+    public virtual DbSet<TaskType> TaskTypes { get; set; }
 
     public virtual DbSet<WorkSchedule> WorkSchedules { get; set; }
 
@@ -49,7 +57,7 @@ public partial class CafeManagementContext : DbContext
     {
         modelBuilder.Entity<Attendance>(entity =>
         {
-            entity.HasKey(e => e.AttendanceId).HasName("PK__Attendan__20D6A968EED28288");
+            entity.HasKey(e => e.AttendanceId).HasName("PK__Attendan__20D6A96860B72F62");
 
             entity.ToTable("Attendance");
 
@@ -70,24 +78,24 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Shift).WithMany(p => p.Attendances)
                 .HasForeignKey(d => d.ShiftId)
-                .HasConstraintName("FK__Attendanc__shift__4F7CD00D");
+                .HasConstraintName("FK__Attendanc__shift__571DF1D5");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.Attendances)
                 .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__Attendanc__staff__5070F446");
+                .HasConstraintName("FK__Attendanc__staff__5812160E");
 
             entity.HasOne(d => d.Workshift).WithMany(p => p.Attendances)
                 .HasForeignKey(d => d.WorkshiftId)
-                .HasConstraintName("FK__Attendanc__works__5165187F");
+                .HasConstraintName("FK__Attendanc__works__59063A47");
         });
 
         modelBuilder.Entity<Contract>(entity =>
         {
-            entity.HasKey(e => e.ContractId).HasName("PK__Contract__F8D6642317F07A2B");
+            entity.HasKey(e => e.ContractId).HasName("PK__Contract__F8D664236D44B39B");
 
             entity.ToTable("Contract");
 
-            entity.HasIndex(e => e.StaffId, "UQ__Contract__1963DD9D5FF09941").IsUnique();
+            entity.HasIndex(e => e.StaffId, "UQ__Contract__1963DD9DCFD1BF01").IsUnique();
 
             entity.Property(e => e.ContractId).HasColumnName("contract_id");
             entity.Property(e => e.BaseSalary)
@@ -109,12 +117,12 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Staff).WithOne(p => p.Contract)
                 .HasForeignKey<Contract>(d => d.StaffId)
-                .HasConstraintName("FK__Contract__staff___52593CB8");
+                .HasConstraintName("FK__Contract__staff___59FA5E80");
         });
 
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__CD65CB85228A4709");
+            entity.HasKey(e => e.CustomerId).HasName("PK__Customer__CD65CB856CC2B647");
 
             entity.ToTable("Customer");
 
@@ -133,9 +141,30 @@ public partial class CafeManagementContext : DbContext
                 .HasColumnName("phone");
         });
 
+        modelBuilder.Entity<Ingredient>(entity =>
+        {
+            entity.HasKey(e => e.IngredientId).HasName("PK__Ingredie__B0E453CFBEB2569E");
+
+            entity.ToTable("Ingredient");
+
+            entity.Property(e => e.IngredientId).HasColumnName("ingredient_id");
+            entity.Property(e => e.CostPerUnit).HasColumnName("cost_per_unit");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.IngredientName)
+                .HasMaxLength(50)
+                .HasColumnName("ingredient_name");
+            entity.Property(e => e.QuantityInStock).HasColumnName("quantity_in_stock");
+            entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.Unit)
+                .HasMaxLength(20)
+                .HasColumnName("unit");
+        });
+
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.OrderId).HasName("PK__Order__46596229E6D6B4D1");
+            entity.HasKey(e => e.OrderId).HasName("PK__Order__465962291C0FB701");
 
             entity.ToTable("Order");
 
@@ -162,16 +191,16 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerId)
-                .HasConstraintName("FK__Order__customer___534D60F1");
+                .HasConstraintName("FK__Order__customer___5AEE82B9");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__Order__staff_id__5441852A");
+                .HasConstraintName("FK__Order__staff_id__5BE2A6F2");
         });
 
         modelBuilder.Entity<OrderItem>(entity =>
         {
-            entity.HasKey(e => e.ItemId).HasName("PK__OrderIte__52020FDDA0D26B09");
+            entity.HasKey(e => e.ItemId).HasName("PK__OrderIte__52020FDD2E94F2A4");
 
             entity.ToTable("OrderItem");
 
@@ -187,12 +216,12 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderItems)
                 .HasForeignKey(d => d.OrderId)
-                .HasConstraintName("FK__OrderItem__order__5535A963");
+                .HasConstraintName("FK__OrderItem__order__5CD6CB2B");
         });
 
         modelBuilder.Entity<Payroll>(entity =>
         {
-            entity.HasKey(e => e.PayrollId).HasName("PK__Payroll__D99FC944693CE0C5");
+            entity.HasKey(e => e.PayrollId).HasName("PK__Payroll__D99FC944980238A1");
 
             entity.ToTable("Payroll");
 
@@ -221,16 +250,16 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Manager).WithMany(p => p.PayrollManagers)
                 .HasForeignKey(d => d.ManagerId)
-                .HasConstraintName("FK__Payroll__manager__5629CD9C");
+                .HasConstraintName("FK__Payroll__manager__5DCAEF64");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.PayrollStaffs)
                 .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__Payroll__staff_i__571DF1D5");
+                .HasConstraintName("FK__Payroll__staff_i__5EBF139D");
         });
 
         modelBuilder.Entity<Product>(entity =>
         {
-            entity.HasKey(e => e.ProductId).HasName("PK__Product__47027DF57566BA42");
+            entity.HasKey(e => e.ProductId).HasName("PK__Product__47027DF560BF3BB2");
 
             entity.ToTable("Product");
 
@@ -253,9 +282,50 @@ public partial class CafeManagementContext : DbContext
             entity.Property(e => e.Status).HasColumnName("status");
         });
 
+        modelBuilder.Entity<Recipe>(entity =>
+        {
+            entity.HasKey(e => e.RecipeId).HasName("PK__Recipe__3571ED9BE8F047AE");
+
+            entity.ToTable("Recipe");
+
+            entity.Property(e => e.RecipeId).HasColumnName("recipe_id");
+            entity.Property(e => e.IngredientId).HasColumnName("ingredient_id");
+            entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.QuantityNeeded).HasColumnName("quantity_needed");
+
+            entity.HasOne(d => d.Ingredient).WithMany(p => p.Recipes)
+                .HasForeignKey(d => d.IngredientId)
+                .HasConstraintName("FK__Recipe__ingredie__5FB337D6");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.Recipes)
+                .HasForeignKey(d => d.ProductId)
+                .HasConstraintName("FK__Recipe__product___60A75C0F");
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__RefreshT__3213E83F50A5E996");
+
+            entity.ToTable("RefreshToken");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ExpireTime)
+                .HasColumnType("datetime")
+                .HasColumnName("expire_time");
+            entity.Property(e => e.IsEnable).HasColumnName("is_enable");
+            entity.Property(e => e.StaffId).HasColumnName("staff_id");
+            entity.Property(e => e.Token)
+                .HasMaxLength(255)
+                .HasColumnName("token");
+
+            entity.HasOne(d => d.Staff).WithMany(p => p.RefreshTokens)
+                .HasForeignKey(d => d.StaffId)
+                .HasConstraintName("FK__RefreshTo__staff__619B8048");
+        });
+
         modelBuilder.Entity<Request>(entity =>
         {
-            entity.HasKey(e => e.ReportId).HasName("PK__Request__779B7C589FF96FE9");
+            entity.HasKey(e => e.ReportId).HasName("PK__Request__779B7C58335135E8");
 
             entity.ToTable("Request");
 
@@ -284,16 +354,16 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.ResolvedByNavigation).WithMany(p => p.RequestResolvedByNavigations)
                 .HasForeignKey(d => d.ResolvedBy)
-                .HasConstraintName("FK__Request__resolve__5812160E");
+                .HasConstraintName("FK__Request__resolve__628FA481");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.RequestStaffs)
                 .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__Request__staff_i__59063A47");
+                .HasConstraintName("FK__Request__staff_i__6383C8BA");
         });
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__Role__760965CCA3CE6DCD");
+            entity.HasKey(e => e.RoleId).HasName("PK__Role__760965CC091DC99F");
 
             entity.ToTable("Role");
 
@@ -308,18 +378,18 @@ public partial class CafeManagementContext : DbContext
 
         modelBuilder.Entity<Staff>(entity =>
         {
-            entity.HasKey(e => e.StaffId).HasName("PK__Staff__1963DD9C913D50CF");
+            entity.HasKey(e => e.StaffId).HasName("PK__Staff__1963DD9CD415746D");
 
             entity.Property(e => e.StaffId).HasColumnName("staff_id");
             entity.Property(e => e.Address)
-                .HasMaxLength(125)
+                .HasMaxLength(20)
                 .HasColumnName("address");
             entity.Property(e => e.BirthDate).HasColumnName("birth_date");
             entity.Property(e => e.CreateAt)
                 .HasColumnType("datetime")
                 .HasColumnName("create_at");
             entity.Property(e => e.Email)
-                .HasMaxLength(125)
+                .HasMaxLength(20)
                 .IsUnicode(false)
                 .HasColumnName("email");
             entity.Property(e => e.FullName)
@@ -330,7 +400,7 @@ public partial class CafeManagementContext : DbContext
                 .HasMaxLength(50)
                 .HasColumnName("img");
             entity.Property(e => e.Password)
-                .HasMaxLength(20)
+                .HasMaxLength(100)
                 .HasColumnName("password");
             entity.Property(e => e.Phone)
                 .HasMaxLength(15)
@@ -344,12 +414,12 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Role).WithMany(p => p.Staff)
                 .HasForeignKey(d => d.RoleId)
-                .HasConstraintName("FK__Staff__role_id__59FA5E80");
+                .HasConstraintName("FK__Staff__role_id__6477ECF3");
         });
 
         modelBuilder.Entity<Task>(entity =>
         {
-            entity.HasKey(e => e.TaskId).HasName("PK__Task__0492148D4D340497");
+            entity.HasKey(e => e.TaskId).HasName("PK__Task__0492148D9C89C0D1");
 
             entity.ToTable("Task");
 
@@ -357,31 +427,50 @@ public partial class CafeManagementContext : DbContext
             entity.Property(e => e.AssignTime)
                 .HasColumnType("datetime")
                 .HasColumnName("assign_time");
-            entity.Property(e => e.Description)
-                .HasMaxLength(255)
-                .HasColumnName("description");
             entity.Property(e => e.DueTime)
                 .HasColumnType("datetime")
                 .HasColumnName("due_time");
             entity.Property(e => e.ManagerId).HasColumnName("manager_id");
             entity.Property(e => e.StaffId).HasColumnName("staff_id");
             entity.Property(e => e.Status).HasColumnName("status");
+            entity.Property(e => e.TasktypeId).HasColumnName("tasktype_id");
+
+            entity.HasOne(d => d.Manager).WithMany(p => p.TaskManagers)
+                .HasForeignKey(d => d.ManagerId)
+                .HasConstraintName("FK__Task__manager_id__656C112C");
+
+            entity.HasOne(d => d.Staff).WithMany(p => p.TaskStaffs)
+                .HasForeignKey(d => d.StaffId)
+                .HasConstraintName("FK__Task__staff_id__66603565");
+
+            entity.HasOne(d => d.Tasktype).WithMany(p => p.Tasks)
+                .HasForeignKey(d => d.TasktypeId)
+                .HasConstraintName("FK__Task__tasktype_i__6754599E");
+        });
+
+        modelBuilder.Entity<TaskType>(entity =>
+        {
+            entity.HasKey(e => e.TasktypeId).HasName("PK__TaskType__E7E8CD439D93950A");
+
+            entity.ToTable("TaskType");
+
+            entity.Property(e => e.TasktypeId).HasColumnName("tasktype_id");
+            entity.Property(e => e.Description)
+                .HasMaxLength(255)
+                .HasColumnName("description");
+            entity.Property(e => e.RoleId).HasColumnName("role_id");
             entity.Property(e => e.TaskName)
                 .HasMaxLength(100)
                 .HasColumnName("task_name");
 
-            entity.HasOne(d => d.Manager).WithMany(p => p.TaskManagers)
-                .HasForeignKey(d => d.ManagerId)
-                .HasConstraintName("FK__Task__manager_id__5AEE82B9");
-
-            entity.HasOne(d => d.Staff).WithMany(p => p.TaskStaffs)
-                .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__Task__staff_id__5BE2A6F2");
+            entity.HasOne(d => d.Role).WithMany(p => p.TaskTypes)
+                .HasForeignKey(d => d.RoleId)
+                .HasConstraintName("FK__TaskType__role_i__68487DD7");
         });
 
         modelBuilder.Entity<WorkSchedule>(entity =>
         {
-            entity.HasKey(e => e.ShiftId).HasName("PK__WorkSche__7B267220E45FA42B");
+            entity.HasKey(e => e.ShiftId).HasName("PK__WorkSche__7B267220E2AC3F67");
 
             entity.ToTable("WorkSchedule");
 
@@ -399,20 +488,20 @@ public partial class CafeManagementContext : DbContext
 
             entity.HasOne(d => d.Manager).WithMany(p => p.WorkScheduleManagers)
                 .HasForeignKey(d => d.ManagerId)
-                .HasConstraintName("FK__WorkSched__manag__5CD6CB2B");
+                .HasConstraintName("FK__WorkSched__manag__693CA210");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.WorkScheduleStaffs)
                 .HasForeignKey(d => d.StaffId)
-                .HasConstraintName("FK__WorkSched__staff__5DCAEF64");
+                .HasConstraintName("FK__WorkSched__staff__6A30C649");
 
             entity.HasOne(d => d.Workshift).WithMany(p => p.WorkSchedules)
                 .HasForeignKey(d => d.WorkshiftId)
-                .HasConstraintName("FK__WorkSched__works__5EBF139D");
+                .HasConstraintName("FK__WorkSched__works__6B24EA82");
         });
 
         modelBuilder.Entity<WorkShift>(entity =>
         {
-            entity.HasKey(e => e.WorkshiftId).HasName("PK__WorkShif__2E54FD20363698A5");
+            entity.HasKey(e => e.WorkshiftId).HasName("PK__WorkShif__2E54FD2084470B7C");
 
             entity.ToTable("WorkShift");
 

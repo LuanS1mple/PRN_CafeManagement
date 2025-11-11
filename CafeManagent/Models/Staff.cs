@@ -9,11 +9,11 @@ public partial class Staff
 
     public int? RoleId { get; set; }
 
+    public int? Status { get; set; }
+
     public string? FullName { get; set; }
 
     public bool? Gender { get; set; }
-
-    public int? Status { get; set; }
 
     public DateOnly? BirthDate { get; set; }
 
@@ -40,6 +40,8 @@ public partial class Staff
     public virtual ICollection<Payroll> PayrollManagers { get; set; } = new List<Payroll>();
 
     public virtual ICollection<Payroll> PayrollStaffs { get; set; } = new List<Payroll>();
+
+    public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
     public virtual ICollection<Request> RequestResolvedByNavigations { get; set; } = new List<Request>();
 
