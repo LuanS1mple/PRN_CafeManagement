@@ -34,10 +34,10 @@ namespace CafeManagent.Services.Imp
         // ======== LỌC DỮ LIỆU ========
         public List<WorkShift> Filter(FilterWorkShiftDTO filter, int page, int pageSize, out int totalItems)
         {
-            var query = _context.WorkShifts
-                .Include(ws => ws.WorkSchedules)
-                    .ThenInclude(s => s.Staff)
-                        .ThenInclude(st => st.Role)
+            var query = _context.WorkSchedules
+                .Include(ws => ws.Workshift)
+                .Include(ws => ws.Staff)
+                    .ThenInclude(s => s.Role)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(filter.Position))
