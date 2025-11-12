@@ -16,11 +16,15 @@ namespace CafeManagent.Middlewares
         }
         public async Task InvokeAsync(HttpContext context)
         {
-            var excludedPaths = new[] { "/Home/Login", "/Account/Login", "/favicon.ico" };
-
-            if (excludedPaths.Contains(context.Request.Path.Value, StringComparer.OrdinalIgnoreCase))
+            var excludedPaths = new[]
             {
-                await _next(context); // bỏ qua middleware
+                "/Home/Login",
+                "/Home/ProcessLogin",
+            };
+
+            if (excludedPaths.Any(p => context.Request.Path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase)))
+            {
+                await _next(context);
                 return;
             }
             var authenticationService = context.RequestServices.GetRequiredService<IAuthenticationService>();
@@ -33,9 +37,6 @@ namespace CafeManagent.Middlewares
                 //gan quyen va thong tin vao User
                 ClaimsPrincipal userInfo = authenticationService.GetClaims(accessToken);
                 context.User = userInfo;
-                //cap lai refresh
-                string newRefreshToken = authenticationService.CreateRefreshToken(refreshToken);
-                AddTokenToCookies(newRefreshToken, context);
             }
             //neu at het han hoac k co, check refresh
             else if (!string.IsNullOrEmpty(refreshToken) && !authenticationService.IsValidAccessToken(accessToken))
@@ -43,6 +44,8 @@ namespace CafeManagent.Middlewares
                 //check refreshToken
                 if (authenticationService.IsValidRefreshToken(refreshToken))
                 {
+                    //disable refreshToken cu
+                    authenticationService.DisableRefreshToken(refreshToken);
                     //tao moi accessToken, refreshToken
                     string newAccessToken = authenticationService.CreateAccessToken(refreshToken);
                     string newRefreshToken = authenticationService.CreateRefreshToken(refreshToken);
@@ -59,9 +62,6 @@ namespace CafeManagent.Middlewares
                 return;
             }
             await _next(context);
-        }
-        private void AddTokenToCookies(string refreshToken, HttpContext context) {
-            context.Response.Cookies.Append("RefreshToken", refreshToken);
         }
         private void AddTokenToCookies(string refreshToken, string accessToken, HttpContext context)
         {

@@ -17,7 +17,7 @@ namespace CafeManagent.Services.Imp
             //var staff = _context.Staff.FirstOrDefault(s => s.UserName.ToLower().Equals(username.ToLower()) && s.Password.ToLower().Equals(password.ToLower()));
             //if (staff == null) return null;
             //bool verified = BCrypt.Net.BCrypt.Verify(password, staff.Password);
-            //return verified ? staff : null;
+            //return verified ? staff : null; 
         }
     }
 }

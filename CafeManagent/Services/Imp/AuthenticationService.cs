@@ -1,5 +1,7 @@
 ﻿using CafeManagent.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -21,7 +23,8 @@ namespace CafeManagent.Services.Imp
         }
         public string CreateAccessToken(string refreshToken)
         {
-           
+            Staff staff = _context.RefreshTokens.Include(r => r.Staff ).ThenInclude(s => s.Role).Where(s => s.Token.Equals(refreshToken)).FirstOrDefault().Staff;
+            return CreateAccessToken(staff);
         }
 
         public string CreateRefreshToken(string refreshToken)
@@ -54,9 +57,13 @@ namespace CafeManagent.Services.Imp
             JwtSecurityTokenHandler securityTokenHandler = new JwtSecurityTokenHandler();
             TokenValidationParameters parameters = new TokenValidationParameters
             {
+                ValidateIssuer = true,
+                ValidIssuer = "cafe-task",
                 ValidateAudience = true,
+                ValidAudience = "member",
                 ValidateLifetime = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt_signer_key))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt_signer_key)),
+                ClockSkew = TimeSpan.Zero,
             };
             try
             {
@@ -73,9 +80,13 @@ namespace CafeManagent.Services.Imp
         {
             JwtSecurityTokenHandler securityTokenHandler = new JwtSecurityTokenHandler();
             TokenValidationParameters parameters = new TokenValidationParameters {
+                ValidateIssuer = true,
+                ValidIssuer = "cafe-task",
                 ValidateAudience = true,
+                ValidAudience = "member",
                 ValidateLifetime = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt_signer_key))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt_signer_key)),
+                ClockSkew = TimeSpan.Zero,
             };
             try
             {
@@ -126,7 +137,33 @@ namespace CafeManagent.Services.Imp
 
         public string CreateAccessToken(Staff staff)
         {
-           
+            var signKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt_signer_key));
+            var creds = new SigningCredentials(signKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, staff.StaffId.ToString()),       
+                new Claim(ClaimTypes.Role, staff.Role.RoleName),                             
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) 
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: "cafe-task",                    
+                audience: "member",                 
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(2),        
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public void DisableRefreshToken(string refreshToken)
+        {
+            RefreshToken token = _context.RefreshTokens.Where(r => r.Token.Equals(refreshToken)).FirstOrDefault()!;
+            token.IsEnable = false;
+            _context.RefreshTokens.Update(token);
+            _context.SaveChanges();
         }
     }
 }
