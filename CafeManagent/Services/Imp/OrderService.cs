@@ -1,17 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using CafeManagent.dto.Order;
 using CafeManagent.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CafeManagent.Services
 {
     public class OrderService : IOrderService
     {
         private readonly CafeManagementContext _db;
-        public OrderService(CafeManagementContext db)
+        private readonly ICustomerService _customerService;
+        public OrderService(CafeManagementContext db, ICustomerService customerService)
         {
             _db = db;
+            _customerService = customerService;
         }
 
         public List<Order> GetAll()
@@ -98,6 +101,47 @@ namespace CafeManagent.Services
             o.Status = -2; // Đã hoàn tiền
             _db.SaveChanges();
             return true;
+        }
+        public Order CreateOrderFromDraft(OrderDraftDto draft, int? staffId, decimal grandTotal, int? customerId)
+        {
+            // 1. Tạo đối tượng Order
+            var order = new Order
+            {
+                StaffId = staffId,
+                CustomerId = customerId,
+                OrderDate = DateTime.Now,
+                TotalAmount = grandTotal, // Tổng cuối cùng đã tính VAT & Discount
+                Discount = draft.DiscountPercent,
+                Vat = true, // Luôn bật VAT 5% theo yêu cầu
+                Status = 0, // Trạng thái: Chờ (0)
+                Note = draft.Note
+                // OrderPrice (Giá gốc trước giảm giá/VAT) có thể được tính và lưu nếu cần
+            };
+
+            // 2. Thêm OrderItems
+            foreach (var itemDraft in draft.Items)
+            {
+                var orderItem = new OrderItem
+                {
+                    ProductName = itemDraft.ProductName,
+                    Quantity = itemDraft.Quantity,
+                    UnitPrice = itemDraft.UnitPrice,
+                    // OrderId sẽ được thiết lập tự động khi thêm vào Order.OrderItems
+                };
+                order.OrderItems.Add(orderItem);
+            }
+
+            // 3. Xử lý điểm tích lũy (Giả định: 100.000 VNĐ = 1 điểm, hoặc bạn tự định nghĩa)
+            if (customerId.HasValue)
+            {
+                int pointsEarned = (int)Math.Floor(grandTotal / 100000); // 1 điểm cho mỗi 100k
+                _customerService.UpdateLoyaltyPoints(customerId.Value, pointsEarned);
+            }
+
+          
+            _db.Orders.Add(order);
+            _db.SaveChanges();
+            return order;
         }
     }
 }

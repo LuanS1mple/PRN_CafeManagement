@@ -14,6 +14,7 @@
         public static readonly NotifyMessage TAO_REQUEST_THANH_CONG = new("Tạo request thành công");
         public static readonly NotifyMessage TAO_REQUEST_THAT_BAI = new("Tạo request thất bại");
         public static readonly NotifyMessage GET_REQUEST_THAT_BAI = new("Lấy dữ liệt thất bại");
-
+        public static readonly NotifyMessage UPDATE_STATUS_ORDER = new("Cập nhật nhật trạng thái thành công ");
+        public static readonly NotifyMessage CREATE_ORDER = new("Đơn hàng đã tạo mới thành công");
     }
 }
