@@ -1,3 +1,13 @@
-﻿ @{
-   Layout = "_Layout"; 
-} 
+﻿@{
+    var role = Context.Session.GetString("StaffRole");
+
+    // Nếu chưa login (role = null) → dùng layout staff (hoặc layout login)
+    if (role != null && role == "Branch Manager")
+    {
+        Layout = "_Layout";
+    }
+    else
+    {
+        Layout = "_LayoutStaff";
+    }
+}

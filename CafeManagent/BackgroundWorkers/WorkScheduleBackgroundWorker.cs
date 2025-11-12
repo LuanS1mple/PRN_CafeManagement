@@ -112,8 +112,6 @@ public class WorkScheduleBackgroundWorker : BackgroundService // Dịch vụ ch�
                 if (DateTime.Now.Hour == 0 && DateTime.Now.Minute < 2)
                 {
                     _notifiedSchedules.Clear();
-                    notifyUlti.ClearStaff();
-                    notifyUlti.ClearManager();
                 }
             }
             catch (Exception ex)

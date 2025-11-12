@@ -20,5 +20,11 @@
         public static readonly NotifyMessage THONG_BAO_CA_LAM = new("Ca làm của bạn đã bắt đầu");
         public static readonly NotifyMessage UPDATE_STATUS_ORDER = new("Cập nhật nhật trạng thái thành công ");
         public static readonly NotifyMessage CREATE_ORDER = new("Đơn hàng đã tạo mới thành công");
+
+        //Attendance
+        public static readonly NotifyMessage PHAN_HOI_THIEU_THONG_TIN_CA_LAM = new("Thiếu thông tin nhân viên hoặc ca làm việc!");
+        public static readonly NotifyMessage PHAN_HOI_THIEU_THONG_TIN_NHAN_VIEN = new("Không tìm thấy ca làm của nhân viên trong ngày!");
+        public static readonly NotifyMessage CHECK_IN_THANH_CONG = new("Đã check in thành công cho nhân viên ");
+        public static readonly NotifyMessage CHECK_OUT_THANH_CONG = new("Đã check out thành công cho nhân viên ");
     }
 }

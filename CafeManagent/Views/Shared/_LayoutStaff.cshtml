@@ -1,9 +1,11 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CafeManagent</title>
+    <title>@ViewData["Title"] - Cafe Management</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CafeManagent.styles.css" asp-append-version="true" />
@@ -13,7 +15,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.0/signalr.min.js"></script>
 
     <style>
-
         /* Hộp thông báo nhỏ ở góc phải */
         .toast {
             position: fixed;
@@ -32,75 +33,83 @@
             transition: all 0.3s ease;
             z-index: 9999;
         }
-
-            .toast.show {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            .toast.success {
-                background: #2e7d32; /* xanh lá */
-            }
-
-            .toast.error {
-                background: #c62828; /* đỏ */
-            }
-
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.success {
+            background: #2e7d32;
+        }
+        .toast.error {
+            background: #c62828;
+        }
+        #sidebar {
+    background: linear-gradient(180deg, #1fa2ff, #0076ff) !important;
+}
+#sidebar .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+}
     </style>
+
     @await RenderSectionAsync("Styles", required: false)
 </head>
+
 <body>
+
     <div class="d-flex" id="0">
-        <!-- Sidebar -->
-        <div class="bg-dark text-white p-3" id="sidebar">
-            <h4 class="text-center mb-4"><i class="fa-solid fa-mug-hot me-2"></i>CafeManager</h4>
+
+        <!-- SIDEBAR FOR STAFF -->
+        <div class="bg-info text-white p-3" id="sidebar">
+            <h4 class="text-center mb-4">
+                <i class="fa-solid fa-mug-hot me-2"></i> Cafe Management
+            </h4>
+
             <ul class="nav flex-column">
+
                 <li class="nav-item mb-2">
                     <a class="nav-link text-white" asp-controller="Home" asp-action="Index">
                         <i class="fa-solid fa-house me-2"></i>Trang chủ
                     </a>
                 </li>
+
                 <li class="nav-item mb-2">
-                    <a class="nav-link text-white" asp-controller="WorkSchedule" asp-action="WorkScheduleToday">
+                    <a class="nav-link text-white" asp-controller="AttendanceRequest" asp-action="Init">
                         <i class="fa-solid fa-calendar-check me-2"></i>Chấm công
                     </a>
                 </li>
+
                 <li class="nav-item mb-2">
-                    <a class="nav-link text-white" asp-controller="Staff" asp-action="Index">
-                        <i class="fa-solid fa-users me-2"></i>Nhân viên
+                    <a class="nav-link text-white" asp-controller="WorkSchedule" asp-action="MySchedule">
+                        <i class="fa-solid fa-clock me-2"></i>Lịch làm việc
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a class="nav-link text-white" asp-controller="Report" asp-action="Index">
-                        <i class="fa-solid fa-chart-line me-2"></i>Báo cáo
-                    </a>
-                </li>
+
                 <li class="nav-item mt-3 border-top pt-3">
-    <a class="nav-link text-white" asp-controller="Home" asp-action="Logout">
-        <i class="fa-solid fa-right-from-bracket me-2"></i>Đăng xuất
-    </a>
-</li>
+                    <a class="nav-link text-white" asp-controller="Home" asp-action="Logout">
+                        <i class="fa-solid fa-right-from-bracket me-2"></i>Đăng xuất
+                    </a>
+                </li>
             </ul>
         </div>
 
-        <!-- Page Content -->
+        <!-- PAGE CONTENT -->
         <div id="page-content-wrapper" class="flex-grow-1 d-flex flex-column">
-            <!-- Topbar -->
+
+            <!-- TOPBAR -->
             <nav class="navbar navbar-expand navbar-light bg-light border-bottom px-4">
                 <button class="btn btn-outline-secondary" id="menu-toggle">
                     <i class="fa-solid fa-bars"></i>
                 </button>
+
                 <div class="ms-auto d-flex align-items-center">
-                    <!-- ICON CHUÔNG -->
+
+                    <!-- Bell notify -->
                     <div class="dropdown" style="margin-right: 20px">
-                        <div id="notify-bell"
-                             class="position-relative"
-                             data-bs-toggle="dropdown"
-                             aria-expanded="false"
-                             style="cursor:pointer;">
+                        <div id="notify-bell" class="position-relative" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
                             <i class="fa-solid fa-bell fa-lg text-secondary"></i>
 
-                            <!-- Dấu chấm đỏ / số lượng notify -->
+                            <!-- Dot -->
                             <span id="notify-dot"
                                   class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
                                   style="font-size: 10px; width:18px; height:18px; display:flex; align-items:center; justify-content:center;">
@@ -108,78 +117,68 @@
                             </span>
                         </div>
 
-                        <!-- DROPDOWN DANH SÁCH THÔNG BÁO -->
-                        <ul id="notify-list" class="dropdown-menu dropdown-menu-end shadow p-2"
+                        <!-- dropdown notify list -->
+                        <ul id="notify-list"
+                            class="dropdown-menu dropdown-menu-end shadow p-2"
                             style="width: 280px; max-height: 300px; overflow-y: auto;">
                             <li class="dropdown-header fw-bold text-center">Thông báo</li>
                             <li><hr class="dropdown-divider"></li>
                             <li class="text-center text-muted">Chưa có thông báo nào</li>
                         </ul>
                     </div>
-                    <span class="me-3 text-muted">Xin chào, Admin</span>
-                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="rounded-circle" width="35" height="35" alt="User" />
+
+                    <span class="me-3 text-muted">Xin chào, <span>@Context.Session.GetString("StaffName") - @Context.Session.GetString("StaffRole")<span></span>
+
+                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                         class="rounded-circle" width="35" height="35" alt="User" />
                 </div>
             </nav>
 
-            <!-- Main Content -->
+            <!-- MAIN CONTENT -->
             <div class="container-fluid p-4 flex-grow-1">
                 <main role="main" class="pb-3 h-100">
                     @RenderBody()
                 </main>
             </div>
 
-            <!-- Footer -->
+            <!-- FOOTER -->
             <footer class="border-top text-center py-3 text-muted mt-auto bg-white">
-                &copy; 2025 - CafeManagent
+                &copy; 2025 - CafeManagent (Staff)
             </footer>
+
         </div>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    @* code cho phần thông báo response *@
-    <script>
-        // Sidebar toggle
-        $("#menu-toggle").click(function (e) {
-            e.preventDefault();
-            $("#wrapper").toggleClass("toggled");
-        });
-    </script>
+
+    <!-- Response Toast -->
     <script>
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/response")
             .build();
 
         connection.on("ReceiveResponseStatus", (isSuccess, msg) => {
-            if (msg === null || msg === undefined || msg === "") {
-                return;
-             }
-            // Tạo phần tử thông báo
+            if (!msg) return;
+
             const toast = document.createElement("div");
             toast.classList.add("toast", isSuccess ? "success" : "error");
 
-            // Biểu tượng
             const icon = document.createElement("span");
-            icon.textContent = isSuccess ? "O" : "X"; // ký hiệu O/X
+            icon.textContent = isSuccess ? "O" : "X";
             icon.style.fontWeight = "bold";
             icon.style.fontSize = "18px";
 
-            // Nội dung tin nhắn
             const message = document.createElement("span");
             message.textContent = msg;
 
-            // Gắn vào toast
             toast.appendChild(icon);
             toast.appendChild(message);
 
-            // Gắn vào body
             document.body.appendChild(toast);
 
-            // Hiệu ứng xuất hiện
             setTimeout(() => toast.classList.add("show"), 10);
-
-            // Tự ẩn sau 3 giây
             setTimeout(() => {
                 toast.classList.remove("show");
                 setTimeout(() => toast.remove(), 300);
@@ -189,10 +188,11 @@
         });
 
         connection.start()
-            .then(() =>  connection.invoke("GetCurrentNotify"))
+            .then(() => connection.invoke("GetCurrentNotify"))
             .catch(err => console.error(err));
     </script>
-    @* code cho phần notify *@
+
+    <!-- Notify -->
     <script>
         let notifyCount = 0;
         const dot = document.getElementById("notify-dot");
@@ -203,14 +203,10 @@
             .withUrl("/notify")
             .build();
 
-        // Hàm render toàn bộ list
         function renderNotifyList(data) {
-
-            // Reset list UI
-            list.innerHTML = `
-                <li class="dropdown-header fw-bold text-center">Thông báo</li>
-                <li><hr class="dropdown-divider"></li>
-            `;
+            list.innerHTML =
+                `<li class="dropdown-header fw-bold text-center">Thông báo</li>
+                 <li><hr class="dropdown-divider"></li>`;
 
             if (!data || data.length === 0) {
                 list.innerHTML += `<li class="text-center text-muted">Chưa có thông báo nào</li>`;
@@ -222,41 +218,40 @@
             dot.classList.remove("d-none");
             dot.textContent = notifyCount;
 
-            // Append từng notify
             data.forEach(n => {
                 const li = document.createElement("li");
                 li.classList.add("dropdown-item", "p-2", "border-bottom");
-                li.innerHTML = `
-                    <div class="fw-semibold">${n.message}</div>
-                    <small class="text-muted">${n.time}</small>
-                `;
+
+                li.innerHTML =
+                    `<div class="fw-semibold">${n.message}</div>
+                     <small class="text-muted">${n.time}</small>`;
+
                 list.appendChild(li);
             });
         }
 
- 
         notifyConnection.on("ReceiveNotify", (notifyList) => {
-            renderNotifyList(notifyList);  
+            renderNotifyList(notifyList);
         });
 
         notifyConnection.start()
-        .then(() => {
-            notifyConnection.invoke("GetAll")
-                .then(notifyList => {
-                    renderNotifyList(notifyList);
-                })
-                .catch(err => console.error("error:", err));
-        })
-        .catch(err => console.error(err));
-        // click chuong se clear thong bao 
+            .then(() => {
+                notifyConnection.invoke("GetAll")
+                    .then(notifyList => renderNotifyList(notifyList))
+                    .catch(err => console.error("error:", err));
+            })
+            .catch(err => console.error(err));
+
+        // clear notify on click
         bell.addEventListener("click", () => {
             notifyConnection.invoke("Clear")
                 .catch(err => console.error("error:", err));
-                dot.classList.add("d-none");
-                notifyCount = 0;
+
+            dot.classList.add("d-none");
+            notifyCount = 0;
         });
     </script>
-    @await RenderSectionAsync("Scripts", required: false)
 
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

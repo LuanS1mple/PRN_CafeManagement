@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using ClosedXML.Excel;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml.Bibliography;
-using CafeManagent.dto.attendance;
 using CafeManagent.Services.Interface.AttendanceModule;
+using CafeManagent.dto.response.attendance;
 
 namespace CafeManagent.Services.Imp.AttendanceModule
 {
@@ -191,7 +191,7 @@ namespace CafeManagent.Services.Imp.AttendanceModule
                 .ToList();
         }
 
-        public async Task<List<MonthlyReport>> GetMonthlyReportAsync(int? staffId, int month, int year)
+        public async Task<List<MonthlyReportDTO>> GetMonthlyReportAsync(int? staffId, int month, int year)
         {
             var startDate = new DateOnly(year, month, 1);
             var endDate = startDate.AddMonths(1).AddDays(-1);
@@ -222,7 +222,7 @@ namespace CafeManagent.Services.Imp.AttendanceModule
                 var staffAttendances = attendance.Where(a => a.StaffId == s.StaffId).ToList();
                 var validWorkdays = staffAttendances.Where(a => (a.TotalHour ?? 0) >= 4).ToList();
 
-                return new MonthlyReport
+                return new MonthlyReportDTO
                 {
                     StaffId = s.StaffId,
                     StaffName = s.FullName,
@@ -235,8 +235,6 @@ namespace CafeManagent.Services.Imp.AttendanceModule
                     LeaveDays = requests.Count(r => r.StaffId == s.StaffId)
                 };
             })
-
-            .Where(r => r.workingDays > 0)
             .ToList();
 
             return reports;
@@ -245,7 +243,7 @@ namespace CafeManagent.Services.Imp.AttendanceModule
 
 
 
-        public async Task<byte[]> ExportMonthlyReportToExcelAsync(List<MonthlyReport> monthlyReportList)
+        public async Task<byte[]> ExportMonthlyReportToExcelAsync(List<MonthlyReportDTO> monthlyReportList)
         {
             using (var workbook = new XLWorkbook())
             {
