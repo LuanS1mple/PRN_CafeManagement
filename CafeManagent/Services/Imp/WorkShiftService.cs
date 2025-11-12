@@ -13,26 +13,15 @@ namespace CafeManagent.Services.Imp
             _context = context;
         }
 
-        // ======== PHÂN TRANG CƠ BẢN ========
-        public List<WorkShift> GetPaged(int page, int pageSize, out int totalItems)
+        public List<WorkSchedule> GetAll()
         {
-            var query = _context.WorkShifts
-                .Include(ws => ws.WorkSchedules)
-                    .ThenInclude(s => s.Staff)
-                        .ThenInclude(st => st.Role)
-                .AsQueryable();
-
-            totalItems = query.Count();
-
-            return query
-                .OrderByDescending(ws => ws.WorkshiftId)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            return _context.WorkSchedules
+                    .Include(ws => ws.Workshift)
+                    .Include( ws => ws.Staff)
+                        .ThenInclude(s => s.Role).ToList();
         }
 
-        // ======== LỌC DỮ LIỆU ========
-        public List<WorkShift> Filter(FilterWorkShiftDTO filter, int page, int pageSize, out int totalItems)
+        public List<WorkSchedules> Filter(FilterWorkShiftDTO filter)
         {
             var query = _context.WorkSchedules
                 .Include(ws => ws.Workshift)
@@ -40,69 +29,85 @@ namespace CafeManagent.Services.Imp
                     .ThenInclude(s => s.Role)
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(filter.Position))
-                query = query.Where(ws => ws.Staff != null && ws.Staff.Role.RoleName == filter.Position);
-
-            if (!string.IsNullOrEmpty(filter.ShiftType))
-                query = query.Where(ws => ws.ShiftName == filter.ShiftType);
-
-            if (!string.IsNullOrEmpty(filter.Keyword))
-                query = query.Where(ws => ws.WorkSchedules.Any(s =>
-                    s.Staff.FullName.Contains(filter.Keyword) ||
-                    s.Staff.Role.RoleName.Contains(filter.Keyword) ||
-                    s.Description.Contains(filter.Keyword)));
-
             if (filter.FromDate != null)
-                query = query.Where(ws => ws.WorkSchedules.Any(s => s.Date >= filter.FromDate));
+                query = query.Where(ws => ws.Date >= filter.FromDate);
 
             if (filter.ToDate != null)
-                query = query.Where(ws => ws.WorkSchedules.Any(s => s.Date <= filter.ToDate));
+                query = query.Where(ws => ws.Date <= filter.ToDate);
 
-            totalItems = query.Count();
+            if (!string.IsNullOrEmpty(filter.Position))
+                query = query.Where(ws => ws.Staff.Role.RoleName == filter.Position);
 
-            return query
-                .OrderByDescending(ws => ws.WorkshiftId)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            if (!string.IsNullOrEmpty(filter.ShiftType))
+                query = query.Where(ws => ws.Workshift.ShiftName == filter.ShiftType);
+
+            if (!string.IsNullOrEmpty(filter.Keyword))
+                query = query.Where(ws =>
+                    (ws.Staff.FullName.Contains(filter.Keyword) ||
+                     ws.Staff.Role.RoleName.Contains(filter.Keyword)) ||
+                    ws.Description.Contains(filter.Keyword));
+
+            var shifts = query.Select(ws => new
+            {
+                ws.ShiftId,
+                Employee = ws.Staff.FullName,
+                Date = ws.Date,
+                StartTime = ws.Workshift.StartTime,
+                EndTime = ws.Workshift.EndTime,
+                Position = ws.Staff.Role.RoleName,
+                ShiftType = ws.Workshift.ShiftName,
+                TotalHours = (ws.Workshift.EndTime.Value - ws.Workshift.StartTime.Value).TotalHours,
+                Description = ws.Description
+            })
+            .ToList();
+
+            return shifts;
         }
 
-        // ======== THÊM CA LÀM ========
-        public void Add(AddWorkShiftDTO dto, out bool success, out string message)
+        public bool AddWorkShift(AddWorkShiftDTO dto, out string message)
         {
-            success = false;
-            message = "";
-
             var today = DateOnly.FromDateTime(DateTime.Now);
+
             if (dto.Date < today)
             {
                 message = "Không thể thêm ca ở ngày đã qua.";
-                return;
+                return false;
             }
 
-            var staff = _context.Staff.FirstOrDefault(s => s.FullName == dto.EmployeeName);
+            if (string.IsNullOrWhiteSpace(dto.EmployeeName))
+            {
+                message = "Tên nhân viên không được để trống.";
+                return false;
+            }
+
+            var staff = _context.Staff
+                .Include(s => s.Role)
+                .FirstOrDefault(s => s.FullName == dto.EmployeeName);
+
             if (staff == null)
             {
                 message = "Không tìm thấy nhân viên.";
-                return;
+                return false;
             }
 
-            var workShift = _context.WorkShifts.FirstOrDefault(ws => ws.ShiftName == dto.ShiftType);
+            var workShift = _context.WorkShifts
+                .FirstOrDefault(ws => ws.ShiftName == dto.ShiftType);
+
             if (workShift == null)
             {
-                message = "Không tìm thấy loại ca.";
-                return;
+                message = "Không tìm thấy loại ca làm việc.";
+                return false;
             }
 
-            var existsSame = _context.WorkSchedules.Any(ws =>
-                ws.StaffId == staff.StaffId &&
-                ws.Date == dto.Date &&
-                ws.WorkshiftId == workShift.WorkshiftId);
+            var existsSame = _context.WorkSchedules
+                .Any(ws => ws.StaffId == staff.StaffId &&
+                           ws.Date == dto.Date &&
+                           ws.WorkshiftId == workShift.WorkshiftId);
 
             if (existsSame)
             {
-                message = "Nhân viên đã có ca này vào ngày đã chọn.";
-                return;
+                message = "Nhân viên đã có ca này vào ngày đã chọn (trùng ca).";
+                return false;
             }
 
             var schedule = new WorkSchedule
@@ -121,84 +126,24 @@ namespace CafeManagent.Services.Imp
             {
                 StaffId = staff.StaffId,
                 WorkshiftId = workShift.WorkshiftId,
-                Workdate = dto.Date
+                Workdate = dto.Date,
             };
+
             _context.Attendances.Add(attendance);
             _context.SaveChanges();
 
-            success = true;
             message = "Thêm ca làm thành công!";
+            return true;
         }
 
-        // ======== CẬP NHẬT CA LÀM ========
-        public void Update(UpdateWorkShiftDTO dto, out bool success, out string message)
+        public bool DeleteWorkShift(int id, out string message)
         {
-            success = false;
-            message = "";
-
-            var schedule = _context.WorkSchedules.FirstOrDefault(ws => ws.ShiftId == dto.ShiftId);
-            if (schedule == null)
-            {
-                message = "Không tìm thấy ca làm.";
-                return;
-            }
-
-            var staff = _context.Staff.FirstOrDefault(s => s.FullName == dto.EmployeeName);
-            if (staff == null)
-            {
-                message = "Không tìm thấy nhân viên.";
-                return;
-            }
-
-            var workShift = _context.WorkShifts.FirstOrDefault(ws => ws.ShiftName == dto.ShiftType);
-            if (workShift == null)
-            {
-                message = "Không tìm thấy loại ca.";
-                return;
-            }
-
-            var today = DateOnly.FromDateTime(DateTime.Now);
-            if (dto.Date < today)
-            {
-                message = "Không thể sửa ca sang ngày đã qua.";
-                return;
-            }
-
-            var existsSame = _context.WorkSchedules.Any(ws =>
-                ws.ShiftId != dto.ShiftId &&
-                ws.StaffId == staff.StaffId &&
-                ws.Date == dto.Date &&
-                ws.WorkshiftId == workShift.WorkshiftId);
-
-            if (existsSame)
-            {
-                message = "Nhân viên đã có ca tương tự trong ngày đã chọn.";
-                return;
-            }
-
-            schedule.Date = dto.Date;
-            schedule.StaffId = staff.StaffId;
-            schedule.WorkshiftId = workShift.WorkshiftId;
-            schedule.Description = dto.Note;
-            schedule.ShiftName = dto.ShiftType;
-
-            _context.SaveChanges();
-
-            success = true;
-            message = "Cập nhật ca làm thành công!";
-        }
-
-        // ======== XOÁ CA LÀM ========
-        public void Delete(int id, out bool success, out string message)
-        {
-            success = false;
-            message = "";
-
             var schedule = _context.WorkSchedules.FirstOrDefault(ws => ws.ShiftId == id);
+
             if (schedule == null)
             {
                 message = "Không tìm thấy ca làm để xóa.";
-                return;
+                return false;
             }
 
             var attendance = _context.Attendances.FirstOrDefault(a =>
@@ -212,30 +157,58 @@ namespace CafeManagent.Services.Imp
             _context.WorkSchedules.Remove(schedule);
             _context.SaveChanges();
 
-            success = true;
             message = "Đã xóa ca làm thành công!";
+            return true;
         }
 
-        // ======== DỮ LIỆU BỘ LỌC ========
-        public void GetFilterData(out List<string> positions, out List<string> shiftTypes, out List<string> employees)
+        public List<string> GetPositions()
         {
-            positions = _context.Roles
+            return _context.Roles
                 .Where(r => r.RoleId != 1)
                 .Select(r => r.RoleName)
+                .Where(n => !string.IsNullOrEmpty(n))
                 .Distinct()
                 .ToList();
+        }
 
-            shiftTypes = _context.WorkShifts
+        public List<string> GetShiftTypes()
+        {
+            return _context.WorkShifts
                 .Select(s => s.ShiftName)
-                .Where(s => !string.IsNullOrEmpty(s))
+                .Where(s => s != null && s != "")
                 .Distinct()
                 .ToList();
+        }
 
-            employees = _context.Staff
+        public List<string> GetEmployees()
+        {
+            return _context.Staff
                 .Where(s => s.RoleId != 1)
                 .Select(s => s.FullName)
+                .Where(n => !string.IsNullOrEmpty(n))
                 .Distinct()
                 .ToList();
+        }
+
+        public int GetTotalShifts(List<object> shifts)
+        {
+            return shifts.Count;
+        }
+
+        public int GetTotalEmployees(List<object> shifts)
+        {
+            return shifts.Select(s => s.GetType().GetProperty("Employee")!.GetValue(s)).Distinct().Count();
+        }
+
+        public int GetTodayShifts(List<object> shifts)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            return shifts.Count(s => (DateOnly)s.GetType().GetProperty("Date")!.GetValue(s)! == today);
+        }
+
+        public double GetTotalHours(List<object> shifts)
+        {
+            return shifts.Sum(s => (double)s.GetType().GetProperty("TotalHours")!.GetValue(s)!);
         }
     }
 }

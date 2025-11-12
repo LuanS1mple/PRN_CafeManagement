@@ -47,7 +47,7 @@ public partial class CafeManagementContext : DbContext
 
     public virtual DbSet<WorkSchedule> WorkSchedules { get; set; }
 
-    public virtual DbSet<WorkShift> WorkShifts { get; set; }
+    public virtual DbSet<WorkSchedules> WorkShifts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -499,7 +499,7 @@ public partial class CafeManagementContext : DbContext
                 .HasConstraintName("FK__WorkSched__works__6B24EA82");
         });
 
-        modelBuilder.Entity<WorkShift>(entity =>
+        modelBuilder.Entity<WorkSchedules>(entity =>
         {
             entity.HasKey(e => e.WorkshiftId).HasName("PK__WorkShif__2E54FD2084470B7C");
 

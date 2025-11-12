@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CafeManagent.Models;
 
-public partial class WorkShift
+public partial class WorkSchedules
 {
     public int WorkshiftId { get; set; }
 

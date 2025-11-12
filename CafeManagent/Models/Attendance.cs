@@ -29,5 +29,5 @@ public partial class Attendance
 
     public virtual Staff? Staff { get; set; }
 
-    public virtual WorkShift? Workshift { get; set; }
+    public virtual WorkSchedules? Workshift { get; set; }
 }

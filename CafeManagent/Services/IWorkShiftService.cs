@@ -5,11 +5,18 @@ namespace CafeManagent.Services
 {
     public interface IWorkShiftService
     {
-        List<WorkShift> GetPaged(int page, int pageSize, out int totalItems);
-        List<WorkShift> Filter(FilterWorkShiftDTO filter, int page, int pageSize, out int totalItems);
-        void Add(AddWorkShiftDTO dto, out bool success, out string message);
-        void Update(UpdateWorkShiftDTO dto, out bool success, out string message);
-        void Delete(int id, out bool success, out string message);
-        void GetFilterData(out List<string> positions, out List<string> shiftTypes, out List<string> employees);
+        public List<WorkSchedules> GetAll();
+        public List<WorkSchedules> Filter(FilterWorkShiftDTO filter);
+        public bool AddWorkShift(AddWorkShiftDTO dto, out string message);
+        public bool DeleteWorkShift(int id, out string message);
+
+        public List<string> GetPositions();
+        public List<string> GetShiftTypes();
+        public List<string> GetEmployees();
+
+        public int GetTotalShifts(List<object> shifts);
+        public int GetTotalEmployees(List<object> shifts);
+        public int GetTodayShifts(List<object> shifts);
+        public double GetTotalHours(List<object> shifts);
     }
 }
