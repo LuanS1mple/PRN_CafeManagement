@@ -15,10 +15,11 @@ namespace CafeManagent.Controllers
             _service = service;
         }
 
-        public async Task<IActionResult> Index(int page = 1, int pageSize = 6)
+        public IActionResult Index(int page = 1, int pageSize = 6)
         {
-            var (shifts, totalItems) = await _service.GetPagedAsync(page, pageSize);
-            var (positions, shiftTypes, employees) = await _service.GetFilterDataAsync();
+            int totalItems;
+            var shifts = _service.GetPaged(page, pageSize, out totalItems);
+            _service.GetFilterData(out var positions, out var shiftTypes, out var employees);
 
             ViewBag.Page = page;
             ViewBag.PageSize = pageSize;
@@ -28,16 +29,15 @@ namespace CafeManagent.Controllers
             ViewBag.ShiftTypes = shiftTypes;
             ViewBag.Employees = employees;
 
-            
-
             return View(shifts);
         }
 
         [HttpPost]
-        public async Task<IActionResult> FilterWorkShift(FilterWorkShiftDTO filter, int page = 1, int pageSize = 6)
+        public IActionResult FilterWorkShift(FilterWorkShiftDTO filter, int page = 1, int pageSize = 6)
         {
-            var (shifts, totalItems) = await _service.FilterAsync(filter, page, pageSize);
-            var (positions, shiftTypes, employees) = await _service.GetFilterDataAsync();
+            int totalItems;
+            var shifts = _service.Filter(filter, page, pageSize, out totalItems);
+            _service.GetFilterData(out var positions, out var shiftTypes, out var employees);
 
             ViewBag.Page = page;
             ViewBag.PageSize = pageSize;
@@ -51,29 +51,27 @@ namespace CafeManagent.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddWorkShift(AddWorkShiftDTO dto)
+        public IActionResult AddWorkShift(AddWorkShiftDTO dto)
         {
-            var (success, message) = await _service.AddAsync(dto);
+            _service.Add(dto, out bool success, out string message);
             TempData[success ? "Success" : "Error"] = message;
             return RedirectToAction("Index");
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateWorkShift(UpdateWorkShiftDTO dto)
+        public IActionResult UpdateWorkShift(UpdateWorkShiftDTO dto)
         {
-            var (success, message) = await _service.UpdateAsync(dto);
+            _service.Update(dto, out bool success, out string message);
             TempData[success ? "Success" : "Error"] = message;
             return RedirectToAction("Index");
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteWorkShift(int id)
+        public IActionResult DeleteWorkShift(int id)
         {
-            var (success, message) = await _service.DeleteAsync(id);
+            _service.Delete(id, out bool success, out string message);
             TempData[success ? "Success" : "Error"] = message;
             return RedirectToAction("Index");
         }
-
-
     }
 }

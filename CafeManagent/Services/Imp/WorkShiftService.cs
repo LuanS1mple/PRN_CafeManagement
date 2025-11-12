@@ -7,12 +7,13 @@ namespace CafeManagent.Services.Imp
     public class WorkShiftService : IWorkShiftService
     {
         private readonly CafeManagementContext _context;
+
         public WorkShiftService(CafeManagementContext context)
         {
             _context = context;
         }
 
-        public async Task<(List<object> Shifts, int TotalItems)> GetPagedAsync(int page, int pageSize)
+        public List<WorkShift> GetPaged(int page, int pageSize, out int totalItems)
         {
             var query = _context.WorkSchedules
                 .Include(ws => ws.Workshift)
@@ -31,17 +32,17 @@ namespace CafeManagent.Services.Imp
                     Description = ws.Description
                 });
 
-            int totalItems = await query.CountAsync();
-            var shifts = await query
+            totalItems = query.Count();
+
+            return query
                 .OrderByDescending(s => s.Date)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
-
-            return (shifts.Cast<object>().ToList(), totalItems);
+                .Cast<WorkShift>()
+                .ToList();
         }
 
-        public async Task<(List<object> Shifts, int TotalItems)> FilterAsync(FilterWorkShiftDTO filter, int page, int pageSize)
+        public List<WorkShift> Filter(FilterWorkShiftDTO filter, int page, int pageSize, out int totalItems)
         {
             var query = _context.WorkSchedules
                 .Include(ws => ws.Workshift)
@@ -63,9 +64,9 @@ namespace CafeManagent.Services.Imp
                     ws.Staff.Role.RoleName.Contains(filter.Keyword) ||
                     ws.Description.Contains(filter.Keyword));
 
-            int totalItems = await query.CountAsync();
+            totalItems = query.Count();
 
-            var shifts = await query
+            var shifts = query
                 .OrderByDescending(s => s.Date)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -81,32 +82,48 @@ namespace CafeManagent.Services.Imp
                     TotalHours = (ws.Workshift.EndTime.Value - ws.Workshift.StartTime.Value).TotalHours,
                     Description = ws.Description
                 })
-                .ToListAsync();
+                .Cast<WorkShift>()
+                .ToList();
 
-            return (shifts.Cast<object>().ToList(), totalItems);
+            return shifts;
         }
 
-        public async Task<(bool Success, string Message)> AddAsync(AddWorkShiftDTO dto)
+        public void Add(AddWorkShiftDTO dto, out bool success, out string message)
         {
+            success = false;
+            message = "";
+
             var today = DateOnly.FromDateTime(DateTime.Now);
             if (dto.Date < today)
-                return (false, "Không thể thêm ca ở ngày đã qua.");
+            {
+                message = "Không thể thêm ca ở ngày đã qua.";
+                return;
+            }
 
-            var staff = await _context.Staff.FirstOrDefaultAsync(s => s.FullName == dto.EmployeeName);
+            var staff = _context.Staff.FirstOrDefault(s => s.FullName == dto.EmployeeName);
             if (staff == null)
-                return (false, "Không tìm thấy nhân viên.");
+            {
+                message = "Không tìm thấy nhân viên.";
+                return;
+            }
 
-            var workShift = await _context.WorkShifts.FirstOrDefaultAsync(ws => ws.ShiftName == dto.ShiftType);
+            var workShift = _context.WorkShifts.FirstOrDefault(ws => ws.ShiftName == dto.ShiftType);
             if (workShift == null)
-                return (false, "Không tìm thấy loại ca.");
+            {
+                message = "Không tìm thấy loại ca.";
+                return;
+            }
 
-            var existsSame = await _context.WorkSchedules.AnyAsync(ws =>
+            var existsSame = _context.WorkSchedules.Any(ws =>
                 ws.StaffId == staff.StaffId &&
                 ws.Date == dto.Date &&
                 ws.WorkshiftId == workShift.WorkshiftId);
 
             if (existsSame)
-                return (false, "Nhân viên đã có ca này vào ngày đã chọn.");
+            {
+                message = "Nhân viên đã có ca này vào ngày đã chọn.";
+                return;
+            }
 
             var schedule = new WorkSchedule
             {
@@ -117,7 +134,7 @@ namespace CafeManagent.Services.Imp
                 Description = dto.Note
             };
             _context.WorkSchedules.Add(schedule);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
 
             var attendance = new Attendance
             {
@@ -126,37 +143,56 @@ namespace CafeManagent.Services.Imp
                 Workdate = dto.Date
             };
             _context.Attendances.Add(attendance);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
 
-            return (true, "Thêm ca làm thành công!");
+            success = true;
+            message = "Thêm ca làm thành công!";
         }
 
-        public async Task<(bool Success, string Message)> UpdateAsync(UpdateWorkShiftDTO dto)
+        public void Update(UpdateWorkShiftDTO dto, out bool success, out string message)
         {
-            var schedule = await _context.WorkSchedules.FirstOrDefaultAsync(ws => ws.ShiftId == dto.ShiftId);
+            success = false;
+            message = "";
+
+            var schedule = _context.WorkSchedules.FirstOrDefault(ws => ws.ShiftId == dto.ShiftId);
             if (schedule == null)
-                return (false, "Không tìm thấy ca làm.");
+            {
+                message = "Không tìm thấy ca làm.";
+                return;
+            }
 
-            var staff = await _context.Staff.FirstOrDefaultAsync(s => s.FullName == dto.EmployeeName);
+            var staff = _context.Staff.FirstOrDefault(s => s.FullName == dto.EmployeeName);
             if (staff == null)
-                return (false, "Không tìm thấy nhân viên.");
+            {
+                message = "Không tìm thấy nhân viên.";
+                return;
+            }
 
-            var workShift = await _context.WorkShifts.FirstOrDefaultAsync(ws => ws.ShiftName == dto.ShiftType);
+            var workShift = _context.WorkShifts.FirstOrDefault(ws => ws.ShiftName == dto.ShiftType);
             if (workShift == null)
-                return (false, "Không tìm thấy loại ca.");
+            {
+                message = "Không tìm thấy loại ca.";
+                return;
+            }
 
             var today = DateOnly.FromDateTime(DateTime.Now);
             if (dto.Date < today)
-                return (false, "Không thể sửa ca sang ngày đã qua.");
+            {
+                message = "Không thể sửa ca sang ngày đã qua.";
+                return;
+            }
 
-            var existsSame = await _context.WorkSchedules.AnyAsync(ws =>
+            var existsSame = _context.WorkSchedules.Any(ws =>
                 ws.ShiftId != dto.ShiftId &&
                 ws.StaffId == staff.StaffId &&
                 ws.Date == dto.Date &&
                 ws.WorkshiftId == workShift.WorkshiftId);
 
             if (existsSame)
-                return (false, "Nhân viên đã có ca tương tự trong ngày đã chọn.");
+            {
+                message = "Nhân viên đã có ca tương tự trong ngày đã chọn.";
+                return;
+            }
 
             schedule.Date = dto.Date;
             schedule.StaffId = staff.StaffId;
@@ -164,17 +200,25 @@ namespace CafeManagent.Services.Imp
             schedule.Description = dto.Note;
             schedule.ShiftName = dto.ShiftType;
 
-            await _context.SaveChangesAsync();
-            return (true, "Cập nhật ca làm thành công!");
+            _context.SaveChanges();
+
+            success = true;
+            message = "Cập nhật ca làm thành công!";
         }
 
-        public async Task<(bool Success, string Message)> DeleteAsync(int id)
+        public void Delete(int id, out bool success, out string message)
         {
-            var schedule = await _context.WorkSchedules.FirstOrDefaultAsync(ws => ws.ShiftId == id);
-            if (schedule == null)
-                return (false, "Không tìm thấy ca làm để xóa.");
+            success = false;
+            message = "";
 
-            var attendance = await _context.Attendances.FirstOrDefaultAsync(a =>
+            var schedule = _context.WorkSchedules.FirstOrDefault(ws => ws.ShiftId == id);
+            if (schedule == null)
+            {
+                message = "Không tìm thấy ca làm để xóa.";
+                return;
+            }
+
+            var attendance = _context.Attendances.FirstOrDefault(a =>
                 a.StaffId == schedule.StaffId &&
                 a.WorkshiftId == schedule.WorkshiftId &&
                 a.Workdate == schedule.Date);
@@ -183,32 +227,31 @@ namespace CafeManagent.Services.Imp
                 _context.Attendances.Remove(attendance);
 
             _context.WorkSchedules.Remove(schedule);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
 
-            return (true, "Đã xóa ca làm thành công!");
+            success = true;
+            message = "Đã xóa ca làm thành công!";
         }
 
-        public async Task<(List<string> Positions, List<string> ShiftTypes, List<string> Employees)> GetFilterDataAsync()
+        public void GetFilterData(out List<string> positions, out List<string> shiftTypes, out List<string> employees)
         {
-            var positions = await _context.Roles
+            positions = _context.Roles
                 .Where(r => r.RoleId != 1)
                 .Select(r => r.RoleName)
                 .Distinct()
-                .ToListAsync();
+                .ToList();
 
-            var shiftTypes = await _context.WorkShifts
+            shiftTypes = _context.WorkShifts
                 .Select(s => s.ShiftName)
                 .Where(s => !string.IsNullOrEmpty(s))
                 .Distinct()
-                .ToListAsync();
+                .ToList();
 
-            var employees = await _context.Staff
+            employees = _context.Staff
                 .Where(s => s.RoleId != 1)
                 .Select(s => s.FullName)
                 .Distinct()
-                .ToListAsync();
-
-            return (positions, shiftTypes, employees);
+                .ToList();
         }
     }
 }
