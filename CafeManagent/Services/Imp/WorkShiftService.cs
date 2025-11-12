@@ -13,81 +13,61 @@ namespace CafeManagent.Services.Imp
             _context = context;
         }
 
+        // ======== PHÂN TRANG CƠ BẢN ========
         public List<WorkShift> GetPaged(int page, int pageSize, out int totalItems)
         {
-            var query = _context.WorkSchedules
-                .Include(ws => ws.Workshift)
-                .Include(ws => ws.Staff)
-                    .ThenInclude(s => s.Role)
-                .Select(ws => new
-                {
-                    ws.ShiftId,
-                    Employee = ws.Staff.FullName,
-                    Date = ws.Date,
-                    StartTime = ws.Workshift.StartTime,
-                    EndTime = ws.Workshift.EndTime,
-                    Position = ws.Staff.Role.RoleName,
-                    ShiftType = ws.Workshift.ShiftName,
-                    TotalHours = (ws.Workshift.EndTime.Value - ws.Workshift.StartTime.Value).TotalHours,
-                    Description = ws.Description
-                });
+            var query = _context.WorkShifts
+                .Include(ws => ws.WorkSchedules)
+                    .ThenInclude(s => s.Staff)
+                        .ThenInclude(st => st.Role)
+                .AsQueryable();
 
             totalItems = query.Count();
 
             return query
-                .OrderByDescending(s => s.Date)
+                .OrderByDescending(ws => ws.WorkshiftId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Cast<WorkShift>()
                 .ToList();
         }
 
+        // ======== LỌC DỮ LIỆU ========
         public List<WorkShift> Filter(FilterWorkShiftDTO filter, int page, int pageSize, out int totalItems)
         {
-            var query = _context.WorkSchedules
-                .Include(ws => ws.Workshift)
-                .Include(ws => ws.Staff)
-                    .ThenInclude(s => s.Role)
+            var query = _context.WorkShifts
+                .Include(ws => ws.WorkSchedules)
+                    .ThenInclude(s => s.Staff)
+                        .ThenInclude(st => st.Role)
                 .AsQueryable();
 
-            if (filter.FromDate != null)
-                query = query.Where(ws => ws.Date >= filter.FromDate);
-            if (filter.ToDate != null)
-                query = query.Where(ws => ws.Date <= filter.ToDate);
             if (!string.IsNullOrEmpty(filter.Position))
-                query = query.Where(ws => ws.Staff.Role.RoleName == filter.Position);
+                query = query.Where(ws => ws.WorkSchedules.Any(s => s.Staff.Role.RoleName == filter.Position));
+
             if (!string.IsNullOrEmpty(filter.ShiftType))
-                query = query.Where(ws => ws.Workshift.ShiftName == filter.ShiftType);
+                query = query.Where(ws => ws.ShiftName == filter.ShiftType);
+
             if (!string.IsNullOrEmpty(filter.Keyword))
-                query = query.Where(ws =>
-                    ws.Staff.FullName.Contains(filter.Keyword) ||
-                    ws.Staff.Role.RoleName.Contains(filter.Keyword) ||
-                    ws.Description.Contains(filter.Keyword));
+                query = query.Where(ws => ws.WorkSchedules.Any(s =>
+                    s.Staff.FullName.Contains(filter.Keyword) ||
+                    s.Staff.Role.RoleName.Contains(filter.Keyword) ||
+                    s.Description.Contains(filter.Keyword)));
+
+            if (filter.FromDate != null)
+                query = query.Where(ws => ws.WorkSchedules.Any(s => s.Date >= filter.FromDate));
+
+            if (filter.ToDate != null)
+                query = query.Where(ws => ws.WorkSchedules.Any(s => s.Date <= filter.ToDate));
 
             totalItems = query.Count();
 
-            var shifts = query
-                .OrderByDescending(s => s.Date)
+            return query
+                .OrderByDescending(ws => ws.WorkshiftId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(ws => new
-                {
-                    ws.ShiftId,
-                    Employee = ws.Staff.FullName,
-                    Date = ws.Date,
-                    StartTime = ws.Workshift.StartTime,
-                    EndTime = ws.Workshift.EndTime,
-                    Position = ws.Staff.Role.RoleName,
-                    ShiftType = ws.Workshift.ShiftName,
-                    TotalHours = (ws.Workshift.EndTime.Value - ws.Workshift.StartTime.Value).TotalHours,
-                    Description = ws.Description
-                })
-                .Cast<WorkShift>()
                 .ToList();
-
-            return shifts;
         }
 
+        // ======== THÊM CA LÀM ========
         public void Add(AddWorkShiftDTO dto, out bool success, out string message)
         {
             success = false;
@@ -133,6 +113,7 @@ namespace CafeManagent.Services.Imp
                 ShiftName = dto.ShiftType,
                 Description = dto.Note
             };
+
             _context.WorkSchedules.Add(schedule);
             _context.SaveChanges();
 
@@ -149,6 +130,7 @@ namespace CafeManagent.Services.Imp
             message = "Thêm ca làm thành công!";
         }
 
+        // ======== CẬP NHẬT CA LÀM ========
         public void Update(UpdateWorkShiftDTO dto, out bool success, out string message)
         {
             success = false;
@@ -206,6 +188,7 @@ namespace CafeManagent.Services.Imp
             message = "Cập nhật ca làm thành công!";
         }
 
+        // ======== XOÁ CA LÀM ========
         public void Delete(int id, out bool success, out string message)
         {
             success = false;
@@ -233,6 +216,7 @@ namespace CafeManagent.Services.Imp
             message = "Đã xóa ca làm thành công!";
         }
 
+        // ======== DỮ LIỆU BỘ LỌC ========
         public void GetFilterData(out List<string> positions, out List<string> shiftTypes, out List<string> employees)
         {
             positions = _context.Roles

@@ -1,4 +1,5 @@
-﻿@model IEnumerable<dynamic>
+﻿@using CafeManagent.Models
+@model List<WorkShift> 
 @{
     ViewData["Title"] = "Quản lý ca làm";
 }
@@ -163,48 +164,52 @@
                         <th class="text-end">Thao tác</th>
                     </tr>
                 </thead>
+
                 <tbody>
-                    @foreach (var shift in Model)
-                    {
-                            <tr>
-                                <td>@shift.Employee</td>
-                                <td>@shift.Date?.ToString("dd/MM/yyyy")</td>
-                                <td>@shift.Position</td>
-                                <td>
-                                    <span class="badge bg-secondary">@shift.ShiftType</span>
-                                </td>
-                                <td>@shift.StartTime - @shift.EndTime</td>
-                                <td>@($"{shift.TotalHours:0.#}")</td>
-                                <td>@shift.Description</td>
-                                <td class="text-end">
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-primary me-2"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editShiftModal"
-                                            data-shiftid="@shift.ShiftId"
-                                            data-employee="@shift.Employee"
-                                            data-date="@(shift.Date?.ToString("yyyy-MM-dd") ?? "")"
-                                            data-shifttype="@shift.ShiftType"
-                                            data-note="@(shift.Description ?? "")">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </button>
+                        @foreach (var shift in Model)
+                        {
+                            // Một WorkShift có thể có nhiều WorkSchedule (nhiều nhân viên làm cùng ca)
+                            foreach (var ws in shift.WorkSchedules)
+                            {
+                    <tr>
+                        <td>@ws.Staff.FullName</td>
+                        <td>@ws.Date?.ToString("dd/MM/yyyy")</td>
+                        <td>@ws.Staff.Role.RoleName</td>
+                        <td>
+                            <span class="badge bg-secondary">@shift.ShiftName</span>
+                        </td>
+                        <td>@shift.StartTime - @shift.EndTime</td>
+                        <td>@($"{(shift.EndTime - shift.StartTime)?.TotalHours:0.#}")</td>
+                        <td>@ws.Description</td>
+                        <td class="text-end">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary me-2"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editShiftModal"
+                                    data-shiftid="@shift.WorkshiftId"
+                                    data-employee="@ws.Staff.FullName"
+                                    data-date="@(ws.Date?.ToString("yyyy-MM-dd") ?? "")"
+                                    data-shifttype="@shift.ShiftName"
+                                    data-note="@(ws.Description ?? "")">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
 
-                                    <form asp-controller="WorkShift"
-                                          asp-action="DeleteWorkShift"
-                                          method="post"
-                                          style="display:inline;">
-                                        <input type="hidden" name="id" value="@shift.ShiftId" />
-                                        <button type="submit"
-                                                class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('Bạn có chắc muốn xóa ca làm này không?');">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                    }
-                </tbody>
-
+                            <form asp-controller="WorkShift"
+                                  asp-action="DeleteWorkShift"
+                                  method="post"
+                                  style="display:inline;">
+                                <input type="hidden" name="id" value="@shift.WorkshiftId" />
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Bạn có chắc muốn xóa ca làm này không?');">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                            }
+                        }
+            </tbody>
             </table>
         </div>
     </div>
