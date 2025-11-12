@@ -93,23 +93,14 @@
                         </div>
                     </div>
 
-                    <div class="kv2-row">
-                        <div class="kv2-label">Tên đăng nhập</div>
-                        <div class="kv2-value">
-                            <!-- hiển thị dạng pill, không cho sửa -->
-                            <div class="ro-pill">@Model.UserName</div>
-                            <!-- để form vẫn giữ nguyên giá trị khi POST -->
-                            <input type="hidden" asp-for="UserName" />
-                        </div>
-                    </div>
-
+                  
                     <div class="kv2-row">
                         <div class="kv2-label">Ngày tạo</div>
                         <div class="kv2-value">
                             <!-- hiển thị dạng pill, không cho sửa -->
-                            <div class="ro-pill">@Model.CreateAt</div>
-                            <!-- để form vẫn giữ nguyên giá trị khi POST -->
-                            <input type="hidden" asp-for="CreateAt" />
+                            @* <div class="ro-pill">@Model.CreateAt</div> *@
+                            @* <!-- để form vẫn giữ nguyên giá trị khi POST --> *@
+                            @* <input type="hidden" asp-for="CreateAt" /> *@
                         </div>
                     </div>
 

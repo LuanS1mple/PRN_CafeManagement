@@ -4,6 +4,7 @@ using CafeManagent.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace CafeManagent.Controllers
 {
@@ -50,41 +51,50 @@ namespace CafeManagent.Controllers
         // POST /staffs/create
         [HttpPost("create")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(
-            CreateStaffRequest req,
-            [FromServices] IWebHostEnvironment env,
-            CancellationToken ct)
+        public async Task<IActionResult> Create(CreateStaffRequest req,
+            [FromServices] IWebHostEnvironment env, CancellationToken ct)
         {
-            // refill roles if redisplaying
+            // load lại dropdown khi trả view
             ViewBag.Roles = await _service.GetRolesSelectListAsync(ct);
 
-            if (!ModelState.IsValid)
-            {
-                return View(req);
-            }
+            // DataAnnotations chưa qua => trả về kèm lỗi
+            if (!ModelState.IsValid) return View(req);
 
             try
             {
-                // Note: req.AvatarFile should be bound from <input type="file" name="AvatarFile" />
                 var newId = await _service.CreateAsync(req, env.WebRootPath, ct);
                 return RedirectToAction(nameof(Details), new { id = newId });
             }
+            catch (ValidationException ve)
+            {
+                // Ưu tiên map vào đúng field nếu có MemberNames
+                var members = ve.ValidationResult?.MemberNames?.ToList() ?? new List<string>();
+                if (members.Count == 0)
+                {
+                    ModelState.AddModelError(string.Empty, ve.ValidationResult?.ErrorMessage ?? ve.Message);
+                }
+                else
+                {
+                    foreach (var m in members)
+                        ModelState.AddModelError(m, ve.ValidationResult?.ErrorMessage ?? ve.Message);
+                }
+                return View(req);
+            }
             catch (InvalidOperationException ex)
             {
+                // fallback lỗi chung (nếu service còn ném kiểu này)
                 ModelState.AddModelError(string.Empty, ex.Message);
                 return View(req);
             }
         }
 
         // ---------------- EDIT ----------------
-        // GET /staffs/edit/123
         [HttpGet("edit/{id:int}")]
         public async Task<IActionResult> Edit(int id, CancellationToken ct)
         {
             var detail = await _service.GetDetailAsync(id, ct);
             if (detail is null) return NotFound();
 
-            // Map StaffDetailDto -> UpdateStaffProfile (adjust fields as your DTO defines)
             var vm = new UpdateStaffProfile
             {
                 StaffId = detail.StaffId,
@@ -93,9 +103,10 @@ namespace CafeManagent.Controllers
                 BirthDate = detail.BirthDate,
                 Phone = detail.Phone,
                 Address = detail.Address,
-                //UserName = detail.UserName ?? "", // if your DTO has UserName
-                //CreateAt = detail.CreateAt ?? DateTime.Now, // if detail contains CreateAt
-                RoleId = null // optional: set if you include role in detail mapping
+                RoleId = detail.RoleId, // nếu bạn muốn set mặc định từ detail.RoleId hãy sửa chỗ này
+                Gender = detail.Gender,
+                Position = detail.Title, // map Contract.Position -> Title trong DTO detail
+                ContractEndDate = detail.ContractEndDate
             };
 
             ViewBag.Avatar = detail.AvatarUrl ?? "/images/avatars/default.png";
@@ -130,6 +141,19 @@ namespace CafeManagent.Controllers
                 if (!ok) return NotFound();
 
                 return RedirectToAction(nameof(Details), new { id = input.StaffId });
+            }
+            catch (ValidationException ve)
+            {
+                var members = ve.ValidationResult?.MemberNames?.ToList() ?? new List<string>();
+                if (members.Count == 0)
+                    ModelState.AddModelError(string.Empty, ve.ValidationResult?.ErrorMessage ?? ve.Message);
+                else
+                    foreach (var m in members)
+                        ModelState.AddModelError(m, ve.ValidationResult?.ErrorMessage ?? ve.Message);
+
+                var existing = await _service.GetDetailAsync(id, ct);
+                ViewBag.Avatar = existing?.AvatarUrl ?? "/images/avatars/default.png";
+                return View(input);
             }
             catch (InvalidOperationException ex)
             {

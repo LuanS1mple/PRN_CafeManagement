@@ -1,0 +1,229 @@
+﻿/* ===== StaffCreate.css (đồng bộ style StaffDirectory) ===== */
+:root {
+    --bg: #f6f7f9;
+    --card: #fff;
+    --text: #1f2328;
+    --text-soft: #667085;
+    --border: #e5e7eb;
+    --primary: #0ea5e9;
+    --primary-ring: rgba(14,165,233,.25);
+    --danger: #ef4444;
+    --radius: 12px;
+    --radius-pill: 999px;
+    --shadow: 0 6px 20px rgba(17, 24, 39, .08);
+}
+
+/* ===== Page layout ===== */
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif;
+}
+
+.container.profile-wrap {
+    max-width: 1180px;
+    margin: 32px auto;
+    padding: 0 16px;
+}
+
+h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+/* ===== Grid: left avatar / right form ===== */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+}
+
+/* ===== Cards ===== */
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.left-card {
+    padding: 24px;
+    text-align: center;
+}
+
+.right-card {
+    padding: 24px;
+}
+
+/* ===== Avatar ===== */
+.avatar-wrap {
+    width: 220px;
+    height: 220px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #fafbfc;
+    border: 2px dashed var(--border);
+}
+
+.avatar-circle {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #fff;
+}
+
+/* ===== Buttons ===== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+    .btn:hover {
+        filter: brightness(0.97);
+    }
+
+    .btn.primary {
+        background: var(--primary);
+        color: #fff;
+        border-color: transparent;
+    }
+
+        .btn.primary:hover {
+            filter: brightness(0.9);
+        }
+
+    .btn.secondary {
+        background: #fff;
+        color: var(--text);
+    }
+
+.btn-upload {
+    width: 100%;
+    background: var(--primary-ring);
+    color: var(--primary);
+    border-color: transparent;
+}
+
+.label {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin-top: 8px;
+}
+
+/* ===== Form grid ===== */
+.right-card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.kv2 {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1fr 1fr;
+}
+
+.kv2-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 8px;
+    align-items: center;
+}
+
+.kv2-label {
+    font-weight: 600;
+    color: var(--text-soft);
+}
+
+.input,
+.kv2-value input,
+.kv2-value select {
+    width: 100%;
+    height: 42px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0 12px;
+    background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+    .input:focus,
+    .kv2-value input:focus,
+    .kv2-value select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-ring);
+    }
+
+/* ===== Validation ===== */
+.text-danger {
+    color: var(--danger);
+    font-size: 12px;
+}
+
+/* ===== Footer buttons ===== */
+.right-card .btn.primary {
+    padding: 12px 18px;
+}
+
+.right-card .btn.secondary {
+    margin-right: 8px;
+}
+/* Hiển thị khối lỗi tổng */
+.val-summary {
+    border: 1px solid #fecaca;
+    background: #fff1f2;
+    color: #991b1b;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+}
+
+/* Ô nhập có lỗi */
+.input-validation-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 4px rgba(239,68,68,.15) !important;
+    background: #fff !important;
+}
+
+/* Dòng chữ lỗi dưới mỗi field */
+.field-validation-error {
+    color: #ef4444;
+    font-size: 12px;
+}
+
+/* Ẩn placeholder span khi không có lỗi */
+.field-validation-valid {
+    display: none;
+}
+
+
+/* ===== Responsive ===== */
+@media (max-width: 980px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .left-card {
+        order: 2;
+    }
+
+    .right-card {
+        order: 1;
+    }
+}

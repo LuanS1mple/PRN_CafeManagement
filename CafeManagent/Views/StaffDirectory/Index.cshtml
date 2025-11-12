@@ -7,7 +7,7 @@
     var prevDisabled = Model.Page <= 1 ? "disabled" : "";
     var nextDisabled = Model.Page >= totalPages ? "disabled" : "";
 }
-<link rel="stylesheet" href="~/css/Profile.css" />
+<link rel="stylesheet" href="~/css/StaffDirectory.css" />
 
 <div class="container">
     <div class="page-header">
@@ -15,19 +15,19 @@
             <h2 class="title">Danh sách nhân viên</h2>
             <div class="sub">Quản lý thông tin nhân viên trong công ty</div>
         </div>
-        <a class="btn primary" asp-controller="StaffDirectory" asp-action="Create">+ Thêm nhân viên</a>
+        <a class="btn primary" href="@Url.Action("Create","StaffDirectory")">+ Thêm nhân viên</a>
     </div>
 
     <form method="get" action="@Url.Action("Index","StaffDirectory")" class="toolbar">
         <input class="input search" type="text" name="q.Q" value="@q.Q" placeholder="Tìm theo tên/email..." />
-        <select class="input" name="Status">
+        <select class="input" name="q.Status">
             <option value="" selected="@(q.Status == null ? "selected" : null)">Trạng thái</option>
             <option value="1" selected="@(q.Status == 1 ? "selected" : null)">Đang làm việc</option>
             <option value="2" selected="@(q.Status == 2 ? "selected" : null)">Nghỉ phép</option>
             <option value="3" selected="@(q.Status == 3 ? "selected" : null)">Nghỉ việc</option>
         </select>
-        <input type="hidden" name="Page" value="1" />
-        <input type="hidden" name="Size" value="@Model.Size" />
+        <input type="hidden" name="q.Page" value="1" />
+        <input type="hidden" name="q.Size" value="@Model.Size" />
         <button class="btn">Lọc</button>
     </form>
 
@@ -54,10 +54,17 @@
                         <td>@s.FullName</td>
                         <td>@s.Email</td>
                         <td>@s.Title</td>
+                        @{
+                            var badgeClass = s.Status switch
+                            {
+                                "Đang làm việc" => "badge-green",
+                                "Nghỉ phép" => "badge-yellow",
+                                "Nghỉ việc" => "badge-gray",
+                                _ => "badge-gray"
+                            };
+                        }
                         <td>
-                            <span class="badge @(s.Status=="Đang làm việc"?"badge-green": s.Status=="Nghỉ phép"?"badge-yellow":"badge-gray")">
-                                @s.Status
-                            </span>
+                            <span class="badge @badgeClass">@s.Status</span>
                         </td>
                         <td>@(s.JoinDate?.ToString("dd/MM/yyyy"))</td>
                         <td>@(s.ContractEndDate?.ToString("dd/MM/yyyy"))</td>
@@ -68,18 +75,33 @@
 
         <div class="pager">
             <a class="pager-btn @prevDisabled"
-               @(Model.Page <= 1 ? "tabindex=\"-1\" aria-disabled=\"true\"" : "")
-               href="@(Model.Page <= 1 ? "#" : Url.Action("Index", new { q = q.Q, status = q.Status, page = Model.Page - 1, size = Model.Size }))">
+            @(Model.Page <= 1 ? "tabindex=\"-1\" aria-disabled=\"true\"" : "")
+               href="@(Model.Page <= 1 ? "#" :
+                    Url.Action("Index", new System.Collections.Generic.Dictionary<string, object?>
+                    {
+                        ["q.Q"] = q.Q,
+                        ["q.Status"] = q.Status,
+                        ["q.Page"] = Model.Page - 1,
+                        ["q.Size"] = Model.Size
+                    }))">
                 ‹ Previous
             </a>
 
             <span class="pager-num">@Model.Page / @totalPages</span>
 
             <a class="pager-btn @nextDisabled"
-               @((Model.Page >= totalPages || totalPages==0) ? "tabindex=\"-1\" aria-disabled=\"true\"" : "")
-               href="@((Model.Page >= totalPages || totalPages==0) ? "#" : Url.Action("Index", new { q = q.Q, status = q.Status, page = Model.Page + 1, size = Model.Size }))">
+            @((Model.Page >= totalPages || totalPages == 0) ? "tabindex=\"-1\" aria-disabled=\"true\"" : "")
+               href="@((Model.Page >= totalPages || totalPages == 0) ? "#" :
+                    Url.Action("Index", new System.Collections.Generic.Dictionary<string, object?>
+                    {
+                        ["q.Q"] = q.Q,
+                        ["q.Status"] = q.Status,
+                        ["q.Page"] = Model.Page + 1,
+                        ["q.Size"] = Model.Size
+                    }))">
                 Next ›
             </a>
         </div>
+
     </div>
 </div>

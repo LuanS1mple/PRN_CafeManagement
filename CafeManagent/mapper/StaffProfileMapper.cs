@@ -43,10 +43,8 @@ namespace CafeManagent.mapper
             dest.Address = TrimOrNull(src.Address);
             dest.Phone = TrimOrNull(src.Phone);
             dest.Email = TrimOrNull(src.Email);
-            dest.UserName = TrimOrNull(src.UserName);
-
-            if (!string.IsNullOrWhiteSpace(src.Password))
-                dest.Password = src.Password; // TODO: hash nếu có auth
+            //if (!string.IsNullOrWhiteSpace(src.Password))
+            //    dest.Password = src.Password; // TODO: hash nếu có auth
         }
 
         public static void SetAvatarPath(Staff dest, string? publicPath)
