@@ -28,13 +28,7 @@ namespace CafeManagent.Controllers
             ViewBag.ShiftTypes = shiftTypes;
             ViewBag.Employees = employees;
 
-            var today = DateOnly.FromDateTime(DateTime.Now);
-            ViewBag.TotalShifts = totalItems;
-            //ViewBag.TotalEmployees = shifts.Select(s => s.Employee).Distinct().Count();
-            //ViewBag.TodayShifts = shifts.Count(s => s.Date == today);
-            //ViewBag.TotalHours = shifts.Sum(s => s.TotalHours);
-
-
+            
 
             return View(shifts);
         }
@@ -52,8 +46,6 @@ namespace CafeManagent.Controllers
             ViewBag.Positions = positions;
             ViewBag.ShiftTypes = shiftTypes;
             ViewBag.Employees = employees;
-
-            
 
             return View("Index", shifts);
         }
