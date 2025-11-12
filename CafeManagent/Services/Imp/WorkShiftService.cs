@@ -41,7 +41,7 @@ namespace CafeManagent.Services.Imp
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(filter.Position))
-                query = query.Where(ws => ws.WorkSchedules.Any(s => s.Staff.Role.RoleName == filter.Position));
+                query = query.Where(ws => ws.Staff != null && ws.Staff.Role.RoleName == filter.Position);
 
             if (!string.IsNullOrEmpty(filter.ShiftType))
                 query = query.Where(ws => ws.ShiftName == filter.ShiftType);
