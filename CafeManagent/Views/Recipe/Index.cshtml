@@ -44,6 +44,8 @@
                 <thead class="table-light">
                     <tr>
                         <th>Sản phẩm</th>
+                        <th>Price</th>
+                        <th>Mô tả</th>
                         <th class="text-end">Thao tác</th>
                     </tr>
                 </thead>
@@ -51,6 +53,8 @@
                     @foreach(var item in Model){
                         <tr>
                         <td>@item.ProductName</td>
+                        <td>@item.Price</td>
+                        <td>@item.Description</td>
                         <td class="text-end">
                                 <button type="button" class="btn btn-sm btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#detailRecipeModal1">
                                     <i class="fa-solid fa-eye"></i>
