@@ -114,11 +114,11 @@
 //                return RedirectToAction("Index");
 //            }
 
-            //taskToUpdate.TaskName = updateTask.TaskName;
-            //taskToUpdate.Description = updateTask.Description;
-            taskToUpdate.ManagerId = updateTask.ManagerId;
-            taskToUpdate.StaffId = updateTask.StaffId == 0 ? null : updateTask.StaffId;
-            taskToUpdate.DueTime = updateTask.DueTime;
+//            taskToUpdate.TaskName = updateTask.TaskName;
+//            taskToUpdate.Description = updateTask.Description;
+//            taskToUpdate.ManagerId = updateTask.ManagerId;
+//            taskToUpdate.StaffId = updateTask.StaffId == 0 ? null : updateTask.StaffId;
+//            taskToUpdate.DueTime = updateTask.DueTime;
 
 //            if (updateTask.StaffId == 0)
 //            {
@@ -142,14 +142,14 @@
 //            return RedirectToAction("Index");
 //        }
 
-        [HttpGet]
-        public async Task<IActionResult> ReportTask(string searchStaff,
-                                                     string searchManager,
-                                                     DateTime? startDate,
-                                                     DateTime? endDate)
-        {
-            ViewData["CurrentStaffFilter"] = searchStaff;
-            ViewData["CurrentManagerFilter"] = searchManager;
+//        [HttpGet]
+//        public async Task<IActionResult> ReportTask (string searchStaff,
+//                                                     string searchManager,
+//                                                     DateTime? startDate,
+//                                                     DateTime? endDate)
+//        {
+//            ViewData["CurrentStaffFilter"] = searchStaff;
+//            ViewData["CurrentManagerFilter"] = searchManager;
 
 //            if (startDate.HasValue)
 //                ViewData["CurrentStartDateFilter"] = startDate.Value.ToString("yyyy-MM-dd");
