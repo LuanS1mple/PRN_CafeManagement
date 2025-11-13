@@ -1,4 +1,5 @@
 ﻿using CafeManagent.dto.response;
+using CafeManagent.ErrorHandler;
 using CafeManagent.Hubs;
 using CafeManagent.Middlewares;
 using CafeManagent.Models;
@@ -12,13 +13,18 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<GlobalExceptionHandler>();
+});
 //dùng signalR
 builder.Services.AddSignalR();
 
 // Kết nối database
 builder.Services.AddDbContext<CafeManagementContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn")));
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn"));
+});
 
 builder.Services.AddSession();
 //cái này để Hub gọi đc đến httpContext lấy session

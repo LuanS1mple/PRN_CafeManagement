@@ -1,4 +1,5 @@
-﻿using CafeManagent.Models;
+﻿using CafeManagent.ErrorHandler;
+using CafeManagent.Models;
 using Microsoft.EntityFrameworkCore;
 using Task = System.Threading.Tasks.Task;
 
@@ -80,10 +81,10 @@ namespace CafeManagent.Services.Imp
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
-            catch
+            catch(Exception ex) 
             {
                 await transaction.RollbackAsync();
-                throw;
+                throw new AppException(ErrorCode.DefaultError, ex);
             }
         }
 
