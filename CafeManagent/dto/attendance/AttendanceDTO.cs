@@ -11,7 +11,7 @@
         public decimal? TotalHour { get; set; }
         public string? Note { get; set; }
 
-        public int? Status { get; set; }    
+        public int? Status { get; set; }
 
     }
 }

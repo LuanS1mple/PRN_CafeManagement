@@ -1,5 +1,5 @@
-﻿using CafeManagent.dto.request;
-using CafeManagent.dto.response;
+﻿using CafeManagent.dto.request.RequestModuleDTO;
+using CafeManagent.dto.response.RequestModuleDTO;
 using CafeManagent.Models;
 
 namespace CafeManagent.mapper

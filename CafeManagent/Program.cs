@@ -6,6 +6,25 @@ using CafeManagent.Middlewares;
 using CafeManagent.Models;
 using CafeManagent.Services;
 using CafeManagent.Services.Imp;
+using CafeManagent.Services.Imp.AttendanceModule;
+using CafeManagent.Services.Imp.AuthenticationModule;
+using CafeManagent.Services.Imp.CustomerModule;
+using CafeManagent.Services.Imp.RecipeModule;
+using CafeManagent.Services.Imp.RequestModule;
+using CafeManagent.Services.Imp.StaffModule;
+using CafeManagent.Services.Imp.TaskModule;
+using CafeManagent.Services.Imp.WorkScheduleModule;
+using CafeManagent.Services.Imp.WorkShiftModule;
+using CafeManagent.Services.Interface;
+using CafeManagent.Services.Interface.AttendanceModule;
+using CafeManagent.Services.Interface.AuthenticationModule;
+using CafeManagent.Services.Interface.CustomerModule;
+using CafeManagent.Services.Interface.RecipeModule;
+using CafeManagent.Services.Interface.RequestModuleDTO;
+using CafeManagent.Services.Interface.StaffModule;
+using CafeManagent.Services.Interface.TaskModule;
+using CafeManagent.Services.Interface.WorkScheduleModule;
+using CafeManagent.Services.Interface.WorkShiftModule;
 using CafeManagent.Ulties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +32,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+//builder.Services.AddControllersWithViews();
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add<GlobalExceptionHandler>();

@@ -1,7 +1,8 @@
 ﻿using System.Diagnostics;
 using CafeManagent.Models;
-using CafeManagent.Services;
 using CafeManagent.Services.Imp;
+using CafeManagent.Services.Interface.AuthenticationModule;
+using CafeManagent.Services.Interface.StaffModule;
 using DocumentFormat.OpenXml.InkML;
 using Microsoft.AspNetCore.Mvc;
 

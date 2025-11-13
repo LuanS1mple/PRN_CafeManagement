@@ -1,5 +1,7 @@
 ﻿using CafeManagent.dto.Order;
 using CafeManagent.Models;
+using CafeManagent.Services.Interface;
+using CafeManagent.Services.Interface.CustomerModule;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

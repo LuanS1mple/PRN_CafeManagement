@@ -1,4 +1,5 @@
-﻿@model CafeManagent.dto.response.StaffProfile
+﻿@using CafeManagent.dto.response.StaffModuleDTO;
+@model StaffProfile
 @{
     ViewData["Title"] = "Hồ sơ nhân viên";
     string GenderText(bool? g) => g is null ? "—" : (g.Value ? "Nam" : "Nữ");

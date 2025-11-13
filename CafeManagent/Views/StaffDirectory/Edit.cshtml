@@ -1,4 +1,5 @@
-﻿@model CafeManagent.dto.request.UpdateStaffProfile
+﻿@using CafeManagent.dto.request.StaffModuleDTO;
+@model UpdateStaffProfile
 @{
     ViewData["Title"] = "Sửa hồ sơ nhân viên";
     var roles = ViewBag.Roles as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new();

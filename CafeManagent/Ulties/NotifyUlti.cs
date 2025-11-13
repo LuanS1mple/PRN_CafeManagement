@@ -1,4 +1,4 @@
-﻿using CafeManagent.dto.response;
+﻿using CafeManagent.dto.response.NotifyModuleDTO;
 using CafeManagent.Models;
 
 namespace CafeManagent.Ulties

@@ -1,6 +1,7 @@
-﻿@model CafeManagent.dto.response.PagedResult<CafeManagent.dto.response.StaffListItemDto>
+﻿@using CafeManagent.dto.response.StaffModuleDTO;
+@model CafeManagent.dto.response.PagedResult<StaffListItemDto>
 @{
-    var q = (CafeManagent.dto.response.StaffListQuery)ViewBag.Query ?? new CafeManagent.dto.response.StaffListQuery();
+    var q = (StaffListQuery)ViewBag.Query ?? new CafeManagent.dto.response.StaffModuleDTO.StaffListQuery();
     ViewData["Title"] = "Danh sách nhân viên";
 
     var totalPages = (int)Math.Ceiling((double)(Model.TotalItems) / Math.Max(1, Model.Size));

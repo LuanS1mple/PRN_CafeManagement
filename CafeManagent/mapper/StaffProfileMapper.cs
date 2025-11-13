@@ -1,5 +1,5 @@
-﻿using CafeManagent.dto.request;
-using CafeManagent.dto.response;
+﻿using CafeManagent.dto.request.StaffModuleDTO;
+using CafeManagent.dto.response.StaffModuleDTO;
 using CafeManagent.Models;
 using Microsoft.AspNetCore.Mvc;
 
