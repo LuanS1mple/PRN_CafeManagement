@@ -47,6 +47,7 @@
             }
 
     </style>
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <div class="d-flex" id="wrapper">
@@ -256,5 +257,6 @@
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>

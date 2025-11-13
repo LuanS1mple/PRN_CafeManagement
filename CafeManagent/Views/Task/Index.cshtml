@@ -1,374 +1,516 @@
-﻿@* @model IEnumerable<CafeManagent.Models.Task> *@
-@* @using CafeManagent.Models *@
+﻿@model IEnumerable<CafeManagent.Models.Task>
+@using CafeManagent.Models
+@using System.Security.Claims
 
-@* @{ *@
-@*     ViewData["Title"] = "Danh sách công việc"; *@
-@* } *@
+@{
+    ViewData["Title"] = "Danh sách công việc";
 
-@* <!DOCTYPE html> *@
-@* <html lang="vi"> *@
-@* <head> *@
-@*     <meta charset="UTF-8"> *@
-@*     <meta name="viewport" content="width=device-width, initial-scale=1.0"> *@
-@*     <title>@ViewData["Title"]</title> *@
-@*     <script src="https://cdn.tailwindcss.com"></script> *@
-@* </head> *@
+    var currentManagerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var currentManagerFullName = User.FindFirstValue(ClaimTypes.Name);
+}
 
-@* <body class="bg-gray-50 font-sans"> *@
+@section Styles {
+    <style>
+        .modal-custom {
+            background-color: rgba(0, 0, 0, 0.4);
+        }
 
-@*     <!-- Header --> *@
-@*     <div class="border-b bg-white"> *@
-@*         <div class="max-w-7xl mx-auto px-6 py-6 flex items-center gap-3"> *@
-@*             <div class="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl"> *@
-@*                 📋 *@
-@*             </div> *@
-@*             <div> *@
-@*                 <h1 class="text-lg font-semibold">Danh sách công việc</h1> *@
-@*                 <p class="text-gray-500 text-sm">Theo dõi các nhiệm vụ được giao cho nhân viên</p> *@
-@*             </div> *@
-@*         </div> *@
-@*     </div> *@
+        .task-status-badge {
+            min-width: 100px;
+            display: inline-block;
+            text-align: center;
+        }
 
-@*     <!-- Main content --> *@
-@*     <div class="max-w-7xl mx-auto px-6 py-8 space-y-6"> *@
+        .highlight-update {
+            animation: highlight-yellow 2s ease-out;
+        }
 
-@*         <!-- Toolbar --> *@
-@*         <div class="flex items-center justify-between"> *@
-@*             <h2 class="text-md text-gray-700 font-semibold"> *@
-@*                 Tổng số công việc: @Model.Count() *@
-@*             </h2> *@
-@*             <button type="button" *@
-@*                     onclick="openAddModal()" *@
-@*                     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium"> *@
-@*                 + Thêm công việc *@
-@*             </button> *@
-@*         </div> *@
+        @@keyframes highlight-yellow {
+            0% {
+                background-color: #fffb00;
+            }
 
-@*         <!-- Search & Filter Form --> *@
-@*         <div class="bg-white shadow rounded-lg p-4 mb-6"> *@
-@*             <h3 class="text-lg font-semibold text-gray-800 mb-3">Tìm kiếm & Lọc</h3> *@
-@*             <form asp-action="Index" method="get" class="space-y-4"> *@
-@*                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4"> *@
-@*                     <div> *@
-@*                         <label for="searchStaff" class="block text-sm font-medium text-gray-700 mb-1">Tên nhân viên</label> *@
-@*                         <input type="text" id="searchStaff" name="searchStaff" *@
-@*                                value="@ViewData["CurrentStaffFilter"]" *@
-@*                                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" *@
-@*                                placeholder="Nhập tên nhân viên..."> *@
-@*                     </div> *@
+            100% {
+                background-color: transparent;
+            }
+        }
+    </style>
+}
 
-@*                     <div> *@
-@*                         <label for="searchManager" class="block text-sm font-medium text-gray-700 mb-1">Tên quản lý</label> *@
-@*                         <input type="text" id="searchManager" name="searchManager" *@
-@*                                value="@ViewData["CurrentManagerFilter"]" *@
-@*                                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" *@
-@*                                placeholder="Nhập tên quản lý..."> *@
-@*                     </div> *@
+<div class="border-bottom bg-white">
+    <div class="container-fluid px-4 py-3 d-flex align-items-center gap-3">
+        <div class="p-2 bg-primary rounded-3 text-white fw-bold fs-5 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+            📋
+        </div>
+        <div>
+            <h1 class="fs-4 fw-semibold mb-0">@ViewData["Title"]</h1>
+            <p class="text-muted mb-0">Theo dõi các nhiệm vụ được giao cho nhân viên</p>
+        </div>
+    </div>
+</div>
 
-@*                     <div> *@
-@*                         <label for="searchStartDate" class="block text-sm font-medium text-gray-700 mb-1">Từ ngày</label> *@
-@*                         <input type="date" id="searchStartDate" name="searchStartDate" *@
-@*                                value="@ViewData["CurrentStartDateFilter"]" *@
-@*                                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
-@*                     </div> *@
+<div class="container-fluid px-4 py-4">
 
-@*                     <div> *@
-@*                         <label for="searchEndDate" class="block text-sm font-medium text-gray-700 mb-1">Đến ngày</label> *@
-@*                         <input type="date" id="searchEndDate" name="searchEndDate" *@
-@*                                value="@ViewData["CurrentEndDateFilter"]" *@
-@*                                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
-@*                     </div> *@
-@*                 </div> *@
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
 
-@*                 <div class="flex justify-end gap-3 pt-2"> *@
-@*                     <a asp-action="Index" class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100"> *@
-@*                         Xóa lọc *@
-@*                     </a> *@
-@*                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"> *@
-@*                         Tìm kiếm *@
-@*                     </button> *@
-@*                 </div> *@
-@*             </form> *@
-@*         </div> *@
+        <form id="searchForm" method="get" asp-action="Index" class="d-flex flex-wrap align-items-center gap-3">
 
-@*         <!-- Table --> *@
-@*         <div class="overflow-x-auto bg-white shadow rounded-lg"> *@
-@*             <table class="min-w-full text-sm"> *@
-@*                 <thead class="bg-gray-100 text-gray-700"> *@
-@*                     <tr> *@
-@*                         <th class="px-4 py-3 text-left">Mã công việc</th> *@
-@*                         <th class="px-4 py-3 text-left">Tên công việc</th> *@
-@*                         <th class="px-4 py-3 text-left">Mô tả</th> *@
-@*                         <th class="px-4 py-3 text-left">Nhân viên</th> *@
-@*                         <th class="px-4 py-3 text-left">Người quản lý</th> *@
-@*                         <th class="px-4 py-3 text-left">Thời gian bắt đầu</th> *@
-@*                         <th class="px-4 py-3 text-left">Thời hạn</th> *@
-@*                         <th class="px-4 py-3 text-left min-w-[140px] whitespace-nowrap">Trạng thái</th> *@
+            <input type="hidden" name="StatusFilter" id="hiddenStatusFilter" value="@Context.Request.Query["StatusFilter"]" />
 
-@*                         <th class="px-4 py-3 text-left">Chức năng</th> *@
-@*                     </tr> *@
-@*                 </thead> *@
-@*                 <tbody> *@
-@*                     @if (Model != null && Model.Any()) *@
-@*                     { *@
-@*                         foreach (var task in Model) *@
-@*                         { *@
-@*                             <tr class="border-b hover:bg-gray-50"> *@
-@*                                 <td class="px-4 py-3">@task.TaskId</td> *@
-@*                                 <td class="px-4 py-3 font-medium text-gray-800">@task.TaskName</td> *@
-@*                                 <td class="px-4 py-3 text-gray-600">@task.Description</td> *@
+            <input type="text"
+                   name="searchString"
+                   value="@Context.Request.Query["searchString"]"
+                   placeholder="Tìm theo tên NV, QL, công việc..."
+                   class="form-control" style="width: 280px;" />
 
-@*                                 <td class="px-4 py-3">@((task.Staff?.FullName) ?? "—")</td> *@
-@*                                 <td class="px-4 py-3">@((task.Manager?.FullName) ?? "—")</td> *@
+            <div class="dropdown">
+                @{
+                    var currentStatus = Context.Request.Query["StatusFilter"].ToString();
+                    var statusText = "Trạng thái";
+                    if (!string.IsNullOrEmpty(currentStatus))
+                    {
+                        switch (currentStatus)
+                        {
+                            case "4": statusText = "Chưa bắt đầu"; break;
+                            case "0": statusText = "Chờ"; break;
+                            case "1": statusText = "Đang làm"; break;
+                            case "2": statusText = "Hoàn thành"; break;
+                            case "3": statusText = "Đã hủy"; break;
+                        }
+                    }
+                }
+                <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 160px;">
+                    @statusText
+                </button>
+                <ul class="dropdown-menu shadow">
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="applyStatusFilter('4')">Chưa bắt đầu</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="applyStatusFilter('0')">Chờ</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="applyStatusFilter('1')">Đang làm</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="applyStatusFilter('2')">Hoàn thành</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="applyStatusFilter('3')">Đã hủy</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-muted" href="javascript:void(0)" onclick="applyStatusFilter('')">Tất cả trạng thái</a></li>
+                </ul>
+            </div>
 
-@*                                 <td class="px-4 py-3">@((task.AssignTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td> *@
-@*                                 <td class="px-4 py-3">@((task.DueTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td> *@
+            <div class="d-flex align-items-center gap-1">
+                <label for="startDate" class="form-label text-sm fw-medium text-nowrap mb-0">Từ:</label>
+                <input type="date"
+                       id="startDate"
+                       name="startDate"
+                       value="@Context.Request.Query["startDate"]"
+                       class="form-control" />
+            </div>
 
-@*                                 <td class="px-4 py-3 whitespace-nowrap min-w-[140px]"> *@
-@*                                     @{ *@
-@*                                         string statusLabel = "Không xác định"; *@
-@*                                         string statusColor = "bg-gray-400"; *@
-@*                                         switch (task.Status) *@
-@*                                         { *@
-@*                                             case 0: *@
-@*                                                 statusLabel = "Pending"; *@
-@*                                                 statusColor = "bg-gray-400 text-white"; *@
-@*                                                 break; *@
-@*                                             case 1: *@
-@*                                                 statusLabel = "Doing"; *@
-@*                                                 statusColor = "bg-yellow-500 text-white"; *@
-@*                                                 break; *@
-@*                                             case 2: *@
-@*                                                 statusLabel = "Done"; *@
-@*                                                 statusColor = "bg-green-600 text-white"; *@
-@*                                                 break; *@
-@*                                             case 3: *@
-@*                                                 statusLabel = "Cancelled"; *@
-@*                                                 statusColor = "bg-orange-500 text-white"; *@
-@*                                                 break; *@
-@*                                             case 4: *@
-@*                                                 statusLabel = "Not start"; *@
-@*                                                 statusColor = "bg-red-700 text-white"; *@
-@*                                                 break; *@
-@*                                         } *@
-@*                                     } *@
-@*                                     <span class="px-2 py-1 text-xs font-medium rounded @statusColor">@statusLabel</span> *@
-@*                                 </td> *@
+            <div class="d-flex align-items-center gap-1">
+                <label for="endDate" class="form-label text-sm fw-medium text-nowrap mb-0">Đến:</label>
+                <input type="date"
+                       id="endDate"
+                       name="endDate"
+                       value="@Context.Request.Query["endDate"]"
+                       class="form-control" />
+            </div>
 
-@*                                 <td class="px-4 py-3 whitespace-nowrap text-right"> *@
-@*                                     <div class="flex items-center justify-end gap-2"> *@
-@*                                         <button type="button" *@
-@*                                                 class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs font-medium" *@
-@*                                                 onclick="openEditModal(this)" *@
-@*                                                 data-task-id="@task.TaskId" *@
-@*                                                 data-task-name="@task.TaskName" *@
-@*                                                 data-description="@task.Description" *@
-@*                                                 data-manager-id="@task.ManagerId" *@
-@*                                                 data-staff-id="@task.StaffId" *@
-@*                                                 data-due-time="@(task.DueTime?.ToString("yyyy-MM-ddTHH:mm"))"> *@
-@*                                             Chi tiết *@
-@*                                         </button> *@
-@*                                     </div> *@
-@*                                 </td> *@
-@*                             </tr> *@
-@*                         } *@
-@*                     } *@
-@*                     else *@
-@*                     { *@
-@*                         <tr> *@
-@*                             <td colspan="9" class="text-center text-gray-500 py-4"> *@
-@*                                 Không có công việc nào được hiển thị. *@
-@*                             </td> *@
-@*                         </tr> *@
-@*                     } *@
-@*                 </tbody> *@
-@*             </table> *@
-@*         </div> *@
-@*     </div> *@
+            <button type="submit" class="btn btn-primary">
+                Lọc
+            </button>
+        </form>
 
-@*     <!-- Modal Thêm công việc --> *@
-@*     <div id="addTaskModal" *@
-@*          class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"> *@
-@*         <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative"> *@
-@*             <h2 class="text-xl font-semibold mb-4">Thêm công việc mới</h2> *@
+        <button type="button"
+                data-bs-toggle="modal"
+                data-bs-target="#addTaskModalBootstrap"
+                class="btn btn-primary">
+            + Thêm công việc
+        </button>
+    </div>
 
-@*             <form method="post" asp-action="Create" class="space-y-4"> *@
-@*                 <div> *@
-@*                     <label class="block text-sm font-medium mb-1">Tên công việc</label> *@
-@*                     <input type="text" name="TaskName" required *@
-@*                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" /> *@
-@*                 </div> *@
+    <div class="table-responsive bg-white shadow-sm rounded">
+        <table class="table table-hover table-striped mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="px-3 py-3 text-start">Mã công việc</th>
+                    <th class="px-3 py-3 text-start">Tên công việc</th>
+                    <th class="px-3 py-3 text-start">Mô tả</th>
+                    <th class="px-3 py-3 text-start">Nhân viên</th>
+                    <th class="px-3 py-3 text-start">Người quản lý</th>
+                    <th class="px-3 py-3 text-start">Thời gian bắt đầu</th>
+                    <th class="px-3 py-3 text-start">Thời hạn</th>
+                    <th class="px-3 py-3 text-start text-nowrap">Trạng thái</th>
+                    <th class="px-3 py-3 text-start">Chức năng</th>
+                </tr>
+            </thead>
+            <tbody id="tasksTableBody">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var task in Model)
+                    {
+                        <tr class="align-middle" id="task-row-@task.TaskId">
+                            <td class="px-3 py-3">@task.TaskId</td>
+                            <td class="px-3 py-3 fw-medium text-dark">
+                                @(task.Tasktype?.TaskName ?? "—")
+                            </td>
+                            <td class="px-3 py-3 text-muted">
+                                @(task.Tasktype?.Description ?? "—")
+                            </td>
+                            <td class="px-3 py-3">@((task.Staff?.FullName) ?? "—")</td>
+                            <td class="px-3 py-3">@((task.Manager?.FullName) ?? "—")</td>
+                            <td class="px-3 py-3">@((task.AssignTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td>
+                            <td class="px-3 py-3">@((task.DueTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td>
+                            <td class="px-3 py-3 text-nowrap">
+                                @{
+                                    string statusLabel = "Không xác định";
+                                    string statusClass = "badge rounded-pill task-status-badge ";
+                                    switch (task.Status)
+                                    {
+                                        case 0: statusLabel = "Chờ"; statusClass += "bg-secondary"; break;
+                                        case 1: statusLabel = "Đang làm"; statusClass += "bg-warning text-dark"; break;
+                                        case 2: statusLabel = "Hoàn thành"; statusClass += "bg-success"; break;
+                                        case 3: statusLabel = "Đã hủy"; statusClass += "bg-danger"; break;
+                                        case 4: statusLabel = "Chưa bắt đầu"; statusClass += "bg-primary"; break;
+                                    }
+                                }
+                                <span class="@statusClass">@statusLabel</span>
+                            </td>
+                            <td class="px-3 py-3 text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button"
+                                            class="btn btn-sm btn-info text-white"
+                                            onclick="openEditModal(this)"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editTaskModalBootstrap"
+                                            data-task-id="@task.TaskId"
+                                            data-tasktype-id="@task.TasktypeId"
+                                            data-manager-id="@task.ManagerId"
+                                            data-staff-id="@task.StaffId"
+                                            data-due-time="@(task.DueTime?.ToString("yyyy-MM-ddTHH:mm"))"
+                                            data-assign-time="@(task.AssignTime?.ToString("yyyy-MM-ddTHH:mm"))">
+                                        Chi tiết
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            Không có công việc nào được hiển thị.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
-@*                 <div> *@
-@*                     <label class="block text-sm font-medium mb-1">Mô tả</label> *@
-@*                     <textarea name="Description" rows="3" *@
-@*                               class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea> *@
-@*                 </div> *@
+    <div class="modal fade" id="addTaskModalBootstrap" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTaskModalLabel">Thêm công việc mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" asp-action="Create">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Người giao việc</label>
+                            <select name="ManagerId" class="form-select" required>
+                                <option value="">-- Chọn Người giao việc (QL) --</option>
+                                @if (ViewBag.Managers != null)
+                                {
+                                    foreach (var manager in (IEnumerable<Staff>)ViewBag.Managers)
+                                    {
+                                        <option value="@manager.StaffId">@manager.FullName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Loại công việc</label>
+                            <select name="TaskTypeId" class="form-select" required>
+                                <option value="">-- Chọn loại công việc --</option>
+                                @if (ViewBag.TaskTypes != null)
+                                {
+                                    foreach (var type in (IEnumerable<TaskType>)ViewBag.TaskTypes)
+                                    {
+                                        <option value="@type.TasktypeId">@type.TaskName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Thời hạn</label>
+                            <input type="datetime-local" name="DueTime"
+                                   class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nhân viên</label>
+                            <select name="StaffId" class="form-select">
+                                <option value="0">-- Chọn nhân viên --</option>
+                                @if (ViewBag.Staffs != null)
+                                {
+                                    foreach (var staff in (IEnumerable<Staff>)ViewBag.Staffs)
+                                    {
+                                        <option value="@staff.StaffId">@staff.FullName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-@*                 <!--Test--> *@
-@*                 <div> *@
-@*                     <label class="block text-sm font-medium mb-1">Người quản lý (Người giao việc)</label> *@
-@*                     <select name="ManagerId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
-@*                         <option value="">-- Chọn người quản lý --</option> *@
-@*                         @if (ViewBag.Managers != null) *@
-@*                         { *@
-@*                             foreach (var m in ViewBag.Managers) *@
-@*                             { *@
-@*                                 <option value="@m.StaffId">@m.FullName</option> *@
-@*                             } *@
-@*                         } *@
-@*                     </select> *@
-@*                 </div> *@
+    <div class="modal fade" id="editTaskModalBootstrap" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTaskModalLabel">Chỉnh sửa công việc</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editTaskForm" method="post" asp-controller="Task" asp-action="UpdateTask">
+                    <div class="modal-body">
+                        <input type="hidden" name="TaskId" id="edit-TaskId" />
+                        <div class="mb-3">
+                            <label class="form-label">Loại công việc</label>
+                            <select name="TaskTypeId" id="edit-TaskTypeId" class="form-select" required>
+                                <option value="">-- Chọn loại công việc --</option>
+                                @if (ViewBag.TaskTypes != null)
+                                {
+                                    foreach (var type in (IEnumerable<TaskType>)ViewBag.TaskTypes)
+                                    {
+                                        <option value="@type.TasktypeId">@type.TaskName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Người quản lý (Người giao việc)</label>
+                            <select name="ManagerId" id="edit-ManagerId" class="form-select" required>
+                                <option value="">-- Chọn người quản lý --</option>
+                                @if (ViewBag.Managers != null)
+                                {
+                                    foreach (var manager in (IEnumerable<Staff>)ViewBag.Managers)
+                                    {
+                                        <option value="@manager.StaffId">@manager.FullName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
 
-@*                 <div> *@
-@*                     <label class="block text-sm font-medium mb-1">Nhân viên</label> *@
-@*                     <select name="StaffId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
-@*                         <option value="">-- Chọn nhân viên --</option> *@
-@*                         @if (ViewBag.Staffs != null) *@
-@*                         { *@
-@*                             foreach (var s in ViewBag.Staffs) *@
-@*                             { *@
-@*                                 <option value="@s.StaffId">@s.FullName</option> *@
-@*                             } *@
-@*                         } *@
-@*                     </select> *@
-@*                 </div> *@
+                        <div class="mb-3">
+                            <label class="form-label">Thời gian bắt đầu</label>
+                            <input type="datetime-local" name="AssignTime" id="edit-AssignTime"
+                                   class="form-control" />
+                        </div>
 
-@*                 <div> *@
-@*                     <label class="block text-sm font-medium mb-1">Thời hạn</label> *@
-@*                     <input type="datetime-local" name="DueTime" *@
-@*                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" /> *@
-@*                 </div> *@
+                        <div class="mb-3">
+                            <label class="form-label">Thời hạn</label>
+                            <input type="datetime-local" name="DueTime" id="edit-DueTime"
+                                   class="form-control" />
+                        </div>
 
-@*                 <div class="flex justify-end gap-2 mt-6"> *@
-@*                     <button type="button" onclick="closeAddModal()" *@
-@*                             class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100"> *@
-@*                         Hủy *@
-@*                     </button> *@
-@*                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Lưu</button> *@
-@*                 </div> *@
-@*             </form> *@
+                        <div class="mb-3">
+                            <label class="form-label">Nhân viên</label>
+                            <select name="StaffId" id="edit-StaffId" class="form-select">
+                                <option value="0">-- Chọn nhân viên (Không bắt buộc) --</option>
+                                @if (ViewBag.Staffs != null)
+                                {
+                                    foreach (var staff in (IEnumerable<Staff>)ViewBag.Staffs)
+                                    {
+                                        <option value="@staff.StaffId">@staff.FullName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
-@*             <!-- Nút đóng góc --> *@
-@*             <button type="button" onclick="closeAddModal()" *@
-@*                     class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl"> *@
-@*                 &times; *@
-@*             </button> *@
-@*         </div> *@
-@*     </div> *@
+@section Scripts {
+    <script src="~/lib/signalr/signalr.min.js"></script>
+    <script>
+        const taskConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/taskhub")
+            .withAutomaticReconnect()
+            .build();
 
-@*     <!-- Modal Chỉnh sửa công việc--> *@
-@*     </div> *@
-@*     <div id="editTaskModal" *@
-@*          class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"> *@
-@*         <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative"> *@
-@*             <h2 class="text-xl font-semibold mb-4">Chỉnh sửa công việc</h2> *@
+        async function startSignalR() {
+            try {
+                await taskConnection.start();
+                console.log("SignalR (TaskHub) Đã kết nối.");
+            } catch (err) {
+                console.error(err);
+                setTimeout(startSignalR, 5000);
+            }
+        };
 
-@*             <form id="editTaskForm" method="post" asp-controller="Task" asp-action="UpdateTask" class="space-y-4"> *@
+        taskConnection.on("TaskCreated", function (task) {
+            console.log("Công việc mới được tạo (realtime):", task);
 
-@*                 <input type="hidden" name="TaskId" id="edit-TaskId" /> *@
+            const noTaskRow = document.getElementById('no-tasks-row');
+            if (noTaskRow) {
+                noTaskRow.remove();
+            }
 
-@*                 <div> *@
-@*                     <label class="block text-sm font-medium mb-1">Tên công việc</label> *@
-@*                     <input type="text" name="TaskName" id="edit-TaskName" required *@
-@*                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" /> *@
-@*                 </div> *@
+            const tableBody = document.getElementById('tasksTableBody');
+            const newRowHtml = createTaskRowHtml(task);
+            tableBody.insertAdjacentHTML('afterbegin', newRowHtml);
 
-@*                 <div> *@
-@*                     <label class="block text-sm font-medium mb-1">Mô tả</label> *@
-@*                     <textarea name="Description" id="edit-Description" rows="3" *@
-@*                               class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea> *@
-@*                 </div> *@
+            const newRow = document.getElementById(`task-row-${task.taskId}`);
+            if(newRow) {
+                newRow.classList.add('highlight-update');
+            }
+        });
 
-@*                 <div> *@
-@*                     <label class="block text-sm font-medium mb-1">Người quản lý (Người giao việc)</label> *@
-@*                     <select name="ManagerId" id="edit-ManagerId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
-@*                         <option value="">-- Chọn người quản lý --</option> *@
-@*                         @if (ViewBag.Managers != null) *@
-@*                         { *@
-@*                             foreach (var m in ViewBag.Managers) *@
-@*                             { *@
-@*                                 <option value="@m.StaffId">@m.FullName</option> *@
-@*                             } *@
-@*                         } *@
-@*                     </select> *@
-@*                 </div> *@
+        taskConnection.on("TaskUpdated", function (task) {
+            console.log("Công việc được cập nhật (realtime):", task);
 
-@*                 <div> *@
-@*                     <label class="block text-sm font-medium mb-1">Nhân viên</label> *@
-@*                     <select name="StaffId" id="edit-StaffId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
-@*                         <option value="">-- Chọn nhân viên --</option> *@
-@*                         @if (ViewBag.Staffs != null) *@
-@*                         { *@
-@*                             foreach (var s in ViewBag.Staffs) *@
-@*                             { *@
-@*                                 <option value="@s.StaffId">@s.FullName</option> *@
-@*                             } *@
-@*                         } *@
-@*                     </select> *@
-@*                 </div> *@
+            const row = document.getElementById(`task-row-${task.taskId}`);
+            if (row) {
+                updateTaskRow(row, task);
 
-@*                 <div> *@
-@*                     <label class="block text-sm font-medium mb-1">Thời hạn</label> *@
-@*                     <input type="datetime-local" name="DueTime" id="edit-DueTime" *@
-@*                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" /> *@
-@*                 </div> *@
+                row.classList.add('highlight-update');
+            }
+        });
 
-@*                 <div class="flex justify-end gap-2 mt-6"> *@
-@*                     <button type="button" onclick="closeEditModal()" *@
-@*                             class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100"> *@
-@*                         Hủy *@
-@*                     </button> *@
-@*                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Lưu thay đổi</button> *@
-@*                 </div> *@
-@*             </form> *@
+        taskConnection.on("TaskDeleted", function (taskId) {
+            console.log("Công việc bị xóa (realtime):", taskId);
+            const row = document.getElementById(`task-row-${taskId}`);
+            if (row) {
+                row.style.opacity = '0.5';
+                row.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    row.remove();
+                }, 500);
+            }
+        });
 
-@*             <button type="button" onclick="closeEditModal()" *@
-@*                     class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl"> *@
-@*                 &times; *@
-@*             </button> *@
-@*         </div> *@
-@*     </div> *@
+        startSignalR();
+        taskConnection.onclose(async () => {
+            await startSignalR();
+        });
 
-@*     <script> *@
-@*         function openAddModal() { *@
-@*             document.getElementById('addTaskModal').classList.remove('hidden'); *@
-@*         } *@
-@*         function closeAddModal() { *@
-@*             document.getElementById('addTaskModal').classList.add('hidden'); *@
-@*         } *@
+        function updateTaskRow(row, task) {
+            const { statusLabel, statusClass } = getStatusBadgeInfo(task.status);
 
-@*             function openEditModal(button) { *@
-@*             const taskId = button.getAttribute('data-task-id'); *@
-@*             const taskName = button.getAttribute('data-task-name'); *@
-@*             const description = button.getAttribute('data-description'); *@
-@*             const managerId = button.getAttribute('data-manager-id'); *@
-@*             const staffId = button.getAttribute('data-staff-id'); *@
-@*             const dueTime = button.getAttribute('data-due-time'); *@
+            row.querySelector('.cell-task-name').textContent = task.tasktypeName || "—";
+            row.querySelector('.cell-task-description').textContent = task.description || "—";
+            row.querySelector('.cell-task-staff').textContent = task.staffName || "—";
+            row.querySelector('.cell-task-manager').textContent = task.managerName || "—";
+            row.querySelector('.cell-task-assign').textContent = formatDateTime(task.assignTime);
+            row.querySelector('.cell-task-due').textContent = formatDateTime(task.dueTime);
+            row.querySelector('.cell-task-status').innerHTML = `<span class="${statusClass}">${statusLabel}</span>`;
 
-@*             document.getElementById('edit-TaskId').value = taskId; *@
-@*             document.getElementById('edit-TaskName').value = taskName; *@
-@*             document.getElementById('edit-Description').value = description; *@
-@*             document.getElementById('edit-ManagerId').value = managerId; *@
-@*             document.getElementById('edit-StaffId').value = staffId; *@
-@*             document.getElementById('edit-DueTime').value = dueTime; *@
+            const editButton = row.querySelector("button[data-bs-target='#editTaskModalBootstrap']");
+            if (editButton) {
+                editButton.setAttribute('data-due-time', formatDateTimeForInput(task.dueTime));
+                editButton.setAttribute('data-assign-time', formatDateTimeForInput(task.assignTime));
+            }
+        }
 
-@*             document.getElementById('editTaskModal').classList.remove('hidden'); *@
-@*         } *@
+        function createTaskRowHtml(task) {
+            const { statusLabel, statusClass } = getStatusBadgeInfo(task.status);
 
-@*         function closeEditModal() { *@
-@*             document.getElementById('editTaskModal').classList.add('hidden'); *@
-@*         } *@
+            return `
+                <tr class="align-middle" id="task-row-${task.taskId}">
+                    <td class="px-3 py-3 cell-task-id">${task.taskId}</td>
+                    <td class="px-3 py-3 fw-medium text-dark cell-task-name">${task.tasktypeName || "—"}</td>
+                    <td class="px-3 py-3 text-muted cell-task-description">${task.description || "—"}</td>
+                    <td class="px-3 py-3 cell-task-staff">${task.staffName || "—"}</td>
+                    <td class="px-3 py-3 cell-task-manager">${task.managerName || "—"}</td>
+                    <td class="px-3 py-3 cell-task-assign">${formatDateTime(task.assignTime)}</td>
+                    <td class="px-3 py-3 cell-task-due">${formatDateTime(task.dueTime)}</td>
+                    <td class="px-3 py-3 text-nowrap cell-task-status">
+                        <span class="${statusClass}">${statusLabel}</span>
+                    </td>
+                    <td class="px-3 py-3 text-end cell-task-actions">
+                        <div class="d-flex justify-content-end gap-2">
+                             <button type="button"
+                                 class="btn btn-sm btn-info text-white"
+                                 onclick="openEditModal(this)"
+                                 data-bs-toggle="modal"
+                                 data-bs-target="#editTaskModalBootstrap"
+                                 data-task-id="${task.taskId}"
+                                 data-tasktype-id="${task.tasktypeId || ''}"
+                                 data-manager-id="${task.managerId || ''}"
+                                 data-staff-id="${task.staffId || '0'}"
+                                 data-due-time="${formatDateTimeForInput(task.dueTime)}"
+                                 data-assign-time="${formatDateTimeForInput(task.assignTime)}">
+                                 Chi tiết
+                             </button>
+                         </div>
+                    </td>
+                </tr>`;
+        }
 
-@*         (function() { *@
-@*         @if (TempData["OpenModal"] as bool? == true) *@
-@*         { *@
-@*             <text> *@
-@*                         openAddModal(); *@
-@*             </text> *@
-@*         } *@
-@*         })(); *@
-@*     </script> *@
+        function getStatusBadgeInfo(status) {
+            let statusLabel = "Không xác định";
+            let statusClass = "badge rounded-pill task-status-badge ";
+            switch (status) {
+                case 0: statusLabel = "Chờ"; statusClass += "bg-secondary"; break;
+                case 1: statusLabel = "Đang làm"; statusClass += "bg-warning text-dark"; break;
+                case 2: statusLabel = "Hoàn thành"; statusClass += "bg-success"; break;
+                case 3: statusLabel = "Đã hủy"; statusClass += "bg-danger"; break;
+                case 4: statusLabel = "Chưa bắt đầu"; statusClass += "bg-primary"; break;
+            }
+            return { statusLabel, statusClass };
+        }
 
-@* </body> *@
-@* </html> *@
+        function formatDateTime(dateTimeString) {
+            if (!dateTimeString) return "—";
+            const date = new Date(dateTimeString);
+            return date.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatDateTimeForInput(dateTimeString) {
+            if (!dateTimeString) return "";
+            const date = new Date(dateTimeString);
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            return date.toISOString().slice(0, 16);
+        }
+
+        function applyStatusFilter(statusValue) {
+            document.getElementById('hiddenStatusFilter').value = statusValue;
+            document.getElementById('searchForm').submit();
+        }
+
+        function openEditModal(button) {
+            const taskId = button.getAttribute('data-task-id');
+            const taskTypeId = button.getAttribute('data-tasktype-id');
+            const managerId = button.getAttribute('data-manager-id');
+            const staffId = button.getAttribute('data-staff-id');
+            const dueTime = button.getAttribute('data-due-time');
+            const assignTime = button.getAttribute('data-assign-time');
+
+            document.getElementById('edit-TaskId').value = taskId;
+            document.getElementById('edit-TaskTypeId').value = taskTypeId;
+            document.getElementById('edit-ManagerId').value = managerId || "";
+            document.getElementById('edit-StaffId').value = staffId || "0";
+            document.getElementById('edit-AssignTime').value = assignTime;
+            document.getElementById('edit-DueTime').value = dueTime;
+        }
+
+        (function () {
+        @if (TempData["OpenModal"] as bool? == true)
+        {
+            <text>
+                        var addTaskModal = new bootstrap.Modal(document.getElementById('addTaskModalBootstrap'));
+                        addTaskModal.show();
+            </text>
+        }
+        })();
+    </script>
+}
