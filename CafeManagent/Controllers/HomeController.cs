@@ -62,7 +62,7 @@ namespace CafeManagent.Controllers
                 }
                 
             }
-            ViewBag.ErrorMessage = "Email hoặc mật khẩu không đúng!";
+            ViewBag.ErrorMessage = "Username hoặc mật khẩu không đúng!";
             return View("Login");
         }
 

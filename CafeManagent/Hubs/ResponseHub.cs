@@ -21,6 +21,7 @@ namespace CafeManagent.Hubs
         {
             int userId = int.Parse(Context.GetHttpContext()!
                 .Session.Get("StaffId"));
+        
             //int userId = 1;
 
             SystemNotify? notify;

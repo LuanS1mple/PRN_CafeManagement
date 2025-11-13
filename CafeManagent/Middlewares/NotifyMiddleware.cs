@@ -21,7 +21,7 @@ namespace CafeManagent.Middlewares
             string role = context.Session.GetString("StaffRole");
             if (!string.IsNullOrEmpty(role))
             {
-                if (!role.Equals("Branch Manager"))
+                if (role.Equals("Branch Manager"))
                 {
                     var list = ulti.AllManager();
                     await hub.Clients.Group("Manager")
