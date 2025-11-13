@@ -17,9 +17,14 @@ namespace CafeManagent.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 6)
         {
-            var shifts = await _service.GetAllWorkShiftsAsync();
+            var (shifts, totalItems) = await _service.GetPagedWorkShiftsAsync(page, pageSize);
+
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
 
             ViewBag.Positions = await _context.Roles
                 .Where(r => r.RoleId != 1)
@@ -50,10 +55,16 @@ namespace CafeManagent.Controllers
             return View(shifts);
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> FilterWorkShift([FromForm] FilterWorkShiftDTO filter)
+        public async Task<IActionResult> FilterWorkShift([FromForm] FilterWorkShiftDTO filter, int page = 1, int pageSize = 6)
         {
-            var shifts = await _service.FilterWorkShiftsAsync(filter);
+            var (shifts, totalItems) = await _service.FilterPagedWorkShiftsAsync(filter, page, pageSize);
+
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
 
             ViewBag.Positions = await _context.Roles
                 .Where(r => r.RoleId != 1)
@@ -83,6 +94,7 @@ namespace CafeManagent.Controllers
 
             return View("Index", shifts);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> AddWorkShift([FromForm] AddWorkShiftDTO dto)

@@ -15,9 +15,9 @@ namespace CafeManagent.Services.Imp
             _context = context;
         }
 
-        public async Task<List<WorkShiftDTO>> GetAllWorkShiftsAsync()
+        public async Task<(List<WorkShiftDTO> Shifts, int TotalItems)> GetPagedWorkShiftsAsync(int page, int pageSize)
         {
-            var shifts = await _context.WorkSchedules
+            var query = _context.WorkSchedules
                 .Include(ws => ws.Workshift)
                 .Include(ws => ws.Staff)
                     .ThenInclude(s => s.Role)
@@ -32,13 +32,21 @@ namespace CafeManagent.Services.Imp
                     ShiftType = ws.Workshift.ShiftName,
                     TotalHours = (ws.Workshift.EndTime.Value - ws.Workshift.StartTime.Value).TotalHours,
                     Description = ws.Description
-                })
+                });
+
+            int totalItems = await query.CountAsync();
+
+            var shifts = await query
+                .OrderByDescending(s => s.Date)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return shifts;
+            return (shifts, totalItems);
         }
 
-        public async Task<List<WorkShiftDTO>> FilterWorkShiftsAsync(FilterWorkShiftDTO filter)
+
+        public async Task<(List<WorkShiftDTO> Shifts, int TotalItems)> FilterPagedWorkShiftsAsync(FilterWorkShiftDTO filter, int page, int pageSize)
         {
             var query = _context.WorkSchedules
                 .Include(ws => ws.Workshift)
@@ -64,6 +72,8 @@ namespace CafeManagent.Services.Imp
                     ws.Staff.Role.RoleName.Contains(filter.Keyword) ||
                     ws.Description.Contains(filter.Keyword));
 
+            int totalItems = await query.CountAsync();
+
             var shifts = await query
                 .Select(ws => new WorkShiftDTO
                 {
@@ -77,10 +87,14 @@ namespace CafeManagent.Services.Imp
                     TotalHours = (ws.Workshift.EndTime.Value - ws.Workshift.StartTime.Value).TotalHours,
                     Description = ws.Description
                 })
+                .OrderByDescending(s => s.Date)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return shifts;
+            return (shifts, totalItems);
         }
+
 
         public async Task<(bool Success, string Message)> AddWorkShiftAsync(AddWorkShiftDTO dto)
         {
