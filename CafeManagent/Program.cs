@@ -39,6 +39,8 @@ builder.Services.AddTransient<IStaffDirectoryService, StaffDirectoryService>();
 //builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<ITaskReportService, TaskReportService>();
 
 
 builder.Services.AddRazorPages(o =>
@@ -73,6 +75,7 @@ app.MapHub<ResponseHub>("/response");
 app.MapHub<NotifyHub>("/notify");
 
 app.MapHub<OrderHub>("/orderHub");
+app.MapHub<TaskHub>("/taskhub");
 
 app.Run();
 

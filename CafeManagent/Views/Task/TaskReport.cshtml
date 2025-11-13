@@ -1,0 +1,191 @@
+﻿@using CafeManagent.Models
+@using System.Linq
+@* LƯU Ý: ĐÃ LOẠI BỎ TẤT CẢ CÁC THAM CHIẾU ĐẾN ReportTaskViewModel GÂY LỖI CS0246 *@
+@{
+    ViewData["Title"] = "Báo Cáo Công Việc";
+    var taskSummary = ViewBag.TaskSummary as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
+
+<div class="container-fluid">
+    <h2 class="mb-4">📊 Báo Cáo Tình Hình Công Việc</h2>
+
+    <div class="row">
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Tổng Quan Công Việc Theo Trạng Thái</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Trạng Thái</th>
+                                    <th class="text-center">Số Lượng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (taskSummary.Any())
+                                {
+                                    @foreach (var item in taskSummary)
+                                    {
+                                        <tr class="task-summary-row" data-status-id="@item.Key" style="cursor: pointer;">
+                                            <td>@GetStatusLabel(item.Key)</td>
+                                            <td class="text-center fw-bold text-primary">@item.Value</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td colspan="2" class="text-center text-muted">Không có dữ liệu tổng hợp.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        Chi Tiết Công Việc <span id="detail-status-title" class="text-secondary">(Tất cả)</span>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="taskDetailTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên Công Việc</th>
+                                    <th>Mô Tả</th>
+                                    <th>Nhân Viên</th>
+                                    <th>Quản Lý</th>
+                                    <th>Bắt đầu</th> @* <-- CỘT MỚI *@
+                                    <th>Thời Hạn</th>
+                                    <th>Trạng Thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="taskDetailTableBody">
+                                <tr id="no-selection-row">
+                                    <td colspan="8" class="text-center text-muted py-3">Chọn một trạng thái ở bảng bên cạnh để xem chi tiết.</td> @* <-- Tăng colspan lên 8 *@
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function formatDateTime(dateTimeString) {
+            if (!dateTimeString) return "—";
+            const date = new Date(dateTimeString);
+            return date.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function getStatusBadgeInfo(status) {
+            let statusLabel = "Không xác định";
+            let statusClass = "badge rounded-pill task-status-badge ";
+            switch (status) {
+                case 0: statusLabel = "Chờ"; statusClass += "bg-secondary"; break;
+                case 1: statusLabel = "Đang làm"; statusClass += "bg-warning text-dark"; break;
+                case 2: statusLabel = "Hoàn thành"; statusClass += "bg-success"; break;
+                case 3: statusLabel = "Đã hủy"; statusClass += "bg-danger"; break;
+                case 4: statusLabel = "Chưa bắt đầu"; statusClass += "bg-primary"; break;
+                default: statusLabel = "—"; statusClass += "bg-light text-secondary"; break;
+            }
+            return { statusLabel, statusClass };
+        }
+
+        $(document).ready(function () {
+
+            $('.task-summary-row').on('click', function() {
+                const statusId = $(this).data('status-id');
+                const statusLabel = $(this).find('td:first').text();
+
+                $('#detail-status-title').text(`(${statusLabel})`);
+                $('#taskDetailTableBody').empty();
+                $('#taskDetailTableBody').append('<tr><td colspan="8" class="text-center text-info py-3"><i class="fas fa-spinner fa-spin me-2"></i> Đang tải dữ liệu...</td></tr>');
+
+                const url = `@Url.Action("GetTasksByStatus", "Task")?statusId=${statusId}`;
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    success: function(tasks) {
+                        $('#taskDetailTableBody').empty();
+
+                        if (tasks.length === 0) {
+                            const noDataRow = `<tr><td colspan="8" class="text-center text-muted py-3">Không có công việc nào ở trạng thái ${statusLabel}.</td></tr>`;
+                            $('#taskDetailTableBody').append(noDataRow);
+                            return;
+                        }
+
+                        // HIỂN THỊ DỮ LIỆU
+                        tasks.forEach(task => {
+                            const { statusLabel: detailLabel, statusClass: detailClass } = getStatusBadgeInfo(task.status);
+
+                            const rowHtml = `
+                                <tr>
+                                    <td>${task.taskId}</td>
+                                    <td>${task.tasktypeName || '—'}</td>
+                                    <td>${task.description || '—'}</td>
+                                    <td>${task.staffName || '—'}</td>
+                                    <td>${task.managerName || '—'}</td>
+                                    <td>${formatDateTime(task.startTime)}</td>
+                                    <td>${formatDateTime(task.dueTime)}</td>
+                                    <td><span class="${detailClass}">${detailLabel}</span></td>
+                                </tr>
+                            `;
+                            $('#taskDetailTableBody').append(rowHtml);
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        $('#taskDetailTableBody').empty();
+                        // Tăng colspan lên 8
+                        const errorRow = `<tr><td colspan="8" class="text-center text-danger py-3">Lỗi khi tải dữ liệu: ${error}</td></tr>`;
+                        $('#taskDetailTableBody').append(errorRow);
+                        console.error("AJAX Error:", error);
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+@* C# Helper functions (Giữ nguyên) *@
+@functions {
+    string GetStatusLabel(int status)
+    {
+        return status switch
+        {
+            0 => "Chờ",
+            1 => "Đang làm",
+            2 => "Hoàn thành",
+            3 => "Đã hủy",
+            4 => "Chưa bắt đầu",
+            _ => "Không xác định",
+        };
+    }
+
+    string GetStatusClass(int status)
+    {
+        return status switch
+        {
+            0 => "badge bg-secondary",
+            1 => "badge bg-warning text-dark",
+            2 => "badge bg-success",
+            3 => "badge bg-danger",
+            4 => "badge bg-primary",
+            _ => "badge bg-light text-secondary",
+        };
+    }
+}
