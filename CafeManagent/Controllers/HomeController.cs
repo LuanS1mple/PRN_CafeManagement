@@ -28,7 +28,7 @@ namespace CafeManagent.Controllers
 
        
         [HttpPost]
-        public IActionResult ProcessLogin(string Username, string Password, bool RememberMe)
+        public async Task<IActionResult> ProcessLogin(string Username, string Password, bool RememberMe)
         {
             var staff = staffService.Authentication(Username, Password);
 
@@ -37,7 +37,7 @@ namespace CafeManagent.Controllers
                 HttpContext.Session.SetInt32("StaffId", staff.StaffId);
                 HttpContext.Session.SetString("StaffName", staff.FullName ?? "");
                 HttpContext.Session.SetString("StaffRole", staff.Role?.RoleName ?? "");
-                CreateToken(staff, HttpContext);
+                await CreateToken(staff, HttpContext);
 
                 // Nếu RememberMe được chọn, có thể set cookie (tùy bạn)
                 if (RememberMe)
