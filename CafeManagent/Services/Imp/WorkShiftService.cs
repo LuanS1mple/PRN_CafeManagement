@@ -161,14 +161,7 @@ namespace CafeManagent.Services.Imp
             _context.WorkSchedules.Add(schedule);
             await _context.SaveChangesAsync();
 
-            var attendance = new Attendance
-            {
-                StaffId = staff.StaffId,
-                WorkshiftId = workShift.WorkshiftId,
-                Workdate = dto.Date
-            };
-            _context.Attendances.Add(attendance);
-            await _context.SaveChangesAsync();
+           
 
             return (true, "Thêm ca làm thành công!");
         }
@@ -236,16 +229,6 @@ namespace CafeManagent.Services.Imp
 
             await _context.SaveChangesAsync();
 
-            // Cập nhật bảng Attendance
-            var attendance = await _context.Attendances.FirstOrDefaultAsync(a =>
-                a.StaffId == staff.StaffId && a.Workdate == schedule.Date);
-
-            if (attendance != null)
-            {
-                attendance.WorkshiftId = workShift.WorkshiftId;
-                attendance.Workdate = dto.Date;
-                await _context.SaveChangesAsync();
-            }
 
             return (true, "Cập nhật ca làm thành công!");
         }
