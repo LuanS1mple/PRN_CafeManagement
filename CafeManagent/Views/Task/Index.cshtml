@@ -1,374 +1,374 @@
-﻿@model IEnumerable<CafeManagent.Models.Task>
-@using CafeManagent.Models
+﻿@* @model IEnumerable<CafeManagent.Models.Task> *@
+@* @using CafeManagent.Models *@
 
-@{
-    ViewData["Title"] = "Danh sách công việc";
-}
+@* @{ *@
+@*     ViewData["Title"] = "Danh sách công việc"; *@
+@* } *@
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"]</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
+@* <!DOCTYPE html> *@
+@* <html lang="vi"> *@
+@* <head> *@
+@*     <meta charset="UTF-8"> *@
+@*     <meta name="viewport" content="width=device-width, initial-scale=1.0"> *@
+@*     <title>@ViewData["Title"]</title> *@
+@*     <script src="https://cdn.tailwindcss.com"></script> *@
+@* </head> *@
 
-<body class="bg-gray-50 font-sans">
+@* <body class="bg-gray-50 font-sans"> *@
 
-    <!-- Header -->
-    <div class="border-b bg-white">
-        <div class="max-w-7xl mx-auto px-6 py-6 flex items-center gap-3">
-            <div class="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-                📋
-            </div>
-            <div>
-                <h1 class="text-lg font-semibold">Danh sách công việc</h1>
-                <p class="text-gray-500 text-sm">Theo dõi các nhiệm vụ được giao cho nhân viên</p>
-            </div>
-        </div>
-    </div>
+@*     <!-- Header --> *@
+@*     <div class="border-b bg-white"> *@
+@*         <div class="max-w-7xl mx-auto px-6 py-6 flex items-center gap-3"> *@
+@*             <div class="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl"> *@
+@*                 📋 *@
+@*             </div> *@
+@*             <div> *@
+@*                 <h1 class="text-lg font-semibold">Danh sách công việc</h1> *@
+@*                 <p class="text-gray-500 text-sm">Theo dõi các nhiệm vụ được giao cho nhân viên</p> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
 
-    <!-- Main content -->
-    <div class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+@*     <!-- Main content --> *@
+@*     <div class="max-w-7xl mx-auto px-6 py-8 space-y-6"> *@
 
-        <!-- Toolbar -->
-        <div class="flex items-center justify-between">
-            <h2 class="text-md text-gray-700 font-semibold">
-                Tổng số công việc: @Model.Count()
-            </h2>
-            <button type="button"
-                    onclick="openAddModal()"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium">
-                + Thêm công việc
-            </button>
-        </div>
+@*         <!-- Toolbar --> *@
+@*         <div class="flex items-center justify-between"> *@
+@*             <h2 class="text-md text-gray-700 font-semibold"> *@
+@*                 Tổng số công việc: @Model.Count() *@
+@*             </h2> *@
+@*             <button type="button" *@
+@*                     onclick="openAddModal()" *@
+@*                     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium"> *@
+@*                 + Thêm công việc *@
+@*             </button> *@
+@*         </div> *@
 
-        <!-- Search & Filter Form -->
-        <div class="bg-white shadow rounded-lg p-4 mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">Tìm kiếm & Lọc</h3>
-            <form asp-action="Index" method="get" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <label for="searchStaff" class="block text-sm font-medium text-gray-700 mb-1">Tên nhân viên</label>
-                        <input type="text" id="searchStaff" name="searchStaff"
-                               value="@ViewData["CurrentStaffFilter"]"
-                               class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="Nhập tên nhân viên...">
-                    </div>
+@*         <!-- Search & Filter Form --> *@
+@*         <div class="bg-white shadow rounded-lg p-4 mb-6"> *@
+@*             <h3 class="text-lg font-semibold text-gray-800 mb-3">Tìm kiếm & Lọc</h3> *@
+@*             <form asp-action="Index" method="get" class="space-y-4"> *@
+@*                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4"> *@
+@*                     <div> *@
+@*                         <label for="searchStaff" class="block text-sm font-medium text-gray-700 mb-1">Tên nhân viên</label> *@
+@*                         <input type="text" id="searchStaff" name="searchStaff" *@
+@*                                value="@ViewData["CurrentStaffFilter"]" *@
+@*                                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" *@
+@*                                placeholder="Nhập tên nhân viên..."> *@
+@*                     </div> *@
 
-                    <div>
-                        <label for="searchManager" class="block text-sm font-medium text-gray-700 mb-1">Tên quản lý</label>
-                        <input type="text" id="searchManager" name="searchManager"
-                               value="@ViewData["CurrentManagerFilter"]"
-                               class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               placeholder="Nhập tên quản lý...">
-                    </div>
+@*                     <div> *@
+@*                         <label for="searchManager" class="block text-sm font-medium text-gray-700 mb-1">Tên quản lý</label> *@
+@*                         <input type="text" id="searchManager" name="searchManager" *@
+@*                                value="@ViewData["CurrentManagerFilter"]" *@
+@*                                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" *@
+@*                                placeholder="Nhập tên quản lý..."> *@
+@*                     </div> *@
 
-                    <div>
-                        <label for="searchStartDate" class="block text-sm font-medium text-gray-700 mb-1">Từ ngày</label>
-                        <input type="date" id="searchStartDate" name="searchStartDate"
-                               value="@ViewData["CurrentStartDateFilter"]"
-                               class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
+@*                     <div> *@
+@*                         <label for="searchStartDate" class="block text-sm font-medium text-gray-700 mb-1">Từ ngày</label> *@
+@*                         <input type="date" id="searchStartDate" name="searchStartDate" *@
+@*                                value="@ViewData["CurrentStartDateFilter"]" *@
+@*                                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
+@*                     </div> *@
 
-                    <div>
-                        <label for="searchEndDate" class="block text-sm font-medium text-gray-700 mb-1">Đến ngày</label>
-                        <input type="date" id="searchEndDate" name="searchEndDate"
-                               value="@ViewData["CurrentEndDateFilter"]"
-                               class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
+@*                     <div> *@
+@*                         <label for="searchEndDate" class="block text-sm font-medium text-gray-700 mb-1">Đến ngày</label> *@
+@*                         <input type="date" id="searchEndDate" name="searchEndDate" *@
+@*                                value="@ViewData["CurrentEndDateFilter"]" *@
+@*                                class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
+@*                     </div> *@
+@*                 </div> *@
 
-                <div class="flex justify-end gap-3 pt-2">
-                    <a asp-action="Index" class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100">
-                        Xóa lọc
-                    </a>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                        Tìm kiếm
-                    </button>
-                </div>
-            </form>
-        </div>
+@*                 <div class="flex justify-end gap-3 pt-2"> *@
+@*                     <a asp-action="Index" class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100"> *@
+@*                         Xóa lọc *@
+@*                     </a> *@
+@*                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"> *@
+@*                         Tìm kiếm *@
+@*                     </button> *@
+@*                 </div> *@
+@*             </form> *@
+@*         </div> *@
 
-        <!-- Table -->
-        <div class="overflow-x-auto bg-white shadow rounded-lg">
-            <table class="min-w-full text-sm">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="px-4 py-3 text-left">Mã công việc</th>
-                        <th class="px-4 py-3 text-left">Tên công việc</th>
-                        <th class="px-4 py-3 text-left">Mô tả</th>
-                        <th class="px-4 py-3 text-left">Nhân viên</th>
-                        <th class="px-4 py-3 text-left">Người quản lý</th>
-                        <th class="px-4 py-3 text-left">Thời gian bắt đầu</th>
-                        <th class="px-4 py-3 text-left">Thời hạn</th>
-                        <th class="px-4 py-3 text-left min-w-[140px] whitespace-nowrap">Trạng thái</th>
+@*         <!-- Table --> *@
+@*         <div class="overflow-x-auto bg-white shadow rounded-lg"> *@
+@*             <table class="min-w-full text-sm"> *@
+@*                 <thead class="bg-gray-100 text-gray-700"> *@
+@*                     <tr> *@
+@*                         <th class="px-4 py-3 text-left">Mã công việc</th> *@
+@*                         <th class="px-4 py-3 text-left">Tên công việc</th> *@
+@*                         <th class="px-4 py-3 text-left">Mô tả</th> *@
+@*                         <th class="px-4 py-3 text-left">Nhân viên</th> *@
+@*                         <th class="px-4 py-3 text-left">Người quản lý</th> *@
+@*                         <th class="px-4 py-3 text-left">Thời gian bắt đầu</th> *@
+@*                         <th class="px-4 py-3 text-left">Thời hạn</th> *@
+@*                         <th class="px-4 py-3 text-left min-w-[140px] whitespace-nowrap">Trạng thái</th> *@
 
-                        <th class="px-4 py-3 text-left">Chức năng</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var task in Model)
-                        {
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="px-4 py-3">@task.TaskId</td>
-                                @* <td class="px-4 py-3 font-medium text-gray-800">@task.TaskName</td> *@
-                                @* <td class="px-4 py-3 text-gray-600">@task.Description</td> *@
+@*                         <th class="px-4 py-3 text-left">Chức năng</th> *@
+@*                     </tr> *@
+@*                 </thead> *@
+@*                 <tbody> *@
+@*                     @if (Model != null && Model.Any()) *@
+@*                     { *@
+@*                         foreach (var task in Model) *@
+@*                         { *@
+@*                             <tr class="border-b hover:bg-gray-50"> *@
+@*                                 <td class="px-4 py-3">@task.TaskId</td> *@
+@*                                 <td class="px-4 py-3 font-medium text-gray-800">@task.TaskName</td> *@
+@*                                 <td class="px-4 py-3 text-gray-600">@task.Description</td> *@
 
-                                <td class="px-4 py-3">@((task.Staff?.FullName) ?? "—")</td>
-                                <td class="px-4 py-3">@((task.Manager?.FullName) ?? "—")</td>
+@*                                 <td class="px-4 py-3">@((task.Staff?.FullName) ?? "—")</td> *@
+@*                                 <td class="px-4 py-3">@((task.Manager?.FullName) ?? "—")</td> *@
 
-                                <td class="px-4 py-3">@((task.AssignTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td>
-                                <td class="px-4 py-3">@((task.DueTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td>
+@*                                 <td class="px-4 py-3">@((task.AssignTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td> *@
+@*                                 <td class="px-4 py-3">@((task.DueTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td> *@
 
-                                <td class="px-4 py-3 whitespace-nowrap min-w-[140px]">
-                                    @{
-                                        string statusLabel = "Không xác định";
-                                        string statusColor = "bg-gray-400";
-                                        switch (task.Status)
-                                        {
-                                            case 0:
-                                                statusLabel = "Pending";
-                                                statusColor = "bg-gray-400 text-white";
-                                                break;
-                                            case 1:
-                                                statusLabel = "Doing";
-                                                statusColor = "bg-yellow-500 text-white";
-                                                break;
-                                            case 2:
-                                                statusLabel = "Done";
-                                                statusColor = "bg-green-600 text-white";
-                                                break;
-                                            case 3:
-                                                statusLabel = "Cancelled";
-                                                statusColor = "bg-orange-500 text-white";
-                                                break;
-                                            case 4:
-                                                statusLabel = "Not start";
-                                                statusColor = "bg-red-700 text-white";
-                                                break;
-                                        }
-                                    }
-                                    <span class="px-2 py-1 text-xs font-medium rounded @statusColor">@statusLabel</span>
-                                </td>
+@*                                 <td class="px-4 py-3 whitespace-nowrap min-w-[140px]"> *@
+@*                                     @{ *@
+@*                                         string statusLabel = "Không xác định"; *@
+@*                                         string statusColor = "bg-gray-400"; *@
+@*                                         switch (task.Status) *@
+@*                                         { *@
+@*                                             case 0: *@
+@*                                                 statusLabel = "Pending"; *@
+@*                                                 statusColor = "bg-gray-400 text-white"; *@
+@*                                                 break; *@
+@*                                             case 1: *@
+@*                                                 statusLabel = "Doing"; *@
+@*                                                 statusColor = "bg-yellow-500 text-white"; *@
+@*                                                 break; *@
+@*                                             case 2: *@
+@*                                                 statusLabel = "Done"; *@
+@*                                                 statusColor = "bg-green-600 text-white"; *@
+@*                                                 break; *@
+@*                                             case 3: *@
+@*                                                 statusLabel = "Cancelled"; *@
+@*                                                 statusColor = "bg-orange-500 text-white"; *@
+@*                                                 break; *@
+@*                                             case 4: *@
+@*                                                 statusLabel = "Not start"; *@
+@*                                                 statusColor = "bg-red-700 text-white"; *@
+@*                                                 break; *@
+@*                                         } *@
+@*                                     } *@
+@*                                     <span class="px-2 py-1 text-xs font-medium rounded @statusColor">@statusLabel</span> *@
+@*                                 </td> *@
 
-                                <td class="px-4 py-3 whitespace-nowrap text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <button type="button"
-                                                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs font-medium"
-                                                onclick="openEditModal(this)"
-                                                data-task-id="@task.TaskId"
-                                                @* data-task-name="@task.TaskName" *@
-                                                @* data-description="@task.Description" *@
-                                                data-manager-id="@task.ManagerId"
-                                                data-staff-id="@task.StaffId"
-                                                data-due-time="@(task.DueTime?.ToString("yyyy-MM-ddTHH:mm"))">
-                                            Chi tiết
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="9" class="text-center text-gray-500 py-4">
-                                Không có công việc nào được hiển thị.
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+@*                                 <td class="px-4 py-3 whitespace-nowrap text-right"> *@
+@*                                     <div class="flex items-center justify-end gap-2"> *@
+@*                                         <button type="button" *@
+@*                                                 class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-xs font-medium" *@
+@*                                                 onclick="openEditModal(this)" *@
+@*                                                 data-task-id="@task.TaskId" *@
+@*                                                 data-task-name="@task.TaskName" *@
+@*                                                 data-description="@task.Description" *@
+@*                                                 data-manager-id="@task.ManagerId" *@
+@*                                                 data-staff-id="@task.StaffId" *@
+@*                                                 data-due-time="@(task.DueTime?.ToString("yyyy-MM-ddTHH:mm"))"> *@
+@*                                             Chi tiết *@
+@*                                         </button> *@
+@*                                     </div> *@
+@*                                 </td> *@
+@*                             </tr> *@
+@*                         } *@
+@*                     } *@
+@*                     else *@
+@*                     { *@
+@*                         <tr> *@
+@*                             <td colspan="9" class="text-center text-gray-500 py-4"> *@
+@*                                 Không có công việc nào được hiển thị. *@
+@*                             </td> *@
+@*                         </tr> *@
+@*                     } *@
+@*                 </tbody> *@
+@*             </table> *@
+@*         </div> *@
+@*     </div> *@
 
-    <!-- Modal Thêm công việc -->
-    <div id="addTaskModal"
-         class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
-            <h2 class="text-xl font-semibold mb-4">Thêm công việc mới</h2>
+@*     <!-- Modal Thêm công việc --> *@
+@*     <div id="addTaskModal" *@
+@*          class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"> *@
+@*         <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative"> *@
+@*             <h2 class="text-xl font-semibold mb-4">Thêm công việc mới</h2> *@
 
-            <form method="post" asp-action="Create" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Tên công việc</label>
-                    <input type="text" name="TaskName" required
-                           class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+@*             <form method="post" asp-action="Create" class="space-y-4"> *@
+@*                 <div> *@
+@*                     <label class="block text-sm font-medium mb-1">Tên công việc</label> *@
+@*                     <input type="text" name="TaskName" required *@
+@*                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" /> *@
+@*                 </div> *@
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Mô tả</label>
-                    <textarea name="Description" rows="3"
-                              class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                </div>
+@*                 <div> *@
+@*                     <label class="block text-sm font-medium mb-1">Mô tả</label> *@
+@*                     <textarea name="Description" rows="3" *@
+@*                               class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea> *@
+@*                 </div> *@
 
-                <!--Test-->
-                <div>
-                    <label class="block text-sm font-medium mb-1">Người quản lý (Người giao việc)</label>
-                    <select name="ManagerId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Chọn người quản lý --</option>
-                        @if (ViewBag.Managers != null)
-                        {
-                            foreach (var m in ViewBag.Managers)
-                            {
-                                <option value="@m.StaffId">@m.FullName</option>
-                            }
-                        }
-                    </select>
-                </div>
+@*                 <!--Test--> *@
+@*                 <div> *@
+@*                     <label class="block text-sm font-medium mb-1">Người quản lý (Người giao việc)</label> *@
+@*                     <select name="ManagerId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
+@*                         <option value="">-- Chọn người quản lý --</option> *@
+@*                         @if (ViewBag.Managers != null) *@
+@*                         { *@
+@*                             foreach (var m in ViewBag.Managers) *@
+@*                             { *@
+@*                                 <option value="@m.StaffId">@m.FullName</option> *@
+@*                             } *@
+@*                         } *@
+@*                     </select> *@
+@*                 </div> *@
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Nhân viên</label>
-                    <select name="StaffId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Chọn nhân viên --</option>
-                        @if (ViewBag.Staffs != null)
-                        {
-                            foreach (var s in ViewBag.Staffs)
-                            {
-                                <option value="@s.StaffId">@s.FullName</option>
-                            }
-                        }
-                    </select>
-                </div>
+@*                 <div> *@
+@*                     <label class="block text-sm font-medium mb-1">Nhân viên</label> *@
+@*                     <select name="StaffId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
+@*                         <option value="">-- Chọn nhân viên --</option> *@
+@*                         @if (ViewBag.Staffs != null) *@
+@*                         { *@
+@*                             foreach (var s in ViewBag.Staffs) *@
+@*                             { *@
+@*                                 <option value="@s.StaffId">@s.FullName</option> *@
+@*                             } *@
+@*                         } *@
+@*                     </select> *@
+@*                 </div> *@
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Thời hạn</label>
-                    <input type="datetime-local" name="DueTime"
-                           class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+@*                 <div> *@
+@*                     <label class="block text-sm font-medium mb-1">Thời hạn</label> *@
+@*                     <input type="datetime-local" name="DueTime" *@
+@*                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" /> *@
+@*                 </div> *@
 
-                <div class="flex justify-end gap-2 mt-6">
-                    <button type="button" onclick="closeAddModal()"
-                            class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100">
-                        Hủy
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Lưu</button>
-                </div>
-            </form>
+@*                 <div class="flex justify-end gap-2 mt-6"> *@
+@*                     <button type="button" onclick="closeAddModal()" *@
+@*                             class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100"> *@
+@*                         Hủy *@
+@*                     </button> *@
+@*                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Lưu</button> *@
+@*                 </div> *@
+@*             </form> *@
 
-            <!-- Nút đóng góc -->
-            <button type="button" onclick="closeAddModal()"
-                    class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl">
-                &times;
-            </button>
-        </div>
-    </div>
+@*             <!-- Nút đóng góc --> *@
+@*             <button type="button" onclick="closeAddModal()" *@
+@*                     class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl"> *@
+@*                 &times; *@
+@*             </button> *@
+@*         </div> *@
+@*     </div> *@
 
-    <!-- Modal Chỉnh sửa công việc-->
-    </div>
-    <div id="editTaskModal"
-         class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
-            <h2 class="text-xl font-semibold mb-4">Chỉnh sửa công việc</h2>
+@*     <!-- Modal Chỉnh sửa công việc--> *@
+@*     </div> *@
+@*     <div id="editTaskModal" *@
+@*          class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"> *@
+@*         <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative"> *@
+@*             <h2 class="text-xl font-semibold mb-4">Chỉnh sửa công việc</h2> *@
 
-            <form id="editTaskForm" method="post" asp-controller="Task" asp-action="UpdateTask" class="space-y-4">
+@*             <form id="editTaskForm" method="post" asp-controller="Task" asp-action="UpdateTask" class="space-y-4"> *@
 
-                <input type="hidden" name="TaskId" id="edit-TaskId" />
+@*                 <input type="hidden" name="TaskId" id="edit-TaskId" /> *@
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Tên công việc</label>
-                    <input type="text" name="TaskName" id="edit-TaskName" required
-                           class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+@*                 <div> *@
+@*                     <label class="block text-sm font-medium mb-1">Tên công việc</label> *@
+@*                     <input type="text" name="TaskName" id="edit-TaskName" required *@
+@*                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" /> *@
+@*                 </div> *@
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Mô tả</label>
-                    <textarea name="Description" id="edit-Description" rows="3"
-                              class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                </div>
+@*                 <div> *@
+@*                     <label class="block text-sm font-medium mb-1">Mô tả</label> *@
+@*                     <textarea name="Description" id="edit-Description" rows="3" *@
+@*                               class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea> *@
+@*                 </div> *@
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Người quản lý (Người giao việc)</label>
-                    <select name="ManagerId" id="edit-ManagerId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Chọn người quản lý --</option>
-                        @if (ViewBag.Managers != null)
-                        {
-                            foreach (var m in ViewBag.Managers)
-                            {
-                                <option value="@m.StaffId">@m.FullName</option>
-                            }
-                        }
-                    </select>
-                </div>
+@*                 <div> *@
+@*                     <label class="block text-sm font-medium mb-1">Người quản lý (Người giao việc)</label> *@
+@*                     <select name="ManagerId" id="edit-ManagerId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
+@*                         <option value="">-- Chọn người quản lý --</option> *@
+@*                         @if (ViewBag.Managers != null) *@
+@*                         { *@
+@*                             foreach (var m in ViewBag.Managers) *@
+@*                             { *@
+@*                                 <option value="@m.StaffId">@m.FullName</option> *@
+@*                             } *@
+@*                         } *@
+@*                     </select> *@
+@*                 </div> *@
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Nhân viên</label>
-                    <select name="StaffId" id="edit-StaffId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Chọn nhân viên --</option>
-                        @if (ViewBag.Staffs != null)
-                        {
-                            foreach (var s in ViewBag.Staffs)
-                            {
-                                <option value="@s.StaffId">@s.FullName</option>
-                            }
-                        }
-                    </select>
-                </div>
+@*                 <div> *@
+@*                     <label class="block text-sm font-medium mb-1">Nhân viên</label> *@
+@*                     <select name="StaffId" id="edit-StaffId" class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"> *@
+@*                         <option value="">-- Chọn nhân viên --</option> *@
+@*                         @if (ViewBag.Staffs != null) *@
+@*                         { *@
+@*                             foreach (var s in ViewBag.Staffs) *@
+@*                             { *@
+@*                                 <option value="@s.StaffId">@s.FullName</option> *@
+@*                             } *@
+@*                         } *@
+@*                     </select> *@
+@*                 </div> *@
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Thời hạn</label>
-                    <input type="datetime-local" name="DueTime" id="edit-DueTime"
-                           class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+@*                 <div> *@
+@*                     <label class="block text-sm font-medium mb-1">Thời hạn</label> *@
+@*                     <input type="datetime-local" name="DueTime" id="edit-DueTime" *@
+@*                            class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" /> *@
+@*                 </div> *@
 
-                <div class="flex justify-end gap-2 mt-6">
-                    <button type="button" onclick="closeEditModal()"
-                            class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100">
-                        Hủy
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Lưu thay đổi</button>
-                </div>
-            </form>
+@*                 <div class="flex justify-end gap-2 mt-6"> *@
+@*                     <button type="button" onclick="closeEditModal()" *@
+@*                             class="px-4 py-2 border rounded-md text-gray-600 hover:bg-gray-100"> *@
+@*                         Hủy *@
+@*                     </button> *@
+@*                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Lưu thay đổi</button> *@
+@*                 </div> *@
+@*             </form> *@
 
-            <button type="button" onclick="closeEditModal()"
-                    class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl">
-                &times;
-            </button>
-        </div>
-    </div>
+@*             <button type="button" onclick="closeEditModal()" *@
+@*                     class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl"> *@
+@*                 &times; *@
+@*             </button> *@
+@*         </div> *@
+@*     </div> *@
 
-    <script>
-        function openAddModal() {
-            document.getElementById('addTaskModal').classList.remove('hidden');
-        }
-        function closeAddModal() {
-            document.getElementById('addTaskModal').classList.add('hidden');
-        }
+@*     <script> *@
+@*         function openAddModal() { *@
+@*             document.getElementById('addTaskModal').classList.remove('hidden'); *@
+@*         } *@
+@*         function closeAddModal() { *@
+@*             document.getElementById('addTaskModal').classList.add('hidden'); *@
+@*         } *@
 
-            function openEditModal(button) {
-            const taskId = button.getAttribute('data-task-id');
-            const taskName = button.getAttribute('data-task-name');
-            const description = button.getAttribute('data-description');
-            const managerId = button.getAttribute('data-manager-id');
-            const staffId = button.getAttribute('data-staff-id');
-            const dueTime = button.getAttribute('data-due-time');
+@*             function openEditModal(button) { *@
+@*             const taskId = button.getAttribute('data-task-id'); *@
+@*             const taskName = button.getAttribute('data-task-name'); *@
+@*             const description = button.getAttribute('data-description'); *@
+@*             const managerId = button.getAttribute('data-manager-id'); *@
+@*             const staffId = button.getAttribute('data-staff-id'); *@
+@*             const dueTime = button.getAttribute('data-due-time'); *@
 
-            document.getElementById('edit-TaskId').value = taskId;
-            document.getElementById('edit-TaskName').value = taskName;
-            document.getElementById('edit-Description').value = description;
-            document.getElementById('edit-ManagerId').value = managerId;
-            document.getElementById('edit-StaffId').value = staffId;
-            document.getElementById('edit-DueTime').value = dueTime;
+@*             document.getElementById('edit-TaskId').value = taskId; *@
+@*             document.getElementById('edit-TaskName').value = taskName; *@
+@*             document.getElementById('edit-Description').value = description; *@
+@*             document.getElementById('edit-ManagerId').value = managerId; *@
+@*             document.getElementById('edit-StaffId').value = staffId; *@
+@*             document.getElementById('edit-DueTime').value = dueTime; *@
 
-            document.getElementById('editTaskModal').classList.remove('hidden');
-        }
+@*             document.getElementById('editTaskModal').classList.remove('hidden'); *@
+@*         } *@
 
-        function closeEditModal() {
-            document.getElementById('editTaskModal').classList.add('hidden');
-        }
+@*         function closeEditModal() { *@
+@*             document.getElementById('editTaskModal').classList.add('hidden'); *@
+@*         } *@
 
-        (function() {
-        @if (TempData["OpenModal"] as bool? == true)
-        {
-            <text>
-                        openAddModal();
-            </text>
-        }
-        })();
-    </script>
+@*         (function() { *@
+@*         @if (TempData["OpenModal"] as bool? == true) *@
+@*         { *@
+@*             <text> *@
+@*                         openAddModal(); *@
+@*             </text> *@
+@*         } *@
+@*         })(); *@
+@*     </script> *@
 
-</body>
-</html>
+@* </body> *@
+@* </html> *@

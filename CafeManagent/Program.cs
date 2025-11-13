@@ -42,6 +42,7 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 builder.Services.AddSingleton<NotifyUlti>();
 builder.Services.AddTransient<IStaffDirectoryService, StaffDirectoryService>();
+builder.Services.AddHostedService<WorkScheduleBackgroundWorker>();
 
 //builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
 builder.Services.AddMemoryCache();

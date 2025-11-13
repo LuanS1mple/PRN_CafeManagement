@@ -12,12 +12,15 @@ namespace CafeManagent.Services.Imp
         }
         public Staff? Authentication(string username, string password)
         {
-            return _context.Staff.Include(r => r.Role).
-                FirstOrDefault(s => s.UserName.ToLower().Equals(username.ToLower()) && s.Password.ToLower().Equals(password.ToLower()));
-            //var staff = _context.Staff.FirstOrDefault(s => s.UserName.ToLower().Equals(username.ToLower()) && s.Password.ToLower().Equals(password.ToLower()));
-            //if (staff == null) return null;
-            //bool verified = BCrypt.Net.BCrypt.Verify(password, staff.Password);
-            //return verified ? staff : null; 
+            var staff = _context.Staff
+                .Include(s => s.Role)
+                .FirstOrDefault(s => s.UserName.ToLower().Trim() == username.ToLower().Trim());
+
+            if (staff == null) return null;
+            bool verified = BCrypt.Net.BCrypt.Verify(password, staff.Password);
+
+            return verified ? staff : null;
+
         }
     }
 }
