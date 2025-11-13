@@ -19,16 +19,19 @@ namespace CafeManagent.Hubs
 
         public async Task GetCurrentNotify()
         {
-            int userId = int.Parse(Context.GetHttpContext()!
-                .Session.Get("StaffId"));
-            //int userId = 1;
+            int? userId = Context.GetHttpContext()!
+                 .Session.GetInt32("StaffId");
 
+            if (userId == null)
+            {
+                return;
+            }
             SystemNotify? notify;
 
             lock (_lock)
             {
-                Notifies.TryGetValue(userId, out notify);
-                Notifies[userId] = null; 
+                Notifies.TryGetValue(userId.Value, out notify);
+                Notifies[userId.Value] = null; 
             }
 
             if (notify == null)

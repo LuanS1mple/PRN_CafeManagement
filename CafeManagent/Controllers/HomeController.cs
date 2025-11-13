@@ -69,10 +69,13 @@ namespace CafeManagent.Controllers
             return View("Login");
         }
 
-        private void CreateToken(Models.Staff staff,HttpContext context)
+        private async System.Threading.Tasks.Task CreateToken(Models.Staff staff, HttpContext context)
         {
+            //Vo hieu hoa cac token cu
+            authenticationService.DisableRefreshToken(staff.StaffId);
+            //gan vao cookie 
             string accessToken = authenticationService.CreateAccessToken(staff);
-            string refreshToken = authenticationService.CreateRefreshToken(staff);
+            string refreshToken =await authenticationService.CreateRefreshToken(staff);
             context.Response.Cookies.Append("RefreshToken", refreshToken);
             context.Response.Cookies.Append("AccessToken", accessToken);
         }

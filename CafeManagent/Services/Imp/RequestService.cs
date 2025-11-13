@@ -92,5 +92,27 @@ namespace CafeManagent.Services.Imp
             _context.Requests.Remove(request);
             _context.SaveChanges();
         }
+
+        public List<Request> GetByStaffId(int id)
+        {
+            List<Request> requests = _context.Requests.Where(r => r.StaffId == id).ToList();
+            if (requests != null)
+            {
+                return requests;
+            }
+            return null;
+        }
+
+        public List<Request> GetDoneRequest(int id)
+        {
+            return _context.Requests.Include(r => r.Staff).Where(r => r.Status != 0 && r.StaffId == id).ToList();
+        }
+
+        public void Delele(int? id)
+        {
+            Request request = _context.Requests.FirstOrDefault(r => r.ReportId == id)!;
+            _context.Requests.Remove(request);
+            _context.SaveChanges();
+        }
     }
 }

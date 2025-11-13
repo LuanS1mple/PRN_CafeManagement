@@ -27,7 +27,7 @@ namespace CafeManagent.Middlewares
                 await _next(context);
                 return;
             }
-            var authenticationService = context.RequestServices.GetRequiredService<IAuthenticationService>();
+            var authenticationService =context.RequestServices.GetRequiredService<IAuthenticationService>();
 
             string accessToken = context.Request.Cookies["AccessToken"];
             string refreshToken = context.Request.Cookies["RefreshToken"];
@@ -48,11 +48,16 @@ namespace CafeManagent.Middlewares
                     authenticationService.DisableRefreshToken(refreshToken);
                     //tao moi accessToken, refreshToken
                     string newAccessToken = authenticationService.CreateAccessToken(refreshToken);
-                    string newRefreshToken = authenticationService.CreateRefreshToken(refreshToken);
+                    string newRefreshToken =await authenticationService.CreateRefreshToken(refreshToken);
                     ClaimsPrincipal userInfo = authenticationService.GetClaims(accessToken);
                     context.User = userInfo;
                     //them vao cookies
                     AddTokenToCookies(newRefreshToken, newAccessToken, context);
+                }
+                else
+                {
+                    context.Response.Redirect("/home/Login");
+                    return;
                 }
             }
             //co co token nao thoa mans

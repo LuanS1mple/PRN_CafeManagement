@@ -59,8 +59,7 @@ namespace CafeManagent.Controllers.Manager
         }
         public IActionResult DetailAttendanceRequest(int id)
         {
-            //int staffId = int.Parse(HttpContext.Session.Get("StaffId"));
-            int staffId = 1;
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
             Request request = requestService.GetById(id);
             string detail = request.Detail;
             string[] values = detail.Split(";");
@@ -90,6 +89,7 @@ namespace CafeManagent.Controllers.Manager
         }
         public async Task<IActionResult> AcceptAttendanceRequest(int id)
         {
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
             Request request = requestService.GetById(id);
             string detail = request.Detail;
             string[] values = detail.Split(";");
@@ -130,12 +130,12 @@ namespace CafeManagent.Controllers.Manager
                 IsSuccess = true,
                 Message = NotifyMessage.PHAN_HOI_THANH_CONG.Message
             };
-            await _hub.Clients.All.SendAsync("ReceiveResponseStatus", systemNotify.IsSuccess,systemNotify.Message);
-            await Task.Delay(2000); 
+            ResponseHub.SetNotify(staffId, systemNotify);
             return RedirectToAction("Index");   
         }
         public async Task<IActionResult> RejectAttendanceRequest(int id)
         {
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
             Request request = requestService.GetById(id);
             //cập nhập lại request
             request.Status = 2;
@@ -149,15 +149,14 @@ namespace CafeManagent.Controllers.Manager
                 IsSuccess = false,
                 Message = NotifyMessage.PHAN_HOI_THANH_CONG.Message
             };
-            await _hub.Clients.All.SendAsync("ReceiveResponseStatus", systemNotify.IsSuccess,systemNotify.Message);
+            ResponseHub.SetNotify(staffId, systemNotify);
             return RedirectToAction("Index");
-
         }
         [HttpGet]
         public IActionResult DetailWorkscheduleRequest(int id)
         {
-            int staffId = 1;
-            //int staffId = int.Parse(HttpContext.Session.Get("StaffId"));
+            //int staffId = 1;
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
             Request request = requestService.GetById(id);
             string detail = request.Detail;
             string[] values = detail.Split(";");
@@ -191,8 +190,7 @@ namespace CafeManagent.Controllers.Manager
         }
         public async Task<IActionResult> AcceptWorkScheduleRequest(int id)
         {
-            //int staffId = int.Parse(HttpContext.Session.Get("StaffId"));
-            int staffId = 1;
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
             Request request = requestService.GetById(id);
             string detail = request.Detail;
             string[] values = detail.Split(";");
@@ -226,12 +224,12 @@ namespace CafeManagent.Controllers.Manager
                 IsSuccess = true,
                 Message = NotifyMessage.PHAN_HOI_THANH_CONG.Message
             };
-            await _hub.Clients.All.SendAsync("ReceiveResponseStatus", systemNotify.IsSuccess, systemNotify.Message);
-            await Task.Delay(2000);
+            ResponseHub.SetNotify(staffId, systemNotify);
             return RedirectToAction("Index");
         }
         public async Task<IActionResult> RejectWorkScheduleRequest(int id)
         {
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
             Request request = requestService.GetById(id);
             //cập nhập lại request
             request.Status = 2;
@@ -245,7 +243,7 @@ namespace CafeManagent.Controllers.Manager
                 IsSuccess = false,
                 Message = NotifyMessage.PHAN_HOI_THANH_CONG.Message
             };
-            await _hub.Clients.All.SendAsync("ReceiveResponseStatus", systemNotify.IsSuccess, systemNotify.Message);
+            ResponseHub.SetNotify(staffId, systemNotify);
             return RedirectToAction("Index");
 
         }

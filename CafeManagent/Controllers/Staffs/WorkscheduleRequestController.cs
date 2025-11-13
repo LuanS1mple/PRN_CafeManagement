@@ -29,8 +29,7 @@ namespace CafeManagent.Controllers.Staffs
         }
         public IActionResult Init()
         {
-            //int staffId = int.Parse(HttpContext.Session.Get("StaffId"));
-            int staffId = 1;
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
             List<WorkScheduleBasicDTO> data = MapperHelper.FromWorkSchedule(workScheduleService.Get(staffId));
             ViewBag.WorkSchedules = data;
             return View();
@@ -43,8 +42,7 @@ namespace CafeManagent.Controllers.Staffs
         }
         public IActionResult SaveWorkScheduleRequest(WorkScheduleRequestDTO requestDTO)
         {
-            //int staffId = int.Parse(HttpContext.Session.Get("StaffId"));
-            int staffId = 1;
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
             try
             {
                 Request request = MapperHelper.FromWorkScheduleRequestDTO(requestDTO, staffId);

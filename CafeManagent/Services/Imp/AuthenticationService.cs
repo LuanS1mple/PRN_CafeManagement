@@ -27,23 +27,24 @@ namespace CafeManagent.Services.Imp
             return CreateAccessToken(staff);
         }
 
-        public string CreateRefreshToken(string refreshToken)
+        public async Task<string> CreateRefreshToken(string refreshToken)
         {
+            var staff = GetByRefreshToken(refreshToken);
             string token = null;
             do
             {
                 token = Guid.NewGuid().ToString().Substring(0, 8);
             }
-            while (_context.RefreshTokens.Where(s => s.Token.Equals(token)).Any());
+            while (await _context.RefreshTokens.AnyAsync(s => s.Token.Equals(token)));
             RefreshToken newRefreshToken = new RefreshToken
             {
                 Token = token,
                 ExpireTime = DateTime.UtcNow.AddSeconds(refresh_token_duration),
                 IsEnable = true,
-                StaffId = GetByRefreshToken(refreshToken).StaffId
+                StaffId =staff.StaffId
             };
-            _context.RefreshTokens.Add(newRefreshToken);
-            _context.SaveChanges();
+            _context.RefreshTokens.AddAsync(newRefreshToken);
+            _context.SaveChangesAsync();
             return token;
         }
 
@@ -115,23 +116,23 @@ namespace CafeManagent.Services.Imp
             return true;
         }
 
-        public string CreateRefreshToken(Staff staff)
+        public async Task<string> CreateRefreshToken(Staff staff)
         {
             string token = null;
             do
             {
                 token = Guid.NewGuid().ToString().Substring(0, 8);
             }
-            while (_context.RefreshTokens.Where(s => s.Token.Equals(token)).Any());
+            while ( await _context.RefreshTokens.Where(s => s.Token.Equals(token)).AnyAsync());
             RefreshToken newAccessToken = new RefreshToken
             {
                 Token = token,
-                ExpireTime = DateTime.UtcNow.AddDays(access_token_duration),
+                ExpireTime = DateTime.UtcNow.AddSeconds(refresh_token_duration),
                 IsEnable = true,
                 StaffId = staff.StaffId
             };
-            _context.RefreshTokens.Add(newAccessToken);
-            _context.SaveChanges();
+            _context.RefreshTokens.AddAsync(newAccessToken);
+            _context.SaveChangesAsync();
             return token;
         }
 
@@ -151,7 +152,7 @@ namespace CafeManagent.Services.Imp
                 issuer: "cafe-task",                    
                 audience: "member",                 
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),        
+                expires: DateTime.UtcNow.AddSeconds(access_token_duration),        
                 signingCredentials: creds
             );
 
@@ -164,6 +165,11 @@ namespace CafeManagent.Services.Imp
             token.IsEnable = false;
             _context.RefreshTokens.Update(token);
             _context.SaveChanges();
+        }
+
+        public void DisableRefreshToken(int staffId)
+        {
+            _context.RefreshTokens.Where(r => r.StaffId == staffId).ExecuteUpdateAsync(setters => setters.SetProperty(r => r.IsEnable, false));
         }
     }
 }

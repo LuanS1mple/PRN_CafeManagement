@@ -44,8 +44,17 @@ namespace CafeManagent.Hubs
             var context = _http.HttpContext;
 
             var staffRole = context.Session.GetString("StaffRole");
-            if(!string.IsNullOrEmpty(staffRole) && staffRole.Equals("Branch Manager"))
+            var staffId = context.Session.GetInt32("StaffId");
+            if ((staffId == null && staffRole == null) || _notify.IsViewded(staffId.Value))
             {
+                return null;
+            }
+            else
+            {
+                _notify.AddToView(staffId.Value);
+            }
+            if (!string.IsNullOrEmpty(staffRole) && staffRole.Equals("Branch Manager"))
+            {   
                 return GetAllManager();
             }
             return GetAllStaff();
