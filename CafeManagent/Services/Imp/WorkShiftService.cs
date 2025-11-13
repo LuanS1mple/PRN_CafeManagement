@@ -15,7 +15,7 @@ namespace CafeManagent.Services.Imp
             _context = context;
         }
 
-        public async Task<(List<WorkShiftDTO> Shifts, int TotalItems)> GetPagedWorkShiftsAsync(int page, int pageSize)
+        public async Task<(List<WorkShiftDTO> shifts, int totalItems)> GetPagedWorkShiftsAsync(int page, int pageSize)
         {
             var query = _context.WorkSchedules
                 .Include(ws => ws.Workshift)
@@ -46,7 +46,7 @@ namespace CafeManagent.Services.Imp
         }
 
 
-        public async Task<(List<WorkShiftDTO> Shifts, int TotalItems)> FilterPagedWorkShiftsAsync(FilterWorkShiftDTO filter, int page, int pageSize)
+        public async Task<(List<WorkShiftDTO> shifts, int totalItems)> FilterPagedWorkShiftsAsync(FilterWorkShiftDTO filter, int page, int pageSize)
         {
             var query = _context.WorkSchedules
                 .Include(ws => ws.Workshift)
@@ -55,23 +55,34 @@ namespace CafeManagent.Services.Imp
                 .AsQueryable();
 
             if (filter.FromDate != null)
+            {
                 query = query.Where(ws => ws.Date >= filter.FromDate);
+            }
+                
 
             if (filter.ToDate != null)
+            {
                 query = query.Where(ws => ws.Date <= filter.ToDate);
+            }
 
             if (!string.IsNullOrEmpty(filter.Position))
+            {
                 query = query.Where(ws => ws.Staff.Role.RoleName == filter.Position);
+            }
 
             if (!string.IsNullOrEmpty(filter.ShiftType))
+            {
                 query = query.Where(ws => ws.Workshift.ShiftName == filter.ShiftType);
+            }
 
             if (!string.IsNullOrEmpty(filter.Keyword))
+            {
                 query = query.Where(ws =>
                     ws.Staff.FullName.Contains(filter.Keyword) ||
                     ws.Staff.Role.RoleName.Contains(filter.Keyword) ||
                     ws.Description.Contains(filter.Keyword));
-
+            }
+                
             int totalItems = await query.CountAsync();
 
             var shifts = await query
@@ -101,23 +112,32 @@ namespace CafeManagent.Services.Imp
             var today = DateOnly.FromDateTime(DateTime.Now);
 
             if (dto.Date < today)
+            {
                 return (false, "Không thể thêm ca ở ngày đã qua.");
 
+            }
+
             if (string.IsNullOrWhiteSpace(dto.EmployeeName))
+            {
                 return (false, "Tên nhân viên không được để trống.");
+            }
 
             var staff = await _context.Staff
                 .Include(s => s.Role)
                 .FirstOrDefaultAsync(s => s.FullName == dto.EmployeeName);
 
             if (staff == null)
+            {
                 return (false, "Không tìm thấy nhân viên.");
+            }
 
             var workShift = await _context.WorkShifts
                 .FirstOrDefaultAsync(ws => ws.ShiftName == dto.ShiftType);
 
             if (workShift == null)
+            {
                 return (false, "Không tìm thấy loại ca làm việc.");
+            }
 
             var existsSame = await _context.WorkSchedules
                 .AnyAsync(ws => ws.StaffId == staff.StaffId
@@ -125,7 +145,9 @@ namespace CafeManagent.Services.Imp
                             && ws.WorkshiftId == workShift.WorkshiftId);
 
             if (existsSame)
+            {
                 return (false, "Nhân viên đã có ca này vào ngày đã chọn (trùng ca).");
+            }
 
             var schedule = new WorkSchedule
             {
@@ -155,7 +177,9 @@ namespace CafeManagent.Services.Imp
         {
             var schedule = await _context.WorkSchedules.FirstOrDefaultAsync(ws => ws.ShiftId == id);
             if (schedule == null)
+            {
                 return (false, "Không tìm thấy ca làm để xóa.");
+            }
 
             var attendance = await _context.Attendances
                 .FirstOrDefaultAsync(a =>
@@ -171,8 +195,63 @@ namespace CafeManagent.Services.Imp
 
             return (true, "Đã xóa ca làm thành công!");
         }
+
+        public async Task<(bool Success, string Message)> UpdateWorkShiftAsync(UpdateWorkShiftDTO dto)
+        {
+
+            var schedule = await _context.WorkSchedules
+                .Include(ws => ws.Staff)
+                .Include(ws => ws.Workshift)
+                .FirstOrDefaultAsync(ws => ws.ShiftId == dto.ShiftId);
+
+            if (schedule == null)
+                return (false, "Không tìm thấy ca làm để cập nhật.");
+
+            var staff = await _context.Staff.FirstOrDefaultAsync(s => s.FullName == dto.EmployeeName);
+            if (staff == null)
+                return (false, "Không tìm thấy nhân viên.");
+
+            var workShift = await _context.WorkShifts.FirstOrDefaultAsync(ws => ws.ShiftName == dto.ShiftType);
+            if (workShift == null)
+                return (false, "Không tìm thấy loại ca.");
+
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            if (dto.Date < today)
+                return (false, "Không thể sửa ca sang ngày đã qua.");
+
+            var existsSame = await _context.WorkSchedules.AnyAsync(ws =>
+                ws.ShiftId != dto.ShiftId &&
+                ws.StaffId == staff.StaffId &&
+                ws.Date == dto.Date &&
+                ws.WorkshiftId == workShift.WorkshiftId);
+
+            if (existsSame)
+                return (false, "Nhân viên này đã có ca tương tự trong ngày đã chọn.");
+
+            schedule.Date = dto.Date;
+            schedule.StaffId = staff.StaffId;
+            schedule.WorkshiftId = workShift.WorkshiftId;
+            schedule.Description = dto.Note;
+            schedule.ShiftName = dto.ShiftType;
+
+            await _context.SaveChangesAsync();
+
+            // Cập nhật bảng Attendance
+            var attendance = await _context.Attendances.FirstOrDefaultAsync(a =>
+                a.StaffId == staff.StaffId && a.Workdate == schedule.Date);
+
+            if (attendance != null)
+            {
+                attendance.WorkshiftId = workShift.WorkshiftId;
+                attendance.Workdate = dto.Date;
+                await _context.SaveChangesAsync();
+            }
+
+            return (true, "Cập nhật ca làm thành công!");
+        }
+
     }
 
 
-    
+
 }

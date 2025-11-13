@@ -123,5 +123,23 @@ namespace CafeManagent.Controllers
 
             return RedirectToAction("Index");
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateWorkShift([FromForm] UpdateWorkShiftDTO dto)
+        {
+            var (success, message) = await _service.UpdateWorkShiftAsync(dto);
+
+            if (!success)
+            {
+                TempData["Error"] = message;
+                TempData["ShowError"] = "1";
+            }
+            else
+            {
+                TempData["Success"] = message;
+            }
+
+            return RedirectToAction("Index");
+        }
     }
 }
