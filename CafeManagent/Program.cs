@@ -73,7 +73,7 @@ app.MapHub<ResponseHub>("/response");
 app.MapHub<NotifyHub>("/notify");
 
 app.MapHub<OrderHub>("/orderHub");
-
+app.MapHub<StaffHub>("/hubs/staff");
 app.Run();
 
 

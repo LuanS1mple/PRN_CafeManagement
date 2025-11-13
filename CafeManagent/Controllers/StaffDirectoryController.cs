@@ -163,5 +163,17 @@ namespace CafeManagent.Controllers
                 return View(input);
             }
         }
+
+        [HttpPost("status")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateStatus([FromForm] int id, [FromForm] int status, CancellationToken ct)
+        {
+            var (ok, sVal, name, badgeClass) = await _service.UpdateStatusAsync(id, status, ct);
+            if (!ok) return NotFound(new { ok = false, message = "Không tìm thấy nhân viên." });
+
+            // Trả JSON cho client gọi; các client khác sẽ nhận qua SignalR
+            return Json(new { ok = true, status = sVal, name, badgeClass });
+        }
+
     }
 }

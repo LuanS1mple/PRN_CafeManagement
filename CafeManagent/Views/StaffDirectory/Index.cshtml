@@ -48,23 +48,36 @@
             <tbody>
                 @foreach (var s in Model.Items)
                 {
-                    <tr class="row-link" onclick="location.href='@Url.Action("Details","StaffDirectory", new { id = s.StaffId })'">
-                        <td><input type="checkbox" /></td>
+                    <tr class="row-link">
+                        <td>
+                            <input type="checkbox"
+                                   onclick="event.stopPropagation(); location.href='@Url.Action("Details","StaffDirectory", new { id = s.StaffId })';" />
+                        </td>
                         <td><img src="@s.AvatarUrl?v=@DateTimeOffset.UtcNow.Ticks" class="avatar-sm" /></td>
                         <td>@s.FullName</td>
                         <td>@s.Email</td>
                         <td>@s.Title</td>
                         @{
-                            var badgeClass = s.Status switch
+                            var status = s.Status?.Trim();
+
+                            var (badgeClass, dotClass, selectedVal) = status switch
                             {
-                                "Đang làm việc" => "badge-green",
-                                "Nghỉ phép" => "badge-yellow",
-                                "Nghỉ việc" => "badge-gray",
-                                _ => "badge-gray"
+                                "Đang làm việc" => ("badge-green", "dot-green", 1),
+                                "Nghỉ phép" => ("badge-gray", "dot-gray", 2),
+                                "Nghỉ việc" => ("badge-red", "dot-red", 3),
+                                _ => ("badge-gray", "dot-gray", 0)
                             };
                         }
-                        <td>
-                            <span class="badge @badgeClass">@s.Status</span>
+                        <td data-staff-id="@s.StaffId">
+
+                            <!-- Dropdown thay đổi trạng thái -->
+                            <select class="input js-status-select" data-id="@s.StaffId">
+                                <option value="1" selected="@(selectedVal == 1)">Đang làm việc</option>
+                                <option value="2" selected="@(selectedVal == 2)">Nghỉ phép</option>
+                                <option value="3" selected="@(selectedVal == 3)">Nghỉ việc</option>
+
+                            </select>
+
                         </td>
                         <td>@(s.JoinDate?.ToString("dd/MM/yyyy"))</td>
                         <td>@(s.ContractEndDate?.ToString("dd/MM/yyyy"))</td>
@@ -104,4 +117,15 @@
         </div>
 
     </div>
+    <form id="__af" method="post">
+        @Html.AntiForgeryToken()
+    </form>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@7.0.12/dist/browser/signalr.min.js"></script>
+    <!-- JS xử lý inline status + SignalR -->
+    <script src="~/js/StaffStatus.js"></script>
+}
+
+

@@ -14,7 +14,8 @@ using System.Net;
 using System.Net.Mail;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
-
+using Microsoft.AspNetCore.SignalR;
+using CafeManagent.Hubs;
 
 namespace CafeManagent.Services.Imp
 {
@@ -22,13 +23,15 @@ namespace CafeManagent.Services.Imp
     {
         private readonly CafeManagementContext _db;
         private readonly IConfiguration _config;
+        private readonly IHubContext<StaffHub> _hub;
         private const string DefaultAvatar = "/images/avatars/default.png";
         private const string AvatarFolder = "uploads/avatars"; // giữ đúng yêu cầu
 
-        public StaffDirectoryService(CafeManagementContext db, IConfiguration config)
+        public StaffDirectoryService(CafeManagementContext db, IConfiguration config, IHubContext<StaffHub> hub)
         {
             _db = db;
             _config = config;
+            _hub = hub;
         }
         private static string MapStatusToName(int? s) => s switch
         {
@@ -379,5 +382,47 @@ namespace CafeManagent.Services.Imp
             }
             return sb.ToString().Normalize(NormalizationForm.FormC);
         }
+
+        public async Task<(bool ok, int status, string statusName, string badgeClass)> UpdateStatusAsync(int staffId, int status, CancellationToken ct = default)
+        {
+            var s = await _db.Staff.FirstOrDefaultAsync(x => x.StaffId == staffId, ct);
+            if (s is null) return (false, 0, "Không rõ", "badge-gray");
+
+            // ràng buộc 1..3: 1=Đang làm việc, 2=Nghỉ phép, 3=Nghỉ việc
+            if (status is < 1 or > 3) status = 0;
+
+            s.Status = status;
+            await _db.SaveChangesAsync(ct);
+
+            string name = status switch
+            {
+                1 => "Đang làm việc",
+                2 => "Nghỉ phép",
+                3 => "Nghỉ việc",
+                _ => "Không rõ"
+            };
+
+            // mapping màu theo yêu cầu trong list:
+            // xanh nhạt(chấm xanh) = đang làm việc, đỏ = nghỉ việc, xám = nghỉ phép
+            string badgeClass = status switch
+            {
+                1 => "badge-green", // đang làm việc
+                3 => "badge-red",   // nghỉ việc
+                2 => "badge-gray",  // nghỉ phép
+                _ => "badge-gray"
+            };
+
+            // 🔔 Phát tín hiệu cho tất cả client đang mở list
+            await _hub.Clients.All.SendAsync("ReceiveStatusUpdate", new
+            {
+                staffId = s.StaffId,
+                status = status,
+                name = name,
+                badgeClass = badgeClass
+            }, ct);
+
+            return (true, status, name, badgeClass);
+        }
+
     }
 }

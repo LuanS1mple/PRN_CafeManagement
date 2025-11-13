@@ -1,28 +1,60 @@
-﻿/* layout giống profile */
-.profile-wrap {
-    padding-top: 8px;
+﻿/* ====== Tokens (đồng bộ với StaffDirectory / StaffCreate / StaffEdit) ====== */
+:root {
+    --bg: #fff;
+    --bg-soft: #f6f7f9;
+    --text: #1f2328;
+    --text-soft: #667085;
+    --border: #e5e7eb;
+    --primary: #0ea5e9;
+    --primary-ring: rgba(14,165,233,.25);
+    --radius: 12px;
+    --shadow: 0 6px 20px rgba(17,24,39,.08);
+}
+
+/* ====== Page ====== */
+body {
+    background: var(--bg-soft);
+    color: var(--text);
+}
+
+.container {
+    max-width: 1180px;
+    margin: 32px auto;
+    padding: 0 16px;
+}
+
+/* ====== Layout ====== */
+.profile-wrap h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 16px 0;
 }
 
 .profile-grid {
     display: grid;
-    grid-template-columns: 360px 1fr;
-    gap: 24px;
+    grid-template-columns: 280px 1fr;
+    gap: 16px;
+    align-items: start;
 }
 
+/* ====== Card ====== */
+.card {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+}
+
+/* ====== LEFT: Avatar ====== */
 .left-card {
+    padding: 16px;
     text-align: center;
-    padding: 24px;
-    border-radius: 18px;
-}
-
-.right-card {
-    padding: 20px 20px 24px;
-    border-radius: 18px;
 }
 
 .avatar-wrap {
     display: flex;
     justify-content: center;
+    margin: 6px 0 12px;
 }
 
 .avatar-circle {
@@ -30,24 +62,20 @@
     height: 160px;
     border-radius: 50%;
     object-fit: cover;
-    border: 6px solid #fff;
-    box-shadow: 0 0 0 1px #e8eef5;
+    border: 1px solid var(--border);
 }
 
+/* Upload button */
 .btn-upload {
-    margin-top: 18px;
-    width: 100%;
-    background: #eaf4ff;
-    color: #0b5cab;
-    border: 1px solid #dce9ff;
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-weight: 700;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #fff;
     cursor: pointer;
+    font-weight: 600;
 }
 
     .btn-upload:hover {
@@ -55,50 +83,151 @@
     }
 
 .icon-up {
-    transform: rotate(90deg);
+    font-weight: 700;
 }
 
+/* ====== RIGHT: Form ====== */
+.right-card {
+    padding: 16px;
+}
+
+    .right-card h3 {
+        font-size: 16px;
+        margin: 0 0 12px 0;
+    }
+
+/* Tabs giống bên StaffEdit */
 .tabs {
     display: flex;
-    gap: 10px;
-    margin-bottom: 12px;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
 .tab {
-    padding: 8px 14px;
-    background: #fff;
-    border: 1px solid #e7eef6;
+    padding: 8px 16px;
     border-radius: 999px;
-    color: #0c1a2b;
-    text-decoration: none;
+    background: #f3f4f6;
+    color: var(--text-soft);
     font-weight: 600;
-    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
 }
 
     .tab.active {
-        background: #f4fbff;
-        border-color: #d9ecf7;
+        background: var(--primary);
+        color: #fff;
     }
 
-/* label-value 1 dòng */
+/* Tóm tắt lỗi */
+.val-summary {
+    background: #fff3cd;
+    border: 1px solid #ffe69c;
+    color: #7a5d00;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    display: none;
+}
+
+.validation-summary-errors.val-summary {
+    display: block;
+}
+
+/* Lưới field giống Create/Edit Staff */
 .kv2 {
     display: grid;
-    gap: 10px;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
 }
 
 .kv2-row {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    align-items: center;
-    gap: 16px;
+    display: contents;
 }
 
 .kv2-label {
-    font-size: 13px;
-    color: #6b7a90;
-    white-space: nowrap;
+    align-self: center;
+    color: var(--text-soft);
+    font-weight: 600;
 }
 
 .kv2-value {
-    min-width: 0;
+    position: relative;
+}
+
+/* Inputs */
+.input {
+    height: 40px;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 12px;
+    background: #fff;
+}
+
+    .input:focus {
+        outline: none;
+        box-shadow: 0 0 0 4px var(--primary-ring);
+        border-color: var(--primary);
+    }
+
+/* Readonly pill (nếu sau này dùng) */
+.ro-pill {
+    display: inline-flex;
+    align-items: center;
+    border: 1px dashed var(--border);
+    background: #fafbfc;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-weight: 600;
+}
+
+/* ====== Buttons (đồng bộ màu với list staff) ====== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--text);
+}
+
+    .btn.primary {
+        background: var(--primary);
+        color: #fff;
+        border-color: transparent;
+    }
+
+    .btn.secondary {
+        background: #fff;
+        border: 1px solid var(--border);
+        color: var(--text);
+    }
+
+    .btn:hover {
+        filter: brightness(.98);
+    }
+
+.actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+    justify-content: flex-start;
+}
+
+/* ====== Misc ====== */
+.text-danger {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 6px;
+    display: block;
+}
+
+.label {
+    color: var(--text-soft);
+    font-size: 12px;
 }

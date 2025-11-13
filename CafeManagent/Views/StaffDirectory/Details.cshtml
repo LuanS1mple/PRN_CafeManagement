@@ -104,6 +104,15 @@
                 </div>
 
                 <div class="field">
+                    <div class="label">Giới tính</div>
+                    <div class="ro-input">
+                        <input readonly
+                               value="@(Model.Gender == true ? "Nam" : Model.Gender == false ? "Nữ" : "Không xác định")" />
+                    </div>
+                </div>
+
+
+                <div class="field">
                     <div class="label">Địa chỉ</div>
                     <div class="ro-input">
                         <input readonly value="@Model.Address" />
