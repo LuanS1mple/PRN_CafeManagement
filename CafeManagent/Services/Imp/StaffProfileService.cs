@@ -3,6 +3,8 @@ using CafeManagent.dto.response;
 using CafeManagent.mapper;
 using CafeManagent.Models;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
+using System.Linq;
 
 namespace CafeManagent.Services.Imp
 {
@@ -10,6 +12,7 @@ namespace CafeManagent.Services.Imp
     {
         private readonly CafeManagementContext _db;
         private static readonly string[] _allowed = new[] { ".png", ".jpg", ".jpeg", ".webp" };
+        private const string AvatarFolder = "uploads/avatars";
 
         public StaffProfileService(CafeManagementContext db) { _db = db; }
 
@@ -20,7 +23,7 @@ namespace CafeManagent.Services.Imp
                 .Select(s => new StaffProfile(
                     s.StaffId,
                     s.RoleId,
-                    s.Role != null ? s.Role.RoleName : null,   // <-- map trực tiếp
+                    s.Role != null ? s.Role.RoleName : null,
                     s.FullName,
                     s.Gender,
                     s.BirthDate,
@@ -31,20 +34,19 @@ namespace CafeManagent.Services.Imp
                     s.CreateAt,
                     string.IsNullOrWhiteSpace(s.Img) ? "/images/avatars/default.png" : s.Img
                 ))
-                .AsNoTracking()               // đọc thì nên NoTracking cho nhẹ và an toàn
+                .AsNoTracking()
                 .SingleOrDefaultAsync(ct);
         }
-
 
         public async Task<bool> UpdateAsync(UpdateStaffProfile dto, IFormFile? avatarFile, string webRootPath, CancellationToken ct = default)
         {
             var s = await _db.Staff.FirstOrDefaultAsync(x => x.StaffId == dto.StaffId, ct);
             if (s is null) return false;
 
-            // Map DTO -> Entity
+            // Map DTO -> Entity (không đụng CreateAt, Password...)
             StaffProfileMapper.MapUpdate(dto, s);
 
-            // Upload avatar (nếu có)
+            // --- Avatar: đồng bộ với các service khác ---
             if (avatarFile is not null && avatarFile.Length > 0)
             {
                 if (avatarFile.Length > 2 * 1024 * 1024)
@@ -54,18 +56,42 @@ namespace CafeManagent.Services.Imp
                 if (!_allowed.Contains(ext))
                     throw new InvalidOperationException("Định dạng ảnh không hợp lệ.");
 
-                var folder = Path.Combine(webRootPath, "uploads", "avatars");
-                Directory.CreateDirectory(folder);
-                var fileName = $"staff_{s.StaffId}{ext}";
-                var fullPath = Path.Combine(folder, fileName);
-                using var fs = File.Create(fullPath);
-                await avatarFile.CopyToAsync(fs, ct);
+                if (!string.IsNullOrWhiteSpace(s.Img) &&
+                    s.Img.StartsWith($"/{AvatarFolder}", StringComparison.OrdinalIgnoreCase))
+                {
+                    var absOld = Path.Combine(
+                        webRootPath,
+                        s.Img.TrimStart('/').Replace('/', Path.DirectorySeparatorChar)
+                    );
 
-                StaffProfileMapper.SetAvatarPath(s, $"/uploads/avatars/{fileName}");
+                    try
+                    {
+                        if (File.Exists(absOld))
+                            File.Delete(absOld);
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                var folder = Path.Combine(webRootPath, AvatarFolder);
+                Directory.CreateDirectory(folder);
+
+                var fileName = $"staff_{s.StaffId}_img{ext}";
+                var fullPath = Path.Combine(folder, fileName);
+
+                using (var fs = File.Create(fullPath))
+                {
+                    await avatarFile.CopyToAsync(fs, ct);
+                }
+
+                var publicPath = $"/{AvatarFolder}/{fileName}".Replace("//", "/");
+                StaffProfileMapper.SetAvatarPath(s, publicPath);
             }
 
             await _db.SaveChangesAsync(ct);
             return true;
         }
+
     }
 }

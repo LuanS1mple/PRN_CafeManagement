@@ -143,7 +143,7 @@ namespace CafeManagent.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ReportTask (string searchStaff,
+        public async Task<IActionResult> ReportTask(string searchStaff,
                                                      string searchManager,
                                                      DateTime? startDate,
                                                      DateTime? endDate)

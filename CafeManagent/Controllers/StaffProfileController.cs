@@ -40,8 +40,6 @@ namespace CafeManagent.Controllers
                 Address = dto.Address,
                 Phone = dto.Phone,
                 Email = dto.Email,
-                UserName = dto.UserName,
-                CreateAt = dto.CreateAt,
             };
 
             ViewBag.Avatar = dto.Img ?? "/images/avatars/default.png";

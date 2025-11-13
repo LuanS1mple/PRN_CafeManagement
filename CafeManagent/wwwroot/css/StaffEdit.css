@@ -1,4 +1,4 @@
-﻿/* ====== Tokens (đồng bộ với StaffDirectory / StaffCreate / StaffEdit) ====== */
+﻿/* ====== Tokens (đồng bộ với StaffDirectory/StaffCreate) ====== */
 :root {
     --bg: #fff;
     --bg-soft: #f6f7f9;
@@ -23,7 +23,7 @@ body {
     padding: 0 16px;
 }
 
-/* ====== Layout ====== */
+/* ====== Layout giống Create ====== */
 .profile-wrap h2 {
     font-size: 22px;
     font-weight: 700;
@@ -65,7 +65,6 @@ body {
     border: 1px solid var(--border);
 }
 
-/* Upload button */
 .btn-upload {
     display: inline-flex;
     align-items: center;
@@ -83,7 +82,7 @@ body {
     }
 
 .icon-up {
-    font-weight: 700;
+    font-weight: 700
 }
 
 /* ====== RIGHT: Form ====== */
@@ -93,32 +92,9 @@ body {
 
     .right-card h3 {
         font-size: 16px;
-        margin: 0 0 12px 0;
+        margin: 0 0 12px 0
     }
 
-/* Tabs giống bên StaffEdit */
-.tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-.tab {
-    padding: 8px 16px;
-    border-radius: 999px;
-    background: #f3f4f6;
-    color: var(--text-soft);
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-    .tab.active {
-        background: var(--primary);
-        color: #fff;
-    }
-
-/* Tóm tắt lỗi */
 .val-summary {
     background: #fff3cd;
     border: 1px solid #ffe69c;
@@ -133,7 +109,7 @@ body {
     display: block;
 }
 
-/* Lưới field giống Create/Edit Staff */
+/* Lưới field giống Create */
 .kv2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -151,7 +127,7 @@ body {
 }
 
 .kv2-value {
-    position: relative;
+    position: relative
 }
 
 /* Inputs */
@@ -170,7 +146,7 @@ body {
         border-color: var(--primary);
     }
 
-/* Readonly pill (nếu sau này dùng) */
+/* Readonly pill (username, v.v.) */
 .ro-pill {
     display: inline-flex;
     align-items: center;
@@ -181,7 +157,7 @@ body {
     font-weight: 600;
 }
 
-/* ====== Buttons (đồng bộ màu với list staff) ====== */
+/* ====== Buttons (đồng bộ màu với list) ====== */
 .btn {
     display: inline-flex;
     align-items: center;

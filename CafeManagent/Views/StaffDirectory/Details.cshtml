@@ -1,14 +1,53 @@
 ﻿@model CafeManagent.dto.response.StaffDetailDto
 @{
     ViewData["Title"] = "Chi tiết nhân viên";
+
+    // Map status -> class + text hiển thị
+    string statusRaw = Model.Status?.Trim() ?? "";
+    string statusClass = "";
+    string dotClass = "";
+    string statusText = statusRaw;
+
+    switch (statusRaw.ToLowerInvariant())
+    {
+        case "đang làm việc":
+        case "đang hoạt động":
+        case "active":
+            statusClass = "status-active";
+            dotClass = "dot-green";
+            statusText = "Đang làm việc";
+            break;
+
+        case "nghỉ việc":
+        case "inactive":
+            statusClass = "status-inactive";
+            dotClass = "dot-red";
+            statusText = "Nghỉ việc";
+            break;
+
+        case "nghỉ phép":
+        case "leave":
+            statusClass = "status-leave";
+            dotClass = "dot-gray";
+            statusText = "Nghỉ phép";
+            break;
+
+        default:
+            statusClass = "status-unknown";
+            dotClass = "dot-gray";
+            statusText = string.IsNullOrWhiteSpace(statusText) ? "Không xác định" : statusText;
+            break;
+    }
 }
+
 <link rel="stylesheet" href="~/css/Profile.css" />
+<link rel="stylesheet" href="~/css/StaffStatus.css" /> <!-- 👈 thêm dòng này -->
 
 <div class="container profile-wrap">
     <a class="link" asp-action="Index">← Danh sách nhân viên</a>
 
     <div class="profile-grid">
-        <!-- LEFT column: same as profile -->
+        <!-- LEFT column -->
         <aside class="left-card">
             <div class="avatar-wrap">
                 <img class="avatar-circle" src="@Model.AvatarUrl?v=@DateTimeOffset.UtcNow.Ticks" alt="Avatar of @Model.FullName" />
@@ -21,20 +60,19 @@
                 <div class="role-chip">@Model.RoleName</div>
             }
 
-            <div class="pill" style="justify-content:center;">
-                <span class="icon">●</span>
-                <span>@Model.Status</span>
+            <div class="pill @statusClass" style="justify-content:center;">
+                <span class="status-dot @dotClass">●</span>
+                <span>@statusText</span>
             </div>
 
-            <button class="btn-upload" disabled>
+            <!--<button class="btn-upload" disabled>
                 <span class="icon-up">⇪</span>
                 Cập nhật ảnh
-            </button>
+            </button>-->
         </aside>
 
-        <!-- RIGHT column: mirror profile format, filled with details -->
+        <!-- RIGHT column -->
         <main class="right-card">
-            <!-- optional tabs area kept identical to profile (hidden if not needed) -->
             <div class="tabs" role="tablist" aria-hidden="true" style="margin-bottom:16px;">
                 <a class="tab active">Tổng quan</a>
                 <a class="tab">Hoạt động</a>
@@ -57,6 +95,22 @@
                         <input readonly value="@Model.Phone" />
                     </div>
                 </div>
+
+                <div class="field">
+                    <div class="label">Username</div>
+                    <div class="ro-input">
+                        <input readonly value="@Model.UserName" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <div class="label">Giới tính</div>
+                    <div class="ro-input">
+                        <input readonly
+                               value="@(Model.Gender == true ? "Nam" : Model.Gender == false ? "Nữ" : "Không xác định")" />
+                    </div>
+                </div>
+
 
                 <div class="field">
                     <div class="label">Địa chỉ</div>
@@ -99,8 +153,14 @@
             </div>
 
             <div class="actions">
-                <a class="btn primary" asp-controller="StaffProfile" asp-action="Edit" asp-route-id="@Model.StaffId">Sửa thông tin</a>
+                <a class="btn primary" asp-controller="StaffDirectory" asp-action="Edit" asp-route-id="@Model.StaffId">
+                    ✏️ Sửa thông tin
+                </a>
+                <a class="btn secondary" asp-controller="StaffDirectory" asp-action="Index">
+                    ← Quay lại danh sách
+                </a>
             </div>
+
         </main>
     </div>
 </div>

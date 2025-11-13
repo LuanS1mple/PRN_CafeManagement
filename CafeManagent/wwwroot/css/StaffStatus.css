@@ -1,0 +1,51 @@
+﻿/* ====== Staff status styles ====== */
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 14px;
+}
+
+/* Icon chấm tròn màu */
+.status-dot {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.dot-green {
+    color: #22c55e;
+}
+/* xanh lá */
+.dot-red {
+    color: #ef4444;
+}
+/* đỏ */
+.dot-gray {
+    color: #9ca3af;
+}
+/* xám */
+
+/* Nền theo trạng thái */
+.status-active {
+    background-color: #dcfce7; /* xanh nhạt */
+    color: #166534;
+}
+
+.status-inactive {
+    background-color: #fee2e2; /* đỏ nhạt */
+    color: #991b1b;
+}
+
+.status-leave {
+    background-color: #f3f4f6; /* xám nhạt */
+    color: #374151;
+}
+
+.status-unknown {
+    background-color: #e5e7eb;
+    color: #4b5563;
+}
