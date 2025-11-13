@@ -46,8 +46,8 @@ namespace CafeManagent.Controllers
                 TempData["ErrorMessage"] = "Đã xảy ra lỗi khi cập nhật: " + ex.Message;
             }
 
-//            return RedirectToAction("Index");
-//        }
+            return RedirectToAction("Index");
+        }
 
         [HttpPost]
         public async Task<IActionResult> Create(CafeManagent.Models.Task task)

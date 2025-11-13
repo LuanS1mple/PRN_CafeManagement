@@ -1,4 +1,5 @@
-﻿using CafeManagent.dto.response;
+﻿using CafeManagent.dto.Configurations;
+using CafeManagent.dto.response;
 using CafeManagent.ErrorHandler;
 using CafeManagent.Hubs;
 using CafeManagent.Middlewares;
