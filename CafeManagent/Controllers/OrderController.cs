@@ -2,6 +2,7 @@
 using CafeManagent.dto.Order;
 using CafeManagent.Helpers;
 using CafeManagent.Hubs;
+using CafeManagent.mapper;
 using CafeManagent.Models;
 using CafeManagent.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -15,18 +16,19 @@ namespace CafeManagent.Controllers
 {
     public class OrderController : Controller
     {
+        private const string SESSION_KEY_DRAFT = "OrderDraft";
         private readonly IOrderService _svc;
         private readonly IHubContext<OrderHub> _hub;
         private readonly IProductService _productSvc; 
         private readonly ICustomerService _customerSvc;
-        //private readonly IVnPayService _vnpaySvc;
-        public OrderController(IOrderService svc, IHubContext<OrderHub> hub, IProductService productSvc, ICustomerService customerSvc)
+        private readonly IVnPayService _vnpaySvc;
+        public OrderController(IOrderService svc, IHubContext<OrderHub> hub, IProductService productSvc, ICustomerService customerSvc, IVnPayService vnpaySvc)
         {
             _svc = svc;
             _hub = hub;
             _productSvc = productSvc;
             _customerSvc = customerSvc;
-            //_vnpaySvc = vnpaySvc;
+            _vnpaySvc = vnpaySvc;
         }
 
         //view
@@ -56,10 +58,11 @@ namespace CafeManagent.Controllers
         {
             var products = _productSvc.GetAllActive();
             ViewBag.Products = products;
-            HttpContext.Session.Remove("OrderDraft");
+            var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
+            ViewBag.DraftDetails = draftDetails;
             return View();
         }
-        
+
 
         public IActionResult CompletedHistory()
         {
@@ -88,31 +91,38 @@ namespace CafeManagent.Controllers
             {
                 return Json(new { success = false, message = "Dữ liệu đơn hàng trống." });
             }
-
-            // --- 1. Tính toán giá trị ---
             decimal subtotal = draft.Items.Sum(i => i.Quantity * i.UnitPrice);
-            decimal discountAmount = subtotal * (draft.DiscountPercent / 100);
+            decimal discountPercentage = draft.DiscountPercent / 100m;
+            decimal discountAmount = subtotal * discountPercentage;
+
             decimal totalBeforeVAT = subtotal - discountAmount;
             const decimal VAT_PERCENT = 0.05m;
             decimal vatAmount = totalBeforeVAT * VAT_PERCENT;
             decimal grandTotal = totalBeforeVAT + vatAmount;
 
-            // --- 2. Tìm kiếm Khách hàng ---
             Customer? customer = null;
             string customerStatus = "Khách vãng lai";
+
             if (!string.IsNullOrEmpty(draft.CustomerPhone))
             {
                 customer = _customerSvc.GetByPhone(draft.CustomerPhone);
                 if (customer != null)
                 {
-                    customerStatus = $"Khách thân thiết: {customer.FullName} (Điểm: {customer.LoyaltyPoint ?? 0})";
+                    customerStatus = $"<span class='text-success fw-bold'>Khách thân thiết: {customer.FullName}</span> (Điểm: {customer.LoyaltyPoint ?? 0})";
                 }
                 else
                 {
-                    customerStatus = "Người dùng mới";
+                    customerStatus = "SĐT mới. (Khách hàng vãng lai)";
                 }
             }
+            else
+            {
+                customerStatus = "Chưa nhập SĐT.";
+            }
+
             int pointsEarned = (int)Math.Floor(grandTotal / 100000);
+
+            // --- 3. Trả về kết quả ---
             return Json(new
             {
                 success = true,
@@ -132,40 +142,89 @@ namespace CafeManagent.Controllers
         [HttpPost]
         public IActionResult CreateDraft([FromBody] OrderDraftDto draft)
         {
-            // Lặp lại logic tính toán (vì đây là bước xác nhận cuối cùng)
-            decimal subtotal = draft.Items.Sum(i => i.Quantity * i.UnitPrice);
-            decimal discountAmount = subtotal * (draft.DiscountPercent / 100);
-            decimal totalBeforeVAT = subtotal - discountAmount;
-            const decimal VAT_PERCENT = 0.05m;
-            decimal vatAmount = totalBeforeVAT * VAT_PERCENT;
-            decimal grandTotal = totalBeforeVAT + vatAmount;
-
-            // Tìm kiếm khách hàng để lấy CustomerId
-            Customer? customer = null;
-            if (!string.IsNullOrEmpty(draft.CustomerPhone))
+            if (draft == null || !draft.Items.Any())
             {
-                customer = _customerSvc.GetByPhone(draft.CustomerPhone);
+                return Json(new { success = false, message = "Không có sản phẩm trong đơn hàng." });
             }
-            int pointsEarned = (int)Math.Floor(grandTotal / 100000);
 
-            // TẠO VÀ LƯU BẢN NHÁP VÀO SESSION
-            var draftData = new OrderDraftDetailsDto
+            try
             {
-                Draft = draft,
-                Subtotal = subtotal,
-                DiscountAmount = discountAmount,
-                TotalBeforeVAT = totalBeforeVAT,
-                VATAmount = vatAmount,
-                GrandTotal = grandTotal,
-                Customer = customer,
-                PointsEarned = pointsEarned
-            };
+                decimal subtotal = draft.Items.Sum(i => i.Quantity * i.UnitPrice);
+                decimal discountPercentage = draft.DiscountPercent / 100m;
+                decimal discountAmount = subtotal * discountPercentage;
+                decimal totalBeforeVAT = subtotal - discountAmount;
+                decimal vatAmount = totalBeforeVAT * 0.05m;
+                decimal grandTotal = totalBeforeVAT + vatAmount;
 
-            HttpContext.Session.SetObject("OrderDraft", draftData);
-
-            // Trả về kết quả thành công và chuyển hướng đến màn hình Bản nháp
-            return Json(new { success = true, redirectUrl = Url.Action("DraftView") });
+                Customer? customer = string.IsNullOrEmpty(draft.CustomerPhone) ? null : _customerSvc.GetByPhone(draft.CustomerPhone);
+                int pointsEarned = (int)Math.Floor(grandTotal / 100000);
+                var draftData = new OrderDraftDetailsDto
+                {
+                    Draft = draft,
+                    Subtotal = Math.Round(subtotal, 0),
+                    DiscountAmount = Math.Round(discountAmount, 0),
+                    TotalBeforeVAT = Math.Round(totalBeforeVAT, 0),
+                    VATAmount = Math.Round(vatAmount, 0),
+                    GrandTotal = Math.Round(grandTotal, 0),
+                    Customer = customer,
+                    PointsEarned = pointsEarned
+                };
+                HttpContext.Session.SetObject(SESSION_KEY_DRAFT, draftData);
+                return Json(new { success = true, redirectUrl = Url.Action("DraftView") });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Lỗi hệ thống khi tạo nháp: {ex.Message}" });
+            }
         }
+
+        public IActionResult DraftView()
+        {
+            var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
+
+            if (draftDetails == null)
+            {
+                return RedirectToAction("AddOrder");
+            }
+            return View(draftDetails); 
+        }
+        [HttpPost]
+        public IActionResult CancelDraft()
+        {
+            return RedirectToAction("AddOrder");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CompletePayment(string paymentMethod)
+        {
+            var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
+
+            if (draftDetails == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy bản nháp để hoàn tất thanh toán." });
+            }
+
+            try
+            {
+                int? staffId = HttpContext.Session.GetInt32("StaffId");
+                var newOrder = DraftOrderMapper.MapDraftToOrder(
+                    draftDetails,
+                    paymentMethod,
+                    status: 3, 
+                    staffId: staffId
+                );
+
+                var savedOrder = _svc.Add(newOrder);
+                HttpContext.Session.Remove(SESSION_KEY_DRAFT);
+                return Json(new { success = true, redirectUrl = Url.Action("Details", new { id = savedOrder.OrderId }) });
+            }
+            catch (Exception ex)
+            {
+
+                return Json(new { success = false, message = $"Lỗi lưu DB: {ex.Message}" });
+            }
+        }
+
         public IActionResult AllHistory(string query, int? statusFilter, string dateFilter)
         {
 
@@ -357,6 +416,48 @@ namespace CafeManagent.Controllers
             return Json(new { success = true, orders = result });
         }
 
+        // pament
+        [HttpPost]
+public IActionResult ProcessVnPay()
+{
+    var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
+    
+    if (draftDetails == null)
+    {
+        return Json(new { success = false, message = "Không tìm thấy bản nháp để xử lý VNPay." });
+    }
+    
+    try
+    {
+        // 1. Map DTO sang Order Model chính thức VỚI STATUS CHỜ THANH TOÁN (Status: 1)
+        int? staffId = HttpContext.Session.GetInt32("StaffId");
+        var tempOrder = DraftOrderMapper.MapDraftToOrder( // *Lưu ý: Bạn cần đảm bảo đã đổi tên DraftOrderMapper trong file using*
+            draftDetails, 
+            paymentMethod: "Online", 
+            status: 1, // Status 1: Chờ thanh toán
+            staffId: staffId
+        );
+
+        var savedTempOrder = _svc.Add(tempOrder); // Lưu tạm để lấy OrderId
+        
+        // Lưu OrderId vào Session để biết Order nào đang chờ thanh toán
+        HttpContext.Session.SetInt32("ProcessingOrderId", savedTempOrder.OrderId);
+
+        // 2. Gọi Service tạo URL thanh toán
+        string paymentUrl = _vnpaySvc.CreatePaymentUrl(
+            savedTempOrder.OrderId.ToString(), 
+            savedTempOrder.TotalAmount ?? 0, // Đảm bảo TotalAmount có giá trị
+            HttpContext
+        );
+        
+        return Json(new { success = true, redirectUrl = paymentUrl });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = $"Lỗi tạo URL VNPay: {ex.Message}" });
+    }
+}
+
 
         // --- HELPERS ---
 
@@ -422,10 +523,6 @@ namespace CafeManagent.Controllers
             3 => "Hoàn thành",
             _ => "Không rõ"
         };
-
-       
-
-
 
     }
 }
