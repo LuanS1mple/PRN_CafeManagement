@@ -20,7 +20,6 @@ namespace CafeManagent.Services.Imp
             bool verified = BCrypt.Net.BCrypt.Verify(password, staff.Password);
 
             return verified ? staff : null;
-
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using CafeManagent.dto.order;
-
+using CafeManagent.dto.Order;
+using CafeManagent.Helpers;
 using CafeManagent.Hubs;
+using CafeManagent.mapper;
 using CafeManagent.Models;
 using CafeManagent.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -14,18 +16,24 @@ namespace CafeManagent.Controllers
 {
     public class OrderController : Controller
     {
+        private const string SESSION_KEY_DRAFT = "OrderDraft";
         private readonly IOrderService _svc;
         private readonly IHubContext<OrderHub> _hub;
-
-        public OrderController(IOrderService svc, IHubContext<OrderHub> hub)
+        private readonly IProductService _productSvc; 
+        private readonly ICustomerService _customerSvc;
+        private readonly IVnPayService _vnpaySvc;
+        public OrderController(IOrderService svc, IHubContext<OrderHub> hub, IProductService productSvc, ICustomerService customerSvc, IVnPayService vnpaySvc)
         {
             _svc = svc;
             _hub = hub;
+            _productSvc = productSvc;
+            _customerSvc = customerSvc;
+            _vnpaySvc = vnpaySvc;
         }
 
-        // --- VIEWS ---
+        //view
 
-        public IActionResult Waiter() // màn hình Waiter: Chờ (0), Đang chuẩn bị (1), Đã sẵn sàng (2)
+        public IActionResult Waiter() 
         {
             var activeOrders = _svc.GetByStatuses(0)
                  .Concat(_svc.GetByStatuses(1))
@@ -46,6 +54,16 @@ namespace CafeManagent.Controllers
             return View();
         }
 
+        public IActionResult AddOrder()
+        {
+            var products = _productSvc.GetAllActive();
+            ViewBag.Products = products;
+            var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
+            ViewBag.DraftDetails = draftDetails;
+            return View();
+        }
+
+
         public IActionResult CompletedHistory()
         {
             var completedOrders = ToDto(_svc.GetByStatuses(3));
@@ -53,7 +71,6 @@ namespace CafeManagent.Controllers
         }
         public IActionResult BartenderHistory()
         {
-
             var readyOrders = _svc.GetByStatuses(2);
             var completedOrders = _svc.GetByStatuses(3);
             var historyOrders = readyOrders
@@ -66,6 +83,148 @@ namespace CafeManagent.Controllers
                 .ToList();
             return View("CompletedHistory", sortedHistory);
         }
+
+        [HttpPost]
+        public IActionResult CalculateDraftApi([FromBody] OrderDraftDto draft)
+        {
+            if (draft == null)
+            {
+                return Json(new { success = false, message = "Dữ liệu đơn hàng trống." });
+            }
+            decimal subtotal = draft.Items.Sum(i => i.Quantity * i.UnitPrice);
+            decimal discountPercentage = draft.DiscountPercent / 100m;
+            decimal discountAmount = subtotal * discountPercentage;
+
+            decimal totalBeforeVAT = subtotal - discountAmount;
+            const decimal VAT_PERCENT = 0.05m;
+            decimal vatAmount = totalBeforeVAT * VAT_PERCENT;
+            decimal grandTotal = totalBeforeVAT + vatAmount;
+
+            Customer? customer = null;
+            string customerStatus = "Khách vãng lai";
+
+            if (!string.IsNullOrEmpty(draft.CustomerPhone))
+            {
+                customer = _customerSvc.GetByPhone(draft.CustomerPhone);
+                if (customer != null)
+                {
+                    customerStatus = $"<span class='text-success fw-bold'>Khách thân thiết: {customer.FullName}</span> (Điểm: {customer.LoyaltyPoint ?? 0})";
+                }
+                else
+                {
+                    customerStatus = "SĐT mới. (Khách hàng vãng lai)";
+                }
+            }
+            else
+            {
+                customerStatus = "Chưa nhập SĐT.";
+            }
+
+            int pointsEarned = (int)Math.Floor(grandTotal / 100000);
+
+            // --- 3. Trả về kết quả ---
+            return Json(new
+            {
+                success = true,
+                data = new
+                {
+                    Subtotal = subtotal,
+                    DiscountAmount = discountAmount,
+                    VATAmount = vatAmount,
+                    GrandTotal = grandTotal,
+                    CustomerName = customer?.FullName ?? "N/A",
+                    CustomerPhone = customer?.Phone ?? "N/A",
+                    CustomerStatus = customerStatus,
+                    PointsEarned = pointsEarned
+                }
+            });
+        }
+        [HttpPost]
+        public IActionResult CreateDraft([FromBody] OrderDraftDto draft)
+        {
+            if (draft == null || !draft.Items.Any())
+            {
+                return Json(new { success = false, message = "Không có sản phẩm trong đơn hàng." });
+            }
+
+            try
+            {
+                decimal subtotal = draft.Items.Sum(i => i.Quantity * i.UnitPrice);
+                decimal discountPercentage = draft.DiscountPercent / 100m;
+                decimal discountAmount = subtotal * discountPercentage;
+                decimal totalBeforeVAT = subtotal - discountAmount;
+                decimal vatAmount = totalBeforeVAT * 0.05m;
+                decimal grandTotal = totalBeforeVAT + vatAmount;
+
+                Customer? customer = string.IsNullOrEmpty(draft.CustomerPhone) ? null : _customerSvc.GetByPhone(draft.CustomerPhone);
+                int pointsEarned = (int)Math.Floor(grandTotal / 100000);
+                var draftData = new OrderDraftDetailsDto
+                {
+                    Draft = draft,
+                    Subtotal = Math.Round(subtotal, 0),
+                    DiscountAmount = Math.Round(discountAmount, 0),
+                    TotalBeforeVAT = Math.Round(totalBeforeVAT, 0),
+                    VATAmount = Math.Round(vatAmount, 0),
+                    GrandTotal = Math.Round(grandTotal, 0),
+                    Customer = customer,
+                    PointsEarned = pointsEarned
+                };
+                HttpContext.Session.SetObject(SESSION_KEY_DRAFT, draftData);
+                return Json(new { success = true, redirectUrl = Url.Action("DraftView") });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Lỗi hệ thống khi tạo nháp: {ex.Message}" });
+            }
+        }
+
+        public IActionResult DraftView()
+        {
+            var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
+
+            if (draftDetails == null)
+            {
+                return RedirectToAction("AddOrder");
+            }
+            return View(draftDetails); 
+        }
+        [HttpPost]
+        public IActionResult CancelDraft()
+        {
+            return RedirectToAction("AddOrder");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CompletePayment(string paymentMethod)
+        {
+            var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
+
+            if (draftDetails == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy bản nháp để hoàn tất thanh toán." });
+            }
+
+            try
+            {
+                int? staffId = HttpContext.Session.GetInt32("StaffId");
+                var newOrder = DraftOrderMapper.MapDraftToOrder(
+                    draftDetails,
+                    paymentMethod,
+                    status: 3, 
+                    staffId: staffId
+                );
+
+                var savedOrder = _svc.Add(newOrder);
+                HttpContext.Session.Remove(SESSION_KEY_DRAFT);
+                return Json(new { success = true, redirectUrl = Url.Action("Details", new { id = savedOrder.OrderId }) });
+            }
+            catch (Exception ex)
+            {
+
+                return Json(new { success = false, message = $"Lỗi lưu DB: {ex.Message}" });
+            }
+        }
+
         public IActionResult AllHistory(string query, int? statusFilter, string dateFilter)
         {
 
@@ -80,8 +239,6 @@ namespace CafeManagent.Controllers
                     (o.Note?.ToLower().Contains(normalizedQuery) ?? false) ||
                     o.OrderId.ToString().Contains(normalizedQuery));
             }
-
-            // statusFilter: 99 = Tất cả, -2 = Hoàn tiền, -1 = Hủy, 3 = Hoàn thành, 0/1/2 = Đang hoạt động
             if (statusFilter.HasValue && statusFilter != 99)
             {
                 filteredOrders = filteredOrders.Where(o => o.Status == statusFilter.Value);
@@ -103,7 +260,7 @@ namespace CafeManagent.Controllers
             return View(result.OrderByDescending(o => o.OrderId).ToList());
         }
 
-     
+        //action status
         public IActionResult Details(int id)
         {
             string staffRole = HttpContext.Session.GetString("StaffRole");
@@ -113,8 +270,6 @@ namespace CafeManagent.Controllers
             return View(ToDetailsDto(o));
         }
 
-
-        // --- ACTIONS ---
 
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] Order order)
@@ -194,6 +349,7 @@ namespace CafeManagent.Controllers
             }
             return Json(new { success = ok });
         }
+        //Search
 
 
         [HttpGet]
@@ -228,6 +384,79 @@ namespace CafeManagent.Controllers
 
             return Json(new { success = true, orders = result });
         }
+        [HttpGet]
+        public IActionResult SearchActiveOrdersApi(string query, [FromQuery] List<int> statusFilter, string dateFilter)
+        {
+            var allOrders = _svc.GetAll();
+            var filteredOrders = allOrders.AsEnumerable();
+            if (statusFilter != null && statusFilter.Any())
+            {
+                filteredOrders = filteredOrders.Where(o => o.Status.HasValue && statusFilter.Contains(o.Status.Value));
+            }
+            if (!string.IsNullOrEmpty(query))
+            {
+                string normalizedQuery = query.Trim().ToLower();
+                filteredOrders = filteredOrders.Where(o =>
+                    (o.Customer?.FullName?.ToLower().Contains(normalizedQuery) ?? false) ||
+                    (o.Note?.ToLower().Contains(normalizedQuery) ?? false) ||
+                    o.OrderId.ToString().Contains(normalizedQuery));
+            }
+            if (!string.IsNullOrEmpty(dateFilter))
+            {
+                if (DateTime.TryParse(dateFilter, out DateTime targetDate))
+                {
+                    filteredOrders = filteredOrders.Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == targetDate.Date);
+                }
+            }
+
+            var result = ToDto(filteredOrders.ToList())
+                                 .OrderByDescending(o => o.Status)
+                                 .ToList();
+
+            return Json(new { success = true, orders = result });
+        }
+
+        // pament
+        [HttpPost]
+public IActionResult ProcessVnPay()
+{
+    var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
+    
+    if (draftDetails == null)
+    {
+        return Json(new { success = false, message = "Không tìm thấy bản nháp để xử lý VNPay." });
+    }
+    
+    try
+    {
+        // 1. Map DTO sang Order Model chính thức VỚI STATUS CHỜ THANH TOÁN (Status: 1)
+        int? staffId = HttpContext.Session.GetInt32("StaffId");
+        var tempOrder = DraftOrderMapper.MapDraftToOrder( // *Lưu ý: Bạn cần đảm bảo đã đổi tên DraftOrderMapper trong file using*
+            draftDetails, 
+            paymentMethod: "Online", 
+            status: 1, // Status 1: Chờ thanh toán
+            staffId: staffId
+        );
+
+        var savedTempOrder = _svc.Add(tempOrder); // Lưu tạm để lấy OrderId
+        
+        // Lưu OrderId vào Session để biết Order nào đang chờ thanh toán
+        HttpContext.Session.SetInt32("ProcessingOrderId", savedTempOrder.OrderId);
+
+        // 2. Gọi Service tạo URL thanh toán
+        string paymentUrl = _vnpaySvc.CreatePaymentUrl(
+            savedTempOrder.OrderId.ToString(), 
+            savedTempOrder.TotalAmount ?? 0, // Đảm bảo TotalAmount có giá trị
+            HttpContext
+        );
+        
+        return Json(new { success = true, redirectUrl = paymentUrl });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = $"Lỗi tạo URL VNPay: {ex.Message}" });
+    }
+}
 
 
         // --- HELPERS ---
@@ -256,32 +485,25 @@ namespace CafeManagent.Controllers
                 OrderTime = o.OrderDate?.ToString("HH:mm:ss dd/MM") ?? ""
             };
         }
-        // Trong OrderController.cs (Thêm hàm này vào phần HELPERS)
+    
 
         private OrderDetailsDto ToDetailsDto(Order o)
         {
-            // Lấy thông tin cơ bản từ hàm ToDto hiện tại
             var baseDto = ToDto(o);
-
-            // Chuyển đổi chi tiết các món hàng
             var itemsDto = o.OrderItems.Select(item => new OrderItemDto
             {
                 ProductName = item.ProductName,
                 Quantity = item.Quantity ?? 0,
                 UnitPrice = item.UnitPrice ?? 0
             }).ToList();
-
             return new OrderDetailsDto
             {
-                // Copy các trường từ baseDto
                 OrderId = baseDto.OrderId,
                 CustomerName = baseDto.CustomerName,
                 TotalAmount = baseDto.TotalAmount,
                 Status = baseDto.Status,
                 StatusText = baseDto.StatusText,
                 OrderTime = baseDto.OrderTime,
-
-                // Thêm chi tiết
                 CustomerPhone = o.Customer?.Phone ?? "N/A",
                 Note = o.Note ?? "Không có ghi chú.",
                 Discount = o.Discount ?? 0,
@@ -289,44 +511,7 @@ namespace CafeManagent.Controllers
                 Items = itemsDto
             };
         }
-        [HttpGet]
-        public IActionResult SearchActiveOrdersApi(string query, [FromQuery] List<int> statusFilter, string dateFilter)
-        {
-            var allOrders = _svc.GetAll();
-            var filteredOrders = allOrders.AsEnumerable();
-
-            // Lọc theo TRẠNG THÁI: Sử dụng danh sách statusFilter
-            if (statusFilter != null && statusFilter.Any())
-            {
-                filteredOrders = filteredOrders.Where(o => o.Status.HasValue && statusFilter.Contains(o.Status.Value));
-            }
-
-            // Lọc theo TÌM KIẾM (Query)
-            if (!string.IsNullOrEmpty(query))
-            {
-                string normalizedQuery = query.Trim().ToLower();
-                filteredOrders = filteredOrders.Where(o =>
-                    (o.Customer?.FullName?.ToLower().Contains(normalizedQuery) ?? false) ||
-                    (o.Note?.ToLower().Contains(normalizedQuery) ?? false) ||
-                    o.OrderId.ToString().Contains(normalizedQuery));
-            }
-
-            // Lọc theo ngày (YYYY-MM-DD)
-            if (!string.IsNullOrEmpty(dateFilter))
-            {
-                if (DateTime.TryParse(dateFilter, out DateTime targetDate))
-                {
-                    filteredOrders = filteredOrders.Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == targetDate.Date);
-                }
-            }
-
-            // Chuyển sang DTO và Sắp xếp (Status cao hơn lên trước: 2 > 1 > 0)
-            var result = ToDto(filteredOrders.ToList())
-                                 .OrderByDescending(o => o.Status)
-                                 .ToList();
-
-            return Json(new { success = true, orders = result });
-        }
+       
 
         private string StatusText(int? s) => s switch
         {
@@ -338,10 +523,6 @@ namespace CafeManagent.Controllers
             3 => "Hoàn thành",
             _ => "Không rõ"
         };
-
-
-
-
 
     }
 }

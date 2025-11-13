@@ -7,7 +7,6 @@ using CafeManagent.Services;
 using CafeManagent.Services.Imp;
 using CafeManagent.Ulties;
 using Microsoft.AspNetCore.Mvc;
-
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -43,6 +42,9 @@ builder.Services.AddTransient<IWorkShiftService, WorkShiftService>();
 builder.Services.AddTransient<ICustomerProfileService, CustomerProfileService>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
 
+builder.Services.AddTransient<IProductService, ProductService>(); 
+builder.Services.AddTransient<ICustomerService, CustomerService>();
+builder.Services.AddTransient<IVnPayService, VnPayService>();
 builder.Services.AddSingleton<NotifyUlti>();
 builder.Services.AddTransient<IStaffDirectoryService, StaffDirectoryService>();
 builder.Services.AddHostedService<WorkScheduleBackgroundWorker>();
@@ -53,6 +55,8 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ITaskReportService, TaskReportService>();
 
+builder.Services.Configure<VnPayConfig>(
+    builder.Configuration.GetSection("VNPay"));
 
 builder.Services.AddRazorPages(o =>
 {

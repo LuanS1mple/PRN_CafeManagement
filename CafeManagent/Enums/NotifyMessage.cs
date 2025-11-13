@@ -18,5 +18,7 @@
         public static readonly NotifyMessage THONG_BAO_CA_LAM_TRC_1_DAY = new("Bạn có ca làm vào ngày mai");
         public static readonly NotifyMessage THONG_BAO_CA_LAM_TRC_30_MIN = new("Ca làm của bạn ngày hôm nay sắp bắt đầu");
         public static readonly NotifyMessage THONG_BAO_CA_LAM = new("Ca làm của bạn đã bắt đầu");
+        public static readonly NotifyMessage UPDATE_STATUS_ORDER = new("Cập nhật nhật trạng thái thành công ");
+        public static readonly NotifyMessage CREATE_ORDER = new("Đơn hàng đã tạo mới thành công");
     }
 }

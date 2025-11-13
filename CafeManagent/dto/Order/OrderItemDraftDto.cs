@@ -1,11 +1,10 @@
 ﻿namespace CafeManagent.dto.Order
 {
-    public class OrderDraftDto
+    public class OrderItemDraftDto
     {
-        public List<OrderItemDraftDto> Items { get; set; } = new List<OrderItemDraftDto>();
-        public string CustomerPhone { get; set; } 
-        public decimal DiscountPercent { get; set; } 
-        public string PaymentMethod { get; set; } 
-        public string Note { get; set; }
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
     }
 }
