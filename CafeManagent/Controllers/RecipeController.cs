@@ -1,4 +1,5 @@
-﻿using CafeManagent.Models;
+﻿using CafeManagent.dto.request;
+using CafeManagent.Models;
 using CafeManagent.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,6 +26,25 @@ namespace CafeManagent.Controllers
         {
             var recipes = await _service.FilterRecipeProduct(Keyword);
             return View("Index",recipes);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddProduct(AddProductDTO dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Dữ liệu không hợp lệ!";
+                return RedirectToAction("Index");
+            }
+
+            var success = await _service.AddProductAsync(dto);
+
+            if (success)
+                TempData["Success"] = "Thêm sản phẩm thành công!";
+            else
+                TempData["Error"] = "Tên sản phẩm đã tồn tại!";
+
+            return RedirectToAction("Index");
         }
     }
 }

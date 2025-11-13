@@ -56,9 +56,14 @@
                         <td>@item.Price</td>
                         <td>@item.Description</td>
                         <td class="text-end">
-                                <button type="button" class="btn btn-sm btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#detailRecipeModal1">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-info view-recipe-btn" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#detailRecipeModal"
+                                        data-product='@System.Text.Json.JsonSerializer.Serialize(item, new System.Text.Json.JsonSerializerOptions { ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles, PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })'>
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
+
                                 <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editRecipeModal1">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>                                
@@ -84,57 +89,49 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Gửi dữ liệu tới WorkShift/AddWorkShift -->
-                <form asp-controller="WorkShift" asp-action="AddWorkShift" method="post">
-
-                    <!-- Nhân viên -->
+                <form asp-controller="Recipe" asp-action="AddProduct" method="post">
                     <div class="mb-3">
-                        <label class="form-label">Tên nhân viên</label>
-                        <select name="EmployeeName" class="form-select" required>
-                            <option value="">-- Chọn nhân viên --</option>
-                            <option value="Nguyễn Văn A">Nguyễn Văn A</option>
-                            <option value="Trần Thị B">Trần Thị B</option>
-                            <option value="Lê Văn C">Lê Văn C</option>
-                            <option value="Phạm Thị D">Phạm Thị D</option>
-                        </select>
+                        <label class="form-label">Tên sản phẩm</label>
+                        <input type="text" name="ProductName" class="form-control" required />
                     </div>
 
-                    <!-- Ngày -->
                     <div class="mb-3">
-                        <label class="form-label">Ngày làm việc</label>
-                        <input type="date" name="Date" class="form-control" required />
+                        <label class="form-label">Giá</label>
+                        <input type="number" step="0.01" name="Price" class="form-control" required />
                     </div>
 
-                    <!-- Loại ca -->
                     <div class="mb-3">
-                        <label class="form-label">Loại ca</label>
-                        <select name="ShiftType" class="form-select" required>
-                            <option value="">-- Chọn loại ca --</option>
-                            <option value="Sáng">Ca sáng</option>
-                            <option value="Chiều">Ca chiều</option>
-                            <option value="Tối">Ca tối</option>
-                        </select>
+                        <label class="form-label">Mô tả</label>
+                        <input type="text" name="Description" class="form-control" />
                     </div>
 
-                    <!-- Ghi chú -->
                     <div class="mb-3">
-                        <label class="form-label">Ghi chú</label>
-                        <textarea name="Note" class="form-control" rows="2"></textarea>
+                        <label class="form-label">Nguyên liệu</label>
+                        <input type="text" name="IngredientName" class="form-control" />
                     </div>
 
-                    <!-- Nút -->
+                    <div class="mb-3">
+                        <label class="form-label">Đơn vị định lượng</label>
+                        <input type="text" name="Unit" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Số lượng nguyên liệu cần (QuantityNeeded)</label>
+                        <input type="number" step="0.01" name="QuantityNeeded" class="form-control" required />
+                    </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-primary">Thêm ca làm</button>
+                        <button type="submit" class="btn btn-primary">Thêm sản phẩm</button>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal: Xem chi tiết công thức -->
-<div class="modal fade" id="detailRecipeModal1" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="detailRecipeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header">
@@ -144,27 +141,15 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label fw-bold">Tên sản phẩm:</label>
-                    <p class="mb-0">Trà sữa truyền thống</p>
+                    <p id="detailProductName" class="mb-0"></p>
                 </div>
-
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Mô tả:</label>
+                    <p id="detailDescription" class="mb-0"></p>
+                </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Nguyên liệu:</label>
-                    <ul class="mb-0">
-                        <li>Trà đen: 100ml</li>
-                        <li>Sữa đặc: 50ml</li>
-                        <li>Đường: 30g</li>
-                        <li>Trân châu: 50g</li>
-                    </ul>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Cách pha:</label>
-                    <p class="mb-0">Pha trà đen với sữa đặc và đường, thêm trân châu khi hoàn thành.</p>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Ghi chú:</label>
-                    <p class="mb-0">Dùng đá lạnh, không để lâu quá 10 phút.</p>
+                    <ul id="detailIngredients" class="mb-0"></ul>
                 </div>
             </div>
             <div class="modal-footer">
@@ -173,6 +158,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- Modal: Chỉnh sửa công thức -->
 <div class="modal fade" id="editRecipeModal1" tabindex="-1" aria-hidden="true">
@@ -219,6 +205,36 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const buttons = document.querySelectorAll('.view-recipe-btn');
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const product = JSON.parse(this.getAttribute('data-product'));
+
+            document.getElementById('detailProductName').innerText = product.productName;
+            document.getElementById('detailDescription').innerText = product.description;
+
+            const ul = document.getElementById('detailIngredients');
+            ul.innerHTML = '';
+
+            if (product.recipes && product.recipes.length > 0) {
+                product.recipes.forEach(r => {
+                    const li = document.createElement('li');
+                    li.textContent = `${r.ingredient.ingredientName}: ${r.quantityNeeded} ${r.ingredient.unit}`;
+                    ul.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = "Chưa có nguyên liệu nào.";
+                ul.appendChild(li);
+            }
+        });
+    });
+});
+</script>
 
 
 

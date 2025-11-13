@@ -1,4 +1,5 @@
-﻿using CafeManagent.Models;
+﻿using CafeManagent.dto.request;
+using CafeManagent.Models;
 
 namespace CafeManagent.Services
 {
@@ -6,6 +7,8 @@ namespace CafeManagent.Services
     {
         Task<List<Product>> GetRecipeProduct();
         Task<List<Product>> FilterRecipeProduct(string name);
+
+        Task<bool> AddProductAsync(AddProductDTO dto);
 
     }
 }
