@@ -1,0 +1,221 @@
+﻿@model IEnumerable<Product>
+@{
+    ViewData["Title"] = "Quản lý ca làm";
+}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <h1 class="mb-0">Công thức</h1>
+            <p class="text-muted mb-0">Bảng công thức đồ uống</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRecipe">
+                <i class="fa-solid fa-plus"></i> Thêm
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form class="row g-3 align-items-end"
+            asp-controller="Recipe" 
+            asp-action="FilterRecipeProduct"
+            method="post">
+                <div class="col-md-3">
+                    <label class="form-label">Tìm kiếm</label>
+                    <input type="text" name="Keyword" class="form-control" placeholder="Tên đồ uống" />
+                </div>
+                <div class="col-md-1 text-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fa-solid fa-magnifying-glass"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var item in Model){
+                        <tr>
+                        <td>@item.ProductName</td>
+                        <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#detailRecipeModal1">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editRecipeModal1">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>                                
+                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                        </td>
+                        </tr>
+                    }
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    
+
+    <div class="modal fade" id="addRecipe" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm công thức mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Gửi dữ liệu tới WorkShift/AddWorkShift -->
+                <form asp-controller="WorkShift" asp-action="AddWorkShift" method="post">
+
+                    <!-- Nhân viên -->
+                    <div class="mb-3">
+                        <label class="form-label">Tên nhân viên</label>
+                        <select name="EmployeeName" class="form-select" required>
+                            <option value="">-- Chọn nhân viên --</option>
+                            <option value="Nguyễn Văn A">Nguyễn Văn A</option>
+                            <option value="Trần Thị B">Trần Thị B</option>
+                            <option value="Lê Văn C">Lê Văn C</option>
+                            <option value="Phạm Thị D">Phạm Thị D</option>
+                        </select>
+                    </div>
+
+                    <!-- Ngày -->
+                    <div class="mb-3">
+                        <label class="form-label">Ngày làm việc</label>
+                        <input type="date" name="Date" class="form-control" required />
+                    </div>
+
+                    <!-- Loại ca -->
+                    <div class="mb-3">
+                        <label class="form-label">Loại ca</label>
+                        <select name="ShiftType" class="form-select" required>
+                            <option value="">-- Chọn loại ca --</option>
+                            <option value="Sáng">Ca sáng</option>
+                            <option value="Chiều">Ca chiều</option>
+                            <option value="Tối">Ca tối</option>
+                        </select>
+                    </div>
+
+                    <!-- Ghi chú -->
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea name="Note" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <!-- Nút -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Thêm ca làm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Xem chi tiết công thức -->
+<div class="modal fade" id="detailRecipeModal1" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết công thức</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Tên sản phẩm:</label>
+                    <p class="mb-0">Trà sữa truyền thống</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nguyên liệu:</label>
+                    <ul class="mb-0">
+                        <li>Trà đen: 100ml</li>
+                        <li>Sữa đặc: 50ml</li>
+                        <li>Đường: 30g</li>
+                        <li>Trân châu: 50g</li>
+                    </ul>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Cách pha:</label>
+                    <p class="mb-0">Pha trà đen với sữa đặc và đường, thêm trân châu khi hoàn thành.</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Ghi chú:</label>
+                    <p class="mb-0">Dùng đá lạnh, không để lâu quá 10 phút.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Chỉnh sửa công thức -->
+<div class="modal fade" id="editRecipeModal1" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title">Chỉnh sửa công thức</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Gửi dữ liệu tới Recipe/EditRecipe -->
+                <form asp-controller="Recipe" asp-action="EditRecipe" method="post">
+
+                    <!-- Tên sản phẩm -->
+                    <div class="mb-3">
+                        <label class="form-label">Tên sản phẩm</label>
+                        <input type="text" name="ProductName" class="form-control" value="Trà sữa truyền thống" required />
+                    </div>
+
+                    <!-- Nguyên liệu -->
+                    <div class="mb-3">
+                        <label class="form-label">Nguyên liệu</label>
+                        <textarea name="Ingredients" class="form-control" rows="3" required>Trà đen: 100ml, Sữa đặc: 50ml, Đường: 30g, Trân châu: 50g</textarea>
+                    </div>
+
+                    <!-- Cách pha -->
+                    <div class="mb-3">
+                        <label class="form-label">Cách pha</label>
+                        <textarea name="Instructions" class="form-control" rows="2" required>Pha trà đen với sữa đặc và đường, thêm trân châu khi hoàn thành.</textarea>
+                    </div>
+
+                    <!-- Ghi chú -->
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea name="Note" class="form-control" rows="2">Dùng đá lạnh, không để lâu quá 10 phút.</textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+</div>
