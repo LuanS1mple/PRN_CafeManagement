@@ -5,7 +5,7 @@ namespace CafeManagent.ErrorHandler
     public class AppException : Exception
     {
         public ErrorCode ErrorCode { get; set; }
-        public string Root {  get; set; }
+        public string Root { get; set; } = string.Empty;
         public DateTime Time { get; set; } = DateTime.Now;
         public AppException(ErrorCode errorCode, string root)
         {
@@ -15,7 +15,7 @@ namespace CafeManagent.ErrorHandler
         public AppException(ErrorCode errorCode, Exception e)
         {
             ErrorCode = errorCode;
-            Root = e.InnerException.Message;
+            Root = e.InnerException?.Message??"";
         }
     }
 }

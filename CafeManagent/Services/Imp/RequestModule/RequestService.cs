@@ -26,43 +26,86 @@ namespace CafeManagent.Services.Imp.RequestModule
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
-            catch
+            catch(Exception ex)
             {
                 await transaction.RollbackAsync();
-                throw;
+                throw new AppException(ErrorCode.LOI_CHAP_NHAN_REQUEST, ex);
             }
         }
 
         public void Add(Request request)
         {
-            _context.Requests.Add(request);
-            _context.SaveChanges();
+            try
+            {
+                _context.Requests.Add(request);
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new AppException(ErrorCode.LOI_THEM_REQUEST, ex);
+            }
         }
 
         public Request GetById(int id)
         {
-            return _context.Requests.Include(r => r.Staff)
-                .Where(r => r.ReportId == id).FirstOrDefault();
+            try
+            {
+                return _context.Requests.Include(r => r.Staff)
+                .Where(r => r.ReportId == id).First();
+            }
+            catch(Exception e)
+            {
+                throw new AppException(ErrorCode.LOI_LAY_REQUEST, e);
+            }
         }
 
         public List<Request> GetWaitingAttendanceRequest()
         {
-            return _context.Requests.Include(r => r.Staff)
-                .Where(r => r.ReportType.Equals("Attendance") && r.Status == 0).ToList();
+            try
+            {
+                return _context.Requests.Include(r => r.Staff)
+              .Where(r => r.ReportType.Equals("Attendance") && r.Status == 0).ToList();
+            }
+            catch( Exception e)
+            {
+                throw new AppException(ErrorCode.LOI_PHAN_LOAI_REQUEST, e);
+            }
         }
 
         public List<Request> GetWaitingShiftRequest()
         {
-            return _context.Requests.Include(r => r.Staff).Where(r => r.ReportType.Equals("WorkSchedule") && r.Status == 0).ToList();
+            try
+            {
+                return _context.Requests.Include(r => r.Staff).Where(r => r.ReportType.Equals("WorkSchedule") && r.Status == 0).ToList();
+            }
+            catch(Exception ex)
+            {
+                throw new AppException(ErrorCode.LOI_LAY_REQUEST, ex);
+            }
         }
         public List<Request> GetDoneRequest()
         {
-            return _context.Requests.Include(r => r.Staff).Where(r => r.Status != 0).ToList();
+            try
+            {
+                return _context.Requests.Include(r => r.Staff).Where(r => r.Status != 0).ToList();
+
+            }
+            catch (Exception ex)
+            {
+                throw new AppException(ErrorCode.LOI_LAY_REQUEST, ex);
+            }
         }
         public async Task RejectRequest(Request request)
         {
-            _context.Requests.Update(request);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Requests.Update(request);
+                await _context.SaveChangesAsync();
+            }
+            catch(Exception ex)
+            {
+                throw new AppException(ErrorCode.LOI_TU_CHOI_REQUEST, ex);
+            }
         }
 
         public async Task AcceptWorkScheduleRequest(Request request, WorkSchedule workSchedule)
@@ -91,30 +134,58 @@ namespace CafeManagent.Services.Imp.RequestModule
 
         public void Delele(Request request)
         {
-            _context.Requests.Remove(request);
-            _context.SaveChanges();
+            try
+            {
+                _context.Requests.Remove(request);
+                _context.SaveChanges();
+            }
+            catch(Exception e)
+            {
+                throw new AppException(ErrorCode.LOI_XOA_REQUEST, e);
+            }
         }
 
         public List<Request> GetByStaffId(int id)
         {
-            List<Request> requests = _context.Requests.Where(r => r.StaffId == id).ToList();
-            if (requests != null)
+            try
             {
-                return requests;
+                List<Request> requests = _context.Requests.Where(r => r.StaffId == id).ToList();
+                if (requests != null)
+                {
+                    return requests;
+                }
+                return null;
             }
-            return null;
+            catch (Exception e)
+            {
+                throw new AppException(ErrorCode.LOI_LAY_REQUEST, e);
+            }
         }
 
         public List<Request> GetDoneRequest(int id)
         {
-            return _context.Requests.Include(r => r.Staff).Where(r => r.Status != 0 && r.StaffId == id).ToList();
+            try
+            {
+                return _context.Requests.Include(r => r.Staff).Where(r => r.Status != 0 && r.StaffId == id).ToList();
+            }
+            catch (Exception e)
+            {
+                throw new AppException(ErrorCode.LOI_LAY_REQUEST, e);
+            }
         }
 
         public void Delele(int? id)
         {
-            Request request = _context.Requests.FirstOrDefault(r => r.ReportId == id)!;
-            _context.Requests.Remove(request);
-            _context.SaveChanges();
+            try
+            {
+                Request request = _context.Requests.FirstOrDefault(r => r.ReportId == id)!;
+                _context.Requests.Remove(request);
+                _context.SaveChanges();
+            }
+            catch (Exception e)
+            {
+                throw new AppException(ErrorCode.LOI_XOA_REQUEST, e);
+            }
         }
     }
 }

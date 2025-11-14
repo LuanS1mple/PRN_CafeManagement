@@ -1,4 +1,5 @@
-﻿using CafeManagent.dto.Configurations;
+﻿using CafeManagent.BackgroundWorkers;
+using CafeManagent.dto.Configurations;
 using CafeManagent.dto.response;
 using CafeManagent.ErrorHandler;
 using CafeManagent.Hubs;
@@ -32,11 +33,11 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
-//builder.Services.AddControllersWithViews(options =>
-//{
-//    options.Filters.Add<GlobalExceptionHandler>();
-//});
+//builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<GlobalExceptionHandler>();
+});
 //dùng signalR
 builder.Services.AddSignalR();
 
@@ -62,15 +63,15 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddTransient<IWorkShiftService, WorkShiftService>();
 builder.Services.AddTransient<ICustomerProfileService, CustomerProfileService>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
-
 builder.Services.AddTransient<IProductService, ProductService>(); 
 builder.Services.AddTransient<ICustomerService, CustomerService>();
 builder.Services.AddTransient<IVnPayService, VnPayService>();
 builder.Services.AddSingleton<NotifyUlti>();
 builder.Services.AddTransient<IStaffDirectoryService, StaffDirectoryService>();
+//Background services
 builder.Services.AddHostedService<WorkScheduleBackgroundWorker>();
-
-//builder.Services.AddSingleton<CafeManagementContext, CafeManagementContext>();
+builder.Services.AddHostedService<CleanTokenBackgroundWorker>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
@@ -86,7 +87,7 @@ builder.Services.AddRazorPages(o =>
 
 
 var app = builder.Build();
-
+app.UseGlobalExceptionMiddleware();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
