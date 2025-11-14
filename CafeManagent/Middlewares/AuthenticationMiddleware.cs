@@ -38,17 +38,18 @@ namespace CafeManagent.Middlewares
                 context.User = userInfo;
             }
             //neu at het han hoac k co, check refresh
-            else if (!string.IsNullOrEmpty(refreshToken) && !authenticationService.IsValidAccessToken(accessToken))
+            else if (!string.IsNullOrEmpty(refreshToken) && !string.IsNullOrEmpty(accessToken))
             {
+                ClaimsPrincipal userInfo = authenticationService.GetClaimsIgnoreTime(accessToken);
                 //check refreshToken
-                if (authenticationService.IsValidRefreshToken(refreshToken))
+                if (userInfo!=null && authenticationService.IsValidRefreshToken(refreshToken, userInfo))
                 {
                     //disable refreshToken cu
                     authenticationService.DisableRefreshToken(refreshToken);
                     //tao moi accessToken, refreshToken
                     string newAccessToken = authenticationService.CreateAccessToken(refreshToken);
                     string newRefreshToken =await authenticationService.CreateRefreshToken(refreshToken);
-                    ClaimsPrincipal userInfo = authenticationService.GetClaims(accessToken);
+                    userInfo = authenticationService.GetClaims(accessToken);
                     context.User = userInfo;
                     //them vao cookies
                     AddTokenToCookies(newRefreshToken, newAccessToken, context);

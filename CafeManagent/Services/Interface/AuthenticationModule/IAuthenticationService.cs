@@ -12,7 +12,8 @@ namespace CafeManagent.Services.Interface.AuthenticationModule
         void DisableRefreshToken(string refreshToken);
         void DisableRefreshToken(int staffId);
         ClaimsPrincipal GetClaims(string accessToken);
+        ClaimsPrincipal GetClaimsIgnoreTime(string accessToken);
         public bool IsValidAccessToken(string refreshToken);
-        public bool IsValidRefreshToken(string accessToken);
+        public bool IsValidRefreshToken(string accessToken, ClaimsPrincipal userInfo);
     }
 }

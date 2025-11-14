@@ -104,7 +104,7 @@ namespace CafeManagent.Services.Imp.AuthenticationModule
 
         }
 
-        public bool IsValidRefreshToken(string refreshToken)
+        public bool IsValidRefreshToken(string refreshToken, ClaimsPrincipal userInfo)
         {
             RefreshToken token = _context.RefreshTokens.Where(r => r.Token.Equals(refreshToken)).FirstOrDefault();
             if (token == null)
@@ -112,6 +112,17 @@ namespace CafeManagent.Services.Imp.AuthenticationModule
                 return false;
             }
             if (!token.IsEnable.GetValueOrDefault() || token.ExpireTime == null || token.ExpireTime.Value < DateTime.UtcNow)
+            {
+                return false;
+            }
+            try
+            {
+                if (token.StaffId != int.Parse(userInfo.FindFirst(ClaimTypes.NameIdentifier)?.Value))
+                {
+                    return false;
+                }
+            }
+            catch
             {
                 return false;
             }
@@ -172,6 +183,28 @@ namespace CafeManagent.Services.Imp.AuthenticationModule
         public void DisableRefreshToken(int staffId)
         {
             _context.RefreshTokens.Where(r => r.StaffId == staffId).ExecuteUpdateAsync(setters => setters.SetProperty(r => r.IsEnable, false));
+        }
+
+        public ClaimsPrincipal GetClaimsIgnoreTime(string accessToken)
+        {
+            JwtSecurityTokenHandler securityTokenHandler = new JwtSecurityTokenHandler();
+            TokenValidationParameters parameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = "cafe-task",
+                ValidateAudience = true,
+                ValidAudience = "member",
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt_signer_key)),
+            };
+            try
+            {
+                SecurityToken? token;
+                return securityTokenHandler.ValidateToken(accessToken, parameters, out token);
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }
