@@ -42,11 +42,10 @@ namespace CafeManagent.Controllers.Staffs.StaffModule
         // =========================
         // PROFILE
         // =========================
-        [HttpGet("/staff/profile/{id:int}")]
         public async Task<IActionResult> Profile(
-            int id,
             [FromServices] IStaffProfileService staffProfileService)
         {
+            int id = HttpContext.Session.GetInt32("StaffId").Value;
             var auth = EnsureOwnerOrRedirect(id);
             if (auth != null) return auth;
 
