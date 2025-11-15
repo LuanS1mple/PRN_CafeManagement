@@ -1,8 +1,13 @@
 ﻿using CafeManagent.dto.request.CustomerModuleDTO;
 using CafeManagent.dto.request.ProductModuleDTO;
+using CafeManagent.dto.response.NotifyModuleDTO;
+using CafeManagent.Enums;
+using CafeManagent.Hubs;
 using CafeManagent.Models;
 using CafeManagent.Services.Interface.CustomerModule;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace CafeManagent.Controllers.Staffs.CustomerModule
 {
@@ -10,11 +15,16 @@ namespace CafeManagent.Controllers.Staffs.CustomerModule
     {
         private readonly ICustomerProfileService _service;
         private readonly CafeManagementContext _context;
+        private readonly IHubContext<ResponseHub> _hubContext;
 
-        public CustomerProfileController(ICustomerProfileService service, CafeManagementContext context)
+        public CustomerProfileController(
+            ICustomerProfileService service,
+            CafeManagementContext context,
+            IHubContext<ResponseHub> hubContext)
         {
             _service = service;
             _context = context;
+            _hubContext = hubContext;
         }
         public async Task<IActionResult> Index(int page = 1, int pageSize = 6)
         {
@@ -30,18 +40,27 @@ namespace CafeManagent.Controllers.Staffs.CustomerModule
         [HttpPost]
         public async Task<IActionResult> AddCustomerProfile(AddCustomerProfileDTO dto)
         {
+            int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Dữ liệu không hợp lệ!";
+                ResponseHub.SetNotify(staffId, new SystemNotify()
+                {
+                    IsSuccess = false,
+                    Message = NotifyMessage.DU_LIEU_KHONG_HOP_LE.Message
+                });
+
                 return RedirectToAction("Index");
             }
 
             var success = await _service.AddCustomerAsync(dto);
 
-            if (success)
-                TempData["Success"] = "Thêm khách hàng thành công!";
-            else
-                TempData["Error"] = "Khách hàng đã tồn tại!";
+            ResponseHub.SetNotify(staffId, new SystemNotify()
+            {
+                IsSuccess = success,
+                Message = success
+                    ? NotifyMessage.THEM_KHACH_HANG_THANH_CONG.Message
+                    : NotifyMessage.KHACH_HANG_DA_TON_TAI.Message
+            });
 
             return RedirectToAction("Index");
         }
@@ -59,27 +78,32 @@ namespace CafeManagent.Controllers.Staffs.CustomerModule
         [HttpPost]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
+            int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
             var result = await _service.DeleteCustomerAsync(id);
 
-            if (!result)
-                return NotFound();
-
-            TempData["Success"] = "Xóa khách hàng thành công";
+            ResponseHub.SetNotify(staffId, new SystemNotify()
+            {
+                IsSuccess = result,
+                Message = result
+                    ? NotifyMessage.XOA_KHACH_HANG_THANH_CONG.Message
+                    : NotifyMessage.KHACH_HANG_KHONG_TON_TAI.Message
+            });
             return RedirectToAction("Index");
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdateCustomerProfile([FromForm] UpdateCustomerProfileDTO dto)
         {
+            int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
             var result = await _service.UpdateCustomerAsync(dto);
 
-            if (!result)
+            ResponseHub.SetNotify(staffId, new SystemNotify()
             {
-                TempData["Error"] = "Cập nhật khách hàng thất bại!";
-                return RedirectToAction("Index");
-            }
-
-            TempData["Success"] = "Cập nhật khách hàng thành công!";
+                IsSuccess = result,
+                Message = result
+                    ? NotifyMessage.SUA_KHACH_HANG_THANH_CONG.Message
+                    : NotifyMessage.SUA_KHACH_HANG_THAT_BAI.Message
+            });
             return RedirectToAction("Index");
         }
 

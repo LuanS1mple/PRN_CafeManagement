@@ -1,8 +1,12 @@
 ﻿using CafeManagent.dto.request.ProductModuleDTO;
+using CafeManagent.dto.response.NotifyModuleDTO;
+using CafeManagent.Enums;
+using CafeManagent.Hubs;
 using CafeManagent.Models;
 using CafeManagent.Services.Imp.RecipeModule;
 using CafeManagent.Services.Interface.RecipeModule;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace CafeManagent.Controllers.Staffs.RecipeModule
 {
@@ -10,11 +14,15 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
     {
         private readonly IRecipeService _service;
         private readonly CafeManagementContext _context;
+        private readonly IHubContext<ResponseHub> _hubContext;
 
-        public RecipeController(IRecipeService service, CafeManagementContext context)
+        public RecipeController(IRecipeService service,
+                        CafeManagementContext context,
+                        IHubContext<ResponseHub> hubContext)
         {
             _service = service;
             _context = context;
+            _hubContext = hubContext;
         }
         public async Task<IActionResult> Index()
         {
@@ -32,18 +40,28 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
         [HttpPost]
         public async Task<IActionResult> AddProduct(AddProductDTO dto)
         {
+            int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
+
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Dữ liệu không hợp lệ!";
+                ResponseHub.SetNotify(staffId, new SystemNotify()
+                {
+                    IsSuccess = false,
+                    Message = NotifyMessage.DU_LIEU_KHONG_HOP_LE.Message
+                });
+
                 return RedirectToAction("Index");
             }
 
-            var success = await _service.AddProductAsync(dto);
+            var ok = await _service.AddProductAsync(dto);
 
-            if (success)
-                TempData["Success"] = "Thêm sản phẩm thành công!";
-            else
-                TempData["Error"] = "Tên sản phẩm đã tồn tại!";
+            ResponseHub.SetNotify(staffId, new SystemNotify()
+            {
+                IsSuccess = ok,
+                Message = ok
+                    ? NotifyMessage.THEM_SAN_PHAM_THANH_CONG.Message
+                    : NotifyMessage.SAN_PHAM_DA_TON_TAI.Message
+            });
 
             return RedirectToAction("Index");
         }
@@ -51,14 +69,37 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
         [HttpPost]
         public async Task<IActionResult> EditProduct(int productId, AddProductDTO dto)
         {
+            int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
+
             var ok = await _service.EditProductAsync(productId, dto);
+
+            var notify = new SystemNotify()
+            {
+                IsSuccess = ok,
+                Message = NotifyMessage.SUA_SAN_PHAM_THANH_CONG.Message
+            };
+
+            ResponseHub.SetNotify(staffId, notify);
+
             return RedirectToAction("Index");
         }
+
 
         [HttpPost]
         public async Task<IActionResult> DeleteProduct(int id)
         {
+            int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
+
             var ok = await _service.DeleteProductAsync(id);
+
+            ResponseHub.SetNotify(staffId, new SystemNotify()
+            {
+                IsSuccess = ok,
+                Message = ok
+                    ? NotifyMessage.XOA_SAN_PHAM_THANH_CONG.Message
+                    : NotifyMessage.SAN_PHAM_KHONG_TON_TAI.Message
+            });
+
             return RedirectToAction("Index");
         }
 
