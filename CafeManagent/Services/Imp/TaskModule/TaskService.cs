@@ -128,6 +128,7 @@ namespace CafeManagent.Services.Imp.TaskModule
 
             _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
+            await SendTaskUpdateAsync(task);
         }
 
         public async Task<bool> UpdateTaskStatusAsync(int taskId, int newStatus)

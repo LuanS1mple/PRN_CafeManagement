@@ -44,6 +44,8 @@ namespace CafeManagent.Controllers.Manager.TaskModule
             return (userIdInt, null);
         }
 
+        #region Task Management
+
         [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> Index(string searchString, string statusFilter, string startDate, string endDate)
         {
@@ -71,72 +73,10 @@ namespace CafeManagent.Controllers.Manager.TaskModule
             {
                 ViewBag.Staffs = await _taskService.GetAllStaffAsync();
                 ViewBag.TaskTypes = await _taskService.GetTaskTypesAsync();
-
-                SystemNotify notify = new SystemNotify()
-                {
-                    IsSuccess = false,
-                    Message = NotifyMessage.TASK_CREATED_FAIL.Message
-                };
-
-                ResponseHub.SetNotify(managerId.Value, notify);
-
                 return View(task);
             }
 
-            try
-            {
-                await _taskService.CreateTasksAsync(task, managerId.Value.ToString());
-
-                // gửi Task realtime cho tất cả client
-                var createdTask = await _taskService.GetTaskByIdAsync(task.TaskId);
-                if (createdTask != null)
-                {
-                    await _taskHub.Clients.All.SendAsync("ReceiveTaskUpdate", new
-                    {
-                        createdTask.TaskId,
-                        createdTask.TasktypeId,
-                        tasktypeName = createdTask.Tasktype?.TaskName,
-                        description = createdTask.Tasktype?.Description,
-                        createdTask.ManagerId,
-                        managerName = createdTask.Manager?.FullName,
-                        createdTask.StaffId,
-                        staffName = createdTask.Staff?.FullName,
-                        assignTime = createdTask.AssignTime,
-                        dueTime = createdTask.DueTime,
-                        status = createdTask.Status
-                    });
-                }
-
-                // gửi thông báo cho manager
-                SystemNotify notify = new SystemNotify()
-                {
-                    IsSuccess = true,
-                    Message = NotifyMessage.TASK_CREATED_SUCCESS.Message
-                };
-
-                ResponseHub.SetNotify(managerId.Value, notify);
-
-                // gửi thông báo cho nhân viên được giao
-                SystemNotify notify1 = new SystemNotify()
-                {
-                    IsSuccess = true,
-                    Message = NotifyMessage.TASK_CREATED_SUCCESS.Message
-                };
-
-                if (task.StaffId.HasValue)
-                {
-                    ResponseHub.SetNotify(task.StaffId.Value, notify1);
-                }
-            }
-            catch
-            {
-                SystemNotify notify = new SystemNotify()
-                {
-                    IsSuccess = false,
-                    Message = NotifyMessage.TASK_CREATED_FAIL.Message
-                };
-                ResponseHub.SetNotify(managerId.Value, notify);
-            }
+            await _taskService.CreateTasksAsync(task, managerId.Value.ToString());
 
             return RedirectToAction("Index");
         }
@@ -168,68 +108,7 @@ namespace CafeManagent.Controllers.Manager.TaskModule
                 return View(updateTask);
             }
 
-            try
-            {
-                var success = await _taskService.UpdateTaskAsync(updateTask);
-                if (success)
-                {
-                    var updatedTask = await _taskService.GetTaskByIdAsync(updateTask.TaskId);
-
-                    // gửi Task realtime
-                    await _taskHub.Clients.All.SendAsync("ReceiveTaskUpdate", new
-                    {
-                        updatedTask.TaskId,
-                        updatedTask.TasktypeId,
-                        tasktypeName = updatedTask.Tasktype?.TaskName,
-                        description = updatedTask.Tasktype?.Description,
-                        updatedTask.ManagerId,
-                        managerName = updatedTask.Manager?.FullName,
-                        updatedTask.StaffId,
-                        staffName = updatedTask.Staff?.FullName,
-                        assignTime = updatedTask.AssignTime,
-                        dueTime = updatedTask.DueTime,
-                        status = updatedTask.Status
-                    });
-
-                    // thông báo manager
-                    SystemNotify notify = new SystemNotify()
-                    {
-                        IsSuccess = true,
-                        Message = NotifyMessage.TASK_UPDATED_SUCCESS.Message
-                    };
-                    ResponseHub.SetNotify(managerId.Value, notify);
-
-                    // thông báo nhân viên
-                    SystemNotify notify1 = new SystemNotify()
-                    {
-                        IsSuccess = true,
-                        Message = NotifyMessage.TASK_UPDATED_SUCCESS.Message
-                    };
-                    if (updateTask.StaffId.HasValue)
-                    {
-                        ResponseHub.SetNotify(updateTask.StaffId.Value, notify1);
-                    }
-                }
-                else
-                {
-                    SystemNotify notify = new SystemNotify()
-                    {
-                        IsSuccess = false,
-                        Message = NotifyMessage.TASK_UPDATED_FAIL.Message
-                    };
-                    ResponseHub.SetNotify(managerId.Value, notify);
-                }
-            }
-            catch
-            {
-                SystemNotify notify = new SystemNotify()
-                {
-                    IsSuccess = false,
-                    Message = NotifyMessage.TASK_UPDATED_FAIL.Message
-                };
-                ResponseHub.SetNotify(managerId.Value, notify);
-            }
-
+            await _taskService.UpdateTaskAsync(updateTask);
             return RedirectToAction("Index");
         }
 
@@ -239,76 +118,11 @@ namespace CafeManagent.Controllers.Manager.TaskModule
             var (staffId, errorResult) = GetCurrentUserId();
             if (!staffId.HasValue) return errorResult;
 
-            try
-            {
-                var success = await _taskService.UpdateTaskStatusAsync(taskId, newStatus);
-                if (!success)
-                {
-                    SystemNotify notify1 = new SystemNotify()
-                    {
-                        IsSuccess = false,
-                        Message = NotifyMessage.TASK_ERROR.Message
-                    };
-                    return RedirectToAction("Detail");
-                }
-
-                var task = await _taskService.GetTaskByIdAsync(taskId);
-
-                // gửi Task realtime
-                await _taskHub.Clients.All.SendAsync("ReceiveTaskUpdate", new
-                {
-                    task.TaskId,
-                    task.TasktypeId,
-                    tasktypeName = task.Tasktype?.TaskName,
-                    description = task.Tasktype?.Description,
-                    task.ManagerId,
-                    managerName = task.Manager?.FullName,
-                    task.StaffId,
-                    staffName = task.Staff?.FullName,
-                    assignTime = task.AssignTime,
-                    dueTime = task.DueTime,
-                    status = task.Status
-                });
-
-                NotifyMessage message = newStatus switch
-                {
-                    2 => NotifyMessage.TASK_COMPLETED,
-                    3 => NotifyMessage.TASK_CANCELLED,
-                    _ => NotifyMessage.TASK_UPDATED_SUCCESS
-                };
-
-                // thông báo cho staff
-                SystemNotify notify = new SystemNotify()
-                {
-                    IsSuccess = true,
-                    Message = message.Message
-                };
-                ResponseHub.SetNotify(staffId.Value, notify);
-
-                // thông báo cho manager
-                if (task.ManagerId.HasValue)
-                {
-                    SystemNotify notify1 = new SystemNotify()
-                    {
-                        IsSuccess = true,
-                        Message = message.Message
-                    };
-                    ResponseHub.SetNotify(task.ManagerId.Value, notify1);
-                }
-            }
-            catch
-            {
-                SystemNotify notify = new SystemNotify()
-                {
-                    IsSuccess = false,
-                    Message = NotifyMessage.TASK_ERROR.Message
-                };
-                ResponseHub.SetNotify(staffId.Value, notify);
-            }
-
+            await _taskService.UpdateTaskStatusAsync(taskId, newStatus);
             return RedirectToAction("Detail");
         }
 
+        [Authorize(Roles = "Cashier, Barista")]
         public async Task<IActionResult> Detail()
         {
             var (staffId, errorResult) = GetCurrentUserId();
@@ -318,5 +132,46 @@ namespace CafeManagent.Controllers.Manager.TaskModule
             ViewData["Title"] = "Công việc của tôi";
             return View("Detail", tasks);
         }
+
+        [HttpGet("TaskReport")]
+        [Authorize(Roles = "Branch Manager")]
+        public async Task<IActionResult> TaskReport()
+        {
+            // Lấy role từ session
+            var role = HttpContext.Session.GetString("StaffRole");
+            ViewBag.StaffRole = role;
+
+            var summaryDictionary = await _taskReportService.GetTaskSummaryAsync();
+            ViewBag.TaskSummary = summaryDictionary;
+
+            return View();
+        }
+
+        [HttpGet("GetTasksByStatus")]
+        public async Task<IActionResult> GetTasksByStatus(int statusId)
+        {
+            var tasks = await _taskReportService.GetTasksByStatusAsync(statusId);
+            return Json(tasks);
+        }
+
+        [HttpGet("ExportTaskReport")]
+        [Authorize(Roles = "Branch Manager")]
+        public async Task<IActionResult> ExportTaskReport()
+        {
+            try
+            {
+                var fileContent = await _taskReportService.GenerateExcelReportAsync();
+                var fileName = $"TaskReport-{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                return File(fileContent,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            fileName);
+            }
+            catch
+            {
+                TempData["Error"] = "Không thể xuất file Excel lúc này.";
+                return RedirectToAction("TaskReport");
+            }
+        }
+
     }
 }
