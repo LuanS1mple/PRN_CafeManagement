@@ -131,21 +131,25 @@ namespace CafeManagent.Services.Imp.AuthenticationModule
 
         public async Task<string> CreateRefreshToken(Staff staff)
         {
-            string token = null;
-            do
+            string token;
+            using (var db = new CafeManagementContext())
             {
-                token = Guid.NewGuid().ToString().Substring(0, 8);
+                do
+                {
+                    token = Guid.NewGuid().ToString("N").Substring(0, 8);
+                }
+                while (await db.RefreshTokens.AnyAsync(s => s.Token == token));
+
+                var newToken = new RefreshToken
+                {
+                    Token = token,
+                    ExpireTime = DateTime.UtcNow.AddSeconds(refresh_token_duration),
+                    IsEnable = true,
+                    StaffId = staff.StaffId
+                };
+                await db.RefreshTokens.AddAsync(newToken);
+                await db.SaveChangesAsync();
             }
-            while (await _context.RefreshTokens.Where(s => s.Token.Equals(token)).AnyAsync());
-            RefreshToken newAccessToken = new RefreshToken
-            {
-                Token = token,
-                ExpireTime = DateTime.UtcNow.AddSeconds(refresh_token_duration),
-                IsEnable = true,
-                StaffId = staff.StaffId
-            };
-            _context.RefreshTokens.AddAsync(newAccessToken);
-            _context.SaveChangesAsync();
             return token;
         }
 

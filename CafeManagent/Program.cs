@@ -27,17 +27,18 @@ using CafeManagent.Services.Interface.TaskModule;
 using CafeManagent.Services.Interface.WorkScheduleModule;
 using CafeManagent.Services.Interface.WorkShiftModule;
 using CafeManagent.Ulties;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-//builder.Services.AddControllersWithViews();
-builder.Services.AddControllersWithViews(options =>
-{
-    options.Filters.Add<GlobalExceptionHandler>();
-});
+builder.Services.AddControllersWithViews();
+//builder.Services.AddControllersWithViews(options =>
+//{
+//    options.Filters.Add<GlobalExceptionHandler>();
+//});
 //dùng signalR
 builder.Services.AddSignalR();
 
@@ -45,6 +46,15 @@ builder.Services.AddSignalR();
 builder.Services.AddDbContext<CafeManagementContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("MyCnn"));
+});
+//dẫn khi bị 403
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultForbidScheme = "JwtMiddleware";
+})
+.AddCookie("JwtMiddleware", options =>
+{
+    options.AccessDeniedPath = "/Home/AccessDenied"; 
 });
 
 builder.Services.AddSession();

@@ -4,6 +4,7 @@ using CafeManagent.dto.response;
 using CafeManagent.Ulties;
 using CafeManagent.dto.response.RequestModuleDTO;
 using CafeManagent.Services.Interface.RequestModuleDTO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CafeManagent.Controllers.Staffs.RequestModule
 {
@@ -14,11 +15,13 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
         {
             this.requestService = requestService;
         }
+        [Authorize(Roles = "Cashier,Barista")]
         public IActionResult Delete(int? id)
         {
             requestService.Delele(id);
             return RedirectToAction("Index");
         }
+        [Authorize(Roles = "Cashier,Barista")]
         public IActionResult Index(int? page)
         {
             int staffId = HttpContext.Session.GetInt32("StaffId").Value;

@@ -7,6 +7,7 @@ using CafeManagent.mapper;
 using CafeManagent.Models;
 using CafeManagent.Services.Interface.RequestModuleDTO;
 using CafeManagent.Services.Interface.WorkScheduleModule;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
@@ -25,10 +26,12 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
             this.requestService = requestService;
             this.hubContext = hubContext;
         }
+        [Authorize(Roles = "Cashier,Barista")]
         public IActionResult Index()
         {
             return View();
         }
+        [Authorize(Roles = "Cashier,Barista")]
         public IActionResult Init()
         {
             int staffId = HttpContext.Session.GetInt32("StaffId").Value;
@@ -36,12 +39,14 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
             ViewBag.WorkSchedules = data;
             return View();
         }
+        [Authorize(Roles = "Cashier,Barista")]
         [HttpGet]
         public IActionResult GetWorkSchedule(int id)
         {
             WorkScheduleDetailDTO schedule = MapperHelper.FromWorkSchedule(workScheduleService.GetById(id));
             return Json(schedule);
         }
+        [Authorize(Roles = "Cashier,Barista")]
         public IActionResult SaveWorkScheduleRequest(WorkScheduleRequestDTO requestDTO)
         {
             int staffId = HttpContext.Session.GetInt32("StaffId").Value;

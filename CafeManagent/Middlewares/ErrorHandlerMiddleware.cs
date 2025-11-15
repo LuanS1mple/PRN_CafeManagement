@@ -24,17 +24,14 @@ namespace CafeManagent.ErrorHandler
         {
             try
             {
-                await _next(context); // Chạy pipeline tiếp theo
+                await _next(context); 
             }
             catch (Exception ex)
             {
-                // Ghi log ra file
                 WriteToLogFile(ex);
 
-                // Tạo AppException nếu muốn đồng bộ
                 AppException appEx = ex as AppException ?? new AppException(ErrorCode.DefaultError, ex);
 
-                // Tạo ViewResult như filter
                 var viewResult = new ViewResult
                 {
                     ViewName = "Error",
@@ -47,7 +44,6 @@ namespace CafeManagent.ErrorHandler
                     }
                 };
 
-                // Thực thi ViewResult
                 var actionContext = new ActionContext
                 {
                     HttpContext = context,
@@ -79,12 +75,10 @@ namespace CafeManagent.ErrorHandler
             }
             catch
             {
-                // Không làm gì nếu ghi log thất bại
             }
         }
     }
 
-    // Extension method để dễ đăng ký middleware
     public static class GlobalExceptionMiddlewareExtensions
     {
         public static IApplicationBuilder UseGlobalExceptionMiddleware(this IApplicationBuilder builder)

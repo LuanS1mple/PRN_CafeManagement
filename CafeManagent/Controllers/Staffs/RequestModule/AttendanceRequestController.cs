@@ -7,6 +7,7 @@ using CafeManagent.Models;
 using CafeManagent.Services.Interface.AttendanceModule;
 using CafeManagent.Services.Interface.RequestModuleDTO;
 using CafeManagent.Ulties;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
@@ -24,10 +25,12 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
             this.requestService = requestService;
             this.notifyUlti = notifyUlti;
         }
+        [Authorize(Roles = "Cashier,Barista")]
         public IActionResult Init()
         {
             return View();
         }
+        [Authorize(Roles = "Cashier,Barista")]
         public IActionResult GetAttendance(DateOnly workDate, int workshiftId)
         {
             Attendance attendance = attendanceService.GetAttendance(workDate, workshiftId, 1);
@@ -48,6 +51,7 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
                 });
             }
         }
+        [Authorize(Roles = "Cashier,Barista")]
         [HttpPost]
         public async Task<IActionResult> SubmitRequest(AttendanceRequestDTO requestDTO)
         {

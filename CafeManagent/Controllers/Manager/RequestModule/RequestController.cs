@@ -8,6 +8,7 @@ using CafeManagent.Services.Interface.AttendanceModule;
 using CafeManagent.Services.Interface.RequestModuleDTO;
 using CafeManagent.Services.Interface.WorkScheduleModule;
 using CafeManagent.Ulties;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Task = System.Threading.Tasks.Task;
@@ -28,6 +29,7 @@ namespace CafeManagent.Controllers.Manager.RequestModule
             _hub = hub;
             this.workScheduleService = workScheduleService;
         }
+        [Authorize(Roles = "Branch Manager")]
         public IActionResult Index(int? page)
         {
             //data cho phần cần phản hồi
@@ -61,6 +63,7 @@ namespace CafeManagent.Controllers.Manager.RequestModule
 
             return View("Request_List", waitingRequests);
         }
+        [Authorize(Roles = "Branch Manager")]
         public IActionResult DetailAttendanceRequest(int id)
         {
             int staffId = HttpContext.Session.GetInt32("StaffId").Value;
@@ -91,6 +94,8 @@ namespace CafeManagent.Controllers.Manager.RequestModule
             };
             return View(pendingAttendance);
         }
+
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> AcceptAttendanceRequest(int id)
         {
             int staffId = HttpContext.Session.GetInt32("StaffId").Value;
@@ -139,6 +144,7 @@ namespace CafeManagent.Controllers.Manager.RequestModule
             ResponseHub.SetNotify(staffId, systemNotify);
             return RedirectToAction("Index");
         }
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> RejectAttendanceRequest(int id)
         {
             int staffId = HttpContext.Session.GetInt32("StaffId").Value;
@@ -158,6 +164,7 @@ namespace CafeManagent.Controllers.Manager.RequestModule
             ResponseHub.SetNotify(staffId, systemNotify);
             return RedirectToAction("Index");
         }
+        [Authorize(Roles = "Branch Manager")]
         [HttpGet]
         public IActionResult DetailWorkscheduleRequest(int id)
         {
@@ -194,6 +201,7 @@ namespace CafeManagent.Controllers.Manager.RequestModule
             };
             return View("DetailWorkscheduleRequest", pendingWorkSchedule);
         }
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> AcceptWorkScheduleRequest(int id)
         {
             int staffId = HttpContext.Session.GetInt32("StaffId").Value;
@@ -233,6 +241,7 @@ namespace CafeManagent.Controllers.Manager.RequestModule
             ResponseHub.SetNotify(staffId, systemNotify);
             return RedirectToAction("Index");
         }
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> RejectWorkScheduleRequest(int id)
         {
             int staffId = HttpContext.Session.GetInt32("StaffId").Value;

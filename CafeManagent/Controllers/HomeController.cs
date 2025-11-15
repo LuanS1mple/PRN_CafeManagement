@@ -4,6 +4,7 @@ using CafeManagent.Services.Imp;
 using CafeManagent.Services.Interface.AuthenticationModule;
 using CafeManagent.Services.Interface.StaffModule;
 using DocumentFormat.OpenXml.InkML;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CafeManagent.Controllers
@@ -18,6 +19,10 @@ namespace CafeManagent.Controllers
             this.staffService = staffService;
             this.authenticationService = authenticationService;
         }
+        public IActionResult AccessDenied()
+        {
+            return View(); 
+        }
         public IActionResult Index()
         {
             return View();
@@ -26,8 +31,6 @@ namespace CafeManagent.Controllers
         {
             return View();
         }
-
-       
         [HttpPost]
         public async Task<IActionResult> ProcessLogin(string Username, string Password, bool RememberMe)
         {
