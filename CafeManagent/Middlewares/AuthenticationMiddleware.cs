@@ -1,5 +1,8 @@
 ﻿using CafeManagent.Services.Interface.AuthenticationModule;
 using DocumentFormat.OpenXml.Drawing.Diagrams;
+using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Spreadsheet;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace CafeManagent.Middlewares
@@ -36,6 +39,8 @@ namespace CafeManagent.Middlewares
                 //gan quyen va thong tin vao User
                 ClaimsPrincipal userInfo = authenticationService.GetClaims(accessToken);
                 context.User = userInfo;
+                //gan vao session
+                AddToSession(userInfo, context);
             }
             //neu at het han hoac k co, check refresh
             else if (!string.IsNullOrEmpty(refreshToken) && !string.IsNullOrEmpty(accessToken))
@@ -53,6 +58,8 @@ namespace CafeManagent.Middlewares
                     context.User = userInfo;
                     //them vao cookies
                     AddTokenToCookies(newRefreshToken, newAccessToken, context);
+                    //them vao session
+                    AddToSession(userInfo,context);
                 }
                 else
                 {
@@ -72,6 +79,16 @@ namespace CafeManagent.Middlewares
         {
             context.Response.Cookies.Append("RefreshToken", refreshToken);
             context.Response.Cookies.Append("AccessToken", accessToken);
+        }
+        private void AddToSession(ClaimsPrincipal userInfo, HttpContext context)
+        {
+            string staffIdClaim = userInfo.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(staffIdClaim, out int staffId))
+            {
+                context.Session.SetInt32("StaffId", staffId);
+            }
+            var role = userInfo.FindFirst(ClaimTypes.Role)?.Value;
+            context.Session.SetString("StaffRole", role);
         }
     }
 }
