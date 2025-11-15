@@ -885,3 +885,15 @@ StackTrace:    at CafeManagent.Services.Imp.RequestModule.RequestService.GetById
    at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
    at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in C:\Users\thanh\Downloads\Ki7_FALL25\PRN222\Project\CafeManagent\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
 
+--------------------------------------------------
+Time: 2025-11-15 22:08:47
+Exception Type: System.InvalidOperationException
+Message: Endpoint CafeManagent.Controllers.Staffs.OrderModule.OrderController.Waiter (CafeManagent) contains authorization metadata, but a middleware was not found that supports authorization.
+Configure your application startup by adding app.UseAuthorization() in the application startup code. If there are calls to app.UseRouting() and app.UseEndpoints(...), the call to app.UseAuthorization() must go between them.
+StackTrace:    at Microsoft.AspNetCore.Routing.EndpointMiddleware.ThrowMissingAuthMiddlewareException(Endpoint endpoint)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at CafeManagent.Middlewares.NotifyMiddleware.Invoke(HttpContext context, NotifyUlti ulti, IHubContext`1 hub) in D:\FULearning\FALL2025\PRN222\GroupProject\PRN_CafeManagement\CafeManagent\Middlewares\NotifyMiddleware.cs:line 20
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in D:\FULearning\FALL2025\PRN222\GroupProject\PRN_CafeManagement\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
+

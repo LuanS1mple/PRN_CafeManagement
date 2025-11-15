@@ -41,10 +41,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-//builder.Services.AddControllersWithViews(options =>
-//{
-//    options.Filters.Add<GlobalExceptionHandler>();
-//});
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<GlobalExceptionHandler>();
+});
 //dùng signalR
 builder.Services.AddSignalR();
 
@@ -120,8 +120,11 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSession();
-//app.UseMiddleware<AuthenticationMiddleware>();
-//app.UseAuthorization();
+
+app.UseMiddleware<AuthenticationMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
+
 //bất cứ request nào cũng đi qua để thnog báo
 app.UseMiddleware<NotifyMiddleware>();
 app.MapControllerRoute(

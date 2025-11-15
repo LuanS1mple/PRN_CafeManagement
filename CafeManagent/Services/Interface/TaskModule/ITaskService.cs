@@ -18,6 +18,6 @@ namespace CafeManagent.Services.Interface.TaskModule
         Task CreateTasksAsync(Models.Task task, string currentManagerId);
         Task<Models.Task> GetTaskByIdAsync(int taskId);
         Task<IEnumerable<Models.Task>> GetTasksByStaffIdAsync(int staffId);
-        Task<bool> UpdateTaskStatusAsync(int taskId, int newStatsu, int staffId);
+        Task<bool> UpdateTaskStatusAsync(int taskId, int newStatus);
     }
 }

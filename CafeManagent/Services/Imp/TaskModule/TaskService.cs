@@ -2,11 +2,10 @@
 using CafeManagent.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Task = System.Threading.Tasks.Task;
+using Microsoft.AspNetCore.Http;
 using CafeManagent.Services.Interface.TaskModule;
+using Task = System.Threading.Tasks.Task;
+using CafeManagent.dto.response.TaskModuleDTO;
 
 namespace CafeManagent.Services.Imp.TaskModule
 {
@@ -15,17 +14,21 @@ namespace CafeManagent.Services.Imp.TaskModule
         private readonly CafeManagementContext _context;
         private readonly IHubContext<TaskHub> _taskHub;
         private readonly IHubContext<NotifyHub> _notifyHub;
+        private readonly IHttpContextAccessor _httpContext;
 
-        public TaskService(CafeManagementContext context,
-                           IHubContext<TaskHub> taskHub,
-                           IHubContext<NotifyHub> notifyHub)
+        public TaskService(
+            CafeManagementContext context,
+            IHubContext<TaskHub> taskHub,
+            IHubContext<NotifyHub> notifyHub,
+            IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _taskHub = taskHub;
             _notifyHub = notifyHub;
+            _httpContext = httpContextAccessor;
         }
 
-        private async Task SendTaskUpdateAsync(Models.Task task)
+        private async System.Threading.Tasks.Task SendTaskUpdateAsync(Models.Task task)
         {
             var taskFull = await _context.Tasks
                 .Include(t => t.Tasktype)
@@ -51,23 +54,23 @@ namespace CafeManagent.Services.Imp.TaskModule
                 status = taskFull.Status
             };
 
-            // Gửi cập nhật Task realtime cho tất cả client
             await _taskHub.Clients.All.SendAsync("ReceiveTaskUpdate", taskDto);
 
-            // Gửi thông báo cho Staff nếu có
             if (taskFull.StaffId.HasValue)
             {
                 var notify = new
                 {
                     IsSuccess = true,
-                    Message = $"Công việc [{taskFull.Tasktype?.TaskName}] đã được cập nhật trạng thái."
+                    Message = $"Công việc [{taskFull.Tasktype?.TaskName}] đã được cập nhật."
                 };
+
                 await _notifyHub.Clients.User(taskFull.StaffId.Value.ToString())
                     .SendAsync("ReceiveNotify", notify);
             }
         }
 
-        public async Task<IEnumerable<Models.Task>> GetTasksAsync(string searchString, string statusFilter, string startDate, string endDate)
+        public async Task<IEnumerable<Models.Task>> GetTasksAsync(
+            string searchString, string statusFilter, string startDate, string endDate)
         {
             var query = _context.Tasks
                 .Include(t => t.Staff)
@@ -76,47 +79,47 @@ namespace CafeManagent.Services.Imp.TaskModule
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
+            {
                 query = query.Where(t =>
-                    (t.Staff != null && t.Staff.FullName.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
-                    (t.Manager != null && t.Manager.FullName.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
-                    (t.Tasktype != null && t.Tasktype.TaskName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                    (t.Staff != null && t.Staff.FullName.Contains(searchString)) ||
+                    (t.Manager != null && t.Manager.FullName.Contains(searchString)) ||
+                    (t.Tasktype != null && t.Tasktype.TaskName.Contains(searchString))
                 );
+            }
 
-            if (!string.IsNullOrEmpty(statusFilter) && int.TryParse(statusFilter, out int statusValue))
-                query = query.Where(t => t.Status == statusValue);
+            if (!string.IsNullOrEmpty(statusFilter) && int.TryParse(statusFilter, out int s))
+                query = query.Where(t => t.Status == s);
 
-            if (DateTime.TryParse(startDate, out DateTime sDate))
-                query = query.Where(t => t.AssignTime.HasValue && t.AssignTime.Value.Date >= sDate.Date);
+            if (DateTime.TryParse(startDate, out DateTime sd))
+                query = query.Where(t => t.AssignTime >= sd);
 
-            if (DateTime.TryParse(endDate, out DateTime eDate))
-                query = query.Where(t => t.AssignTime.HasValue && t.AssignTime.Value.Date <= eDate.Date);
+            if (DateTime.TryParse(endDate, out DateTime ed))
+                query = query.Where(t => t.AssignTime <= ed);
 
             return await query.OrderByDescending(t => t.AssignTime).ToListAsync();
         }
 
         public async Task<bool> UpdateTaskAsync(Models.Task updateTask)
         {
-            var taskToUpdate = await _context.Tasks.FindAsync(updateTask.TaskId);
-            if (taskToUpdate == null) return false;
+            var task = await _context.Tasks.FindAsync(updateTask.TaskId);
+            if (task == null) return false;
 
-            taskToUpdate.TasktypeId = updateTask.TasktypeId;
-            taskToUpdate.ManagerId = updateTask.ManagerId;
-            taskToUpdate.DueTime = updateTask.DueTime;
-            taskToUpdate.StaffId = updateTask.StaffId == 0 ? null : updateTask.StaffId;
-            taskToUpdate.AssignTime = updateTask.AssignTime;
-            taskToUpdate.Status = updateTask.Status;
+            task.TasktypeId = updateTask.TasktypeId;
+            task.DueTime = updateTask.DueTime;
+            task.StaffId = updateTask.StaffId == 0 ? null : updateTask.StaffId;
+            task.Status = updateTask.Status;
 
             await _context.SaveChangesAsync();
-            _context.Entry(taskToUpdate).State = EntityState.Detached;
+            _context.Entry(task).State = EntityState.Detached;
 
-            await SendTaskUpdateAsync(taskToUpdate);
+            await SendTaskUpdateAsync(task);
             return true;
         }
 
         public async Task CreateTasksAsync(Models.Task task, string currentManagerId)
         {
             if (!int.TryParse(currentManagerId, out int managerId))
-                throw new ArgumentException("Không thể phân tích ManagerId từ claim của người dùng.", nameof(currentManagerId));
+                throw new Exception("Không thể xác định ManagerId từ tham số truyền vào.");
 
             task.ManagerId = managerId;
             task.AssignTime = DateTime.Now;
@@ -125,20 +128,22 @@ namespace CafeManagent.Services.Imp.TaskModule
 
             _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
-
-            await SendTaskUpdateAsync(task);
         }
 
-        public async Task<bool> UpdateTaskStatusAsync(int taskId, int newStatus, int staffId)
+        public async Task<bool> UpdateTaskStatusAsync(int taskId, int newStatus)
         {
-            var taskToUpdate = await _context.Tasks.FindAsync(taskId);
-            if (taskToUpdate == null || taskToUpdate.StaffId != staffId) return false;
+            int? staffId = _httpContext.HttpContext?.Session.GetInt32("StaffId");
+            if (staffId == null) return false;
 
-            taskToUpdate.Status = newStatus;
+            var task = await _context.Tasks.FindAsync(taskId);
+            if (task == null || task.StaffId != staffId) return false;
+
+            task.Status = newStatus;
+
             await _context.SaveChangesAsync();
-            _context.Entry(taskToUpdate).State = EntityState.Detached;
+            _context.Entry(task).State = EntityState.Detached;
 
-            await SendTaskUpdateAsync(taskToUpdate);
+            await SendTaskUpdateAsync(task);
             return true;
         }
 
@@ -154,18 +159,21 @@ namespace CafeManagent.Services.Imp.TaskModule
 
         public async Task<IEnumerable<Models.Task>> GetTasksByStaffIdAsync(int staffId)
         {
-            var query = _context.Tasks
+            return await _context.Tasks
                 .Include(t => t.Staff)
                 .Include(t => t.Manager)
                 .Include(t => t.Tasktype)
-                .Where(t => t.StaffId == staffId);
-
-            return await query.OrderByDescending(t => t.AssignTime).ToListAsync();
+                .Where(t => t.StaffId == staffId)
+                .OrderByDescending(t => t.AssignTime)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Staff>> GetManagersAsync()
         {
-            return await _context.Staff.Where(s => s.RoleId == 1).OrderBy(s => s.FullName).ToListAsync();
+            return await _context.Staff
+                .Where(s => s.RoleId == 1)
+                .OrderBy(s => s.FullName)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Staff>> GetAllStaffAsync()
