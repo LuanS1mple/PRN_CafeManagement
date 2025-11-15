@@ -120,8 +120,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSession();
-//app.UseMiddleware<AuthenticationMiddleware>();
-//app.UseAuthorization();
+app.UseMiddleware<AuthenticationMiddleware>();
+app.UseAuthorization();
 //bất cứ request nào cũng đi qua để thnog báo
 app.UseMiddleware<NotifyMiddleware>();
 app.MapControllerRoute(
