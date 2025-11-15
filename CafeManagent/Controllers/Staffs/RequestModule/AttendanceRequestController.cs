@@ -72,7 +72,12 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
                 Time = DateTime.Now,
             };
             notifyUlti.AddManager(notify);
-
+            SystemNotify systemNotify = new SystemNotify()
+            {
+                IsSuccess = true,
+                Message = NotifyMessage.TAO_REQUEST_THANH_CONG.Message,
+            };
+            ResponseHub.SetNotify(staffId, systemNotify);
             return RedirectToAction("Init");
         }
     }

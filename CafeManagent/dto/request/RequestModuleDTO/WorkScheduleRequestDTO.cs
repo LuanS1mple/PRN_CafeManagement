@@ -24,7 +24,6 @@ namespace CafeManagent.dto.request.RequestModuleDTO
 
         [Required]
         [NewShiftDifferenceOldShift("OldShiftId", "Ca mới phải khác ca cũ")]
-        [Range(1, 3)]
         public int NewShiftId { get; set; }
     }
 }

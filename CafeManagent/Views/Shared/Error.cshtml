@@ -1,7 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Lỗi hệ thống";
     var message = ViewData["ErrorMessage"] as string;
-    var root = ViewData["Root"] as string;
     var time = ViewData["Time"] as DateTime?;
 }
 
@@ -15,17 +14,6 @@
             <p class="text-muted mt-2">
                 Thời gian: @time.Value.ToString("HH:mm:ss dd/MM/yyyy")
             </p>
-        }
-
-        <hr class="my-4" />
-
-        @* Hiển thị lỗi chi tiết khi ở môi trường Development *@
-        @if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-        {
-            <div class="alert alert-warning text-start mt-4">
-                <h5>Chi tiết lỗi kỹ thuật (chỉ hiển thị trong Development):</h5>
-                <pre class="text-danger">@root</pre>
-            </div>
         }
 
         <div class="mt-4">

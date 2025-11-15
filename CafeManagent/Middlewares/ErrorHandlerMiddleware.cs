@@ -9,14 +9,12 @@ namespace CafeManagent.ErrorHandler
     {
         private readonly RequestDelegate _next;
         private readonly IWebHostEnvironment _env;
-        private readonly ILogger<ErrorHandlerMiddleware> _logger;
         private readonly string _logFilePath;
 
-        public ErrorHandlerMiddleware(RequestDelegate next, IWebHostEnvironment env, ILogger<ErrorHandlerMiddleware> logger)
+        public ErrorHandlerMiddleware(RequestDelegate next, IWebHostEnvironment env)
         {
             _next = next;
             _env = env;
-            _logger = logger;
             _logFilePath = Path.Combine(_env.ContentRootPath, "ErrorLog.txt");
         }
 
@@ -38,8 +36,7 @@ namespace CafeManagent.ErrorHandler
                     ViewData = new ViewDataDictionary(new Microsoft.AspNetCore.Mvc.ModelBinding.EmptyModelMetadataProvider(),
                                                       new Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary())
                     {
-                        ["ErrorMessage"] = appEx.Message,
-                        ["Root"] = appEx.Root ?? ex.Message,
+                        ["ErrorMessage"] = appEx.ErrorCode.Message,
                         ["Time"] = appEx.Time
                     }
                 };

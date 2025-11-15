@@ -7,6 +7,7 @@ using CafeManagent.mapper;
 using CafeManagent.Models;
 using CafeManagent.Services.Interface.RequestModuleDTO;
 using CafeManagent.Services.Interface.WorkScheduleModule;
+using CafeManagent.Ulties;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -19,12 +20,14 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
         private readonly IRequestService requestService;
         //hub
         private readonly IHubContext<ResponseHub> hubContext;
+        private readonly NotifyUlti notifyUlti;
         public WorkscheduleRequestController(IWorkScheduleService workShiftService, IRequestService requestService,
-            IHubContext<ResponseHub> hubContext)
+            IHubContext<ResponseHub> hubContext, NotifyUlti notifyUlti)
         {
             workScheduleService = workShiftService;
             this.requestService = requestService;
             this.hubContext = hubContext;
+            this.notifyUlti = notifyUlti;
         }
         [Authorize(Roles = "Cashier,Barista")]
         public IActionResult Index()
@@ -66,6 +69,12 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
                     Message = NotifyMessage.TAO_REQUEST_THANH_CONG.Message,
                 };
                 ResponseHub.SetNotify(staffId, systemNotify);
+                Notify notify = new Notify()
+                {
+                    Message = NotifyMessage.HAVE_REQUEST.Message,
+                    Time = DateTime.Now,
+                };
+                notifyUlti.AddManager(notify);
             }
             catch (Exception ex)
             {
