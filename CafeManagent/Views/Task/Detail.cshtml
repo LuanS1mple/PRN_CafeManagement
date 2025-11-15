@@ -92,7 +92,7 @@
                                 <span class="@statusClass">@statusLabel</span>
                             </td>
                             <td class="text-end task-actions cell-task-actions">
-                                @if (task.Status == 0 || task.Status == 1 || task.Status == 4 || task.Status == 5)
+                                @if (task.Status == 1 || task.Status == 5)
                                 {
                                     <div class="btn-group btn-group-sm" role="group">
                                         <form action="@Url.Action("UpdateTaskStatus","Task")" method="post" class="d-inline">
@@ -169,7 +169,7 @@
             const token = getAntiForgeryToken();
             const tokenInput = `<input name="__RequestVerificationToken" type="hidden" value="${token}" />`;
 
-            if ([0, 1, 4, 5].includes(task.status)) {
+            if ([1, 5].includes(task.status)) {
                 return `
                     <div class="btn-group btn-group-sm" role="group">
                         <form action="${postUrl}" method="post" class="d-inline">${tokenInput}<input type="hidden" name="taskId" value="${task.taskId}" /><button type="submit" name="newStatus" value="6" class="btn btn-success" title="Hoàn thành">✔️</button></form>
