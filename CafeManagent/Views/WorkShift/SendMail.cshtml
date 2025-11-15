@@ -1,0 +1,28 @@
+﻿@using CafeManagent.dto.request.MailWorkShiftDTO
+@model SendMailDTO
+@{
+    ViewData["Title"] = "Gửi mail";
+}
+
+<div class="container mt-4">
+    <h3>Gửi mail tới @Model.ToEmail</h3>
+    <form asp-action="SendMail" method="post">
+        <input type="hidden" asp-for="ToEmail" />
+        <div class="mb-3">
+            <label class="form-label">Tiêu đề</label>
+            <input class="form-control" asp-for="Subject" />
+            <span asp-validation-for="Subject" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Nội dung</label>
+            <textarea class="form-control" rows="5" asp-for="Body"></textarea>
+            <span asp-validation-for="Body" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-success">Gửi mail</button>
+        <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>
+
+@section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+}

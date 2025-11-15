@@ -1,8 +1,10 @@
 ﻿using CafeManagent.dto.request.WorkShiftModuleDTO;
 using CafeManagent.dto.response.WorkShiftDTO;
+using CafeManagent.Hubs;
 using CafeManagent.Models;
 using CafeManagent.Services.Interface.WorkShiftModule;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace CafeManagent.Services.Imp.WorkShiftModule
@@ -10,10 +12,12 @@ namespace CafeManagent.Services.Imp.WorkShiftModule
     public class WorkShiftService : IWorkShiftService
     {
         private readonly CafeManagementContext _context;
+        private readonly IHubContext<WorkShiftHub> _hubContext;
 
-        public WorkShiftService(CafeManagementContext context)
+        public WorkShiftService(CafeManagementContext context, IHubContext<WorkShiftHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         public async Task<(List<WorkShiftDTO> shifts, int totalItems)> GetPagedWorkShiftsAsync(int page, int pageSize)
@@ -32,7 +36,8 @@ namespace CafeManagent.Services.Imp.WorkShiftModule
                     Position = ws.Staff.Role.RoleName,
                     ShiftType = ws.Workshift.ShiftName,
                     TotalHours = (ws.Workshift.EndTime.Value - ws.Workshift.StartTime.Value).TotalHours,
-                    Description = ws.Description
+                    Description = ws.Description,
+                    Email = ws.Staff.Email,
                 });
 
             int totalItems = await query.CountAsync();
@@ -162,7 +167,15 @@ namespace CafeManagent.Services.Imp.WorkShiftModule
             _context.WorkSchedules.Add(schedule);
             await _context.SaveChangesAsync();
 
-
+            await _hubContext.Clients.All.SendAsync("ReceiveWorkShiftUpdate", new
+            {
+                Date = schedule.Date.HasValue ? schedule.Date.Value.ToString("yyyy-MM-dd") : "",
+                Position = staff.Role?.RoleName ?? "",
+                ShiftType = schedule.ShiftName,
+                StartTime = workShift.StartTime.HasValue ? workShift.StartTime.Value.ToString(@"hh\:mm") : "",
+                EndTime = workShift.EndTime.HasValue ? workShift.EndTime.Value.ToString(@"hh\:mm") : "",
+                Description = schedule.Description ?? ""
+            });
 
             return (true, "Thêm ca làm thành công!");
         }

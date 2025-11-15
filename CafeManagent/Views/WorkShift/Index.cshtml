@@ -200,6 +200,13 @@
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
                                         </form>
+                                        <a asp-controller="WorkShift"
+                                           asp-action="SendMail"
+                                           asp-route-email="@shift.Email"
+                                           class="btn btn-sm btn-outline-success ms-2">
+                                            <i class="fa-solid fa-envelope"></i>
+                                        </a>
+
                                     </td>
                                 </tr>
                     }

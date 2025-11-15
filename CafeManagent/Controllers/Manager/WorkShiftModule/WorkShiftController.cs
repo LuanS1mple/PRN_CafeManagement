@@ -1,4 +1,7 @@
-﻿using CafeManagent.dto.request.WorkShiftModuleDTO;
+﻿using CafeManagent.dto.request.MailWorkShiftDTO;
+using System.Net.Mail;
+using System.Net;
+using CafeManagent.dto.request.WorkShiftModuleDTO;
 using CafeManagent.Models;
 using CafeManagent.Services.Interface.WorkShiftModule;
 using Microsoft.AspNetCore.Mvc;
@@ -10,11 +13,12 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
     {
         private readonly IWorkShiftService _service;
         private readonly CafeManagementContext _context;
-
-        public WorkShiftController(IWorkShiftService service, CafeManagementContext context)
+        private readonly IConfiguration _configuration;
+        public WorkShiftController(IWorkShiftService service, CafeManagementContext context, IConfiguration configuration)
         {
             _service = service;
             _context = context;
+            _configuration = configuration;
         }
 
         public async Task<IActionResult> Index(int page = 1, int pageSize = 6)
@@ -141,5 +145,54 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
 
             return RedirectToAction("Index");
         }
+
+        [HttpGet]
+        public IActionResult SendMail(string email)
+        {
+            var model = new SendMailDTO
+            {
+                ToEmail = email
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendMail(SendMailDTO dto)
+        {
+            if (!ModelState.IsValid) return View(dto);
+
+            try
+            {
+                var host = _configuration["Email:Host"];
+                var port = int.Parse(_configuration["Email:Port"] ?? "587");
+                var fromAddress = _configuration["Email:Address"];
+                var appPassword = _configuration["Email:AppPassword"];
+
+                using var msg = new MailMessage(new MailAddress(fromAddress, "Cafe Management"),
+                                                 new MailAddress(dto.ToEmail))
+                {
+                    Subject = dto.Subject,
+                    Body = dto.Body,
+                    IsBodyHtml = false
+                };
+
+                using var smtp = new SmtpClient(host, port)
+                {
+                    EnableSsl = true,
+                    Credentials = new NetworkCredential(fromAddress, appPassword)
+                };
+
+                await smtp.SendMailAsync(msg);
+
+                TempData["Success"] = "Gửi mail thành công!";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Gửi mail thất bại: " + ex.Message;
+            }
+
+            return RedirectToAction("Index");
+        }
+
     }
 }
