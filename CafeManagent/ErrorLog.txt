@@ -885,3 +885,39 @@ StackTrace:    at CafeManagent.Services.Imp.RequestModule.RequestService.GetById
    at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
    at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in C:\Users\thanh\Downloads\Ki7_FALL25\PRN222\Project\CafeManagent\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
 
+--------------------------------------------------
+Time: 2025-11-15 22:53:50
+Exception Type: System.Threading.Tasks.TaskCanceledException
+Message: A task was canceled.
+StackTrace:    at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at CafeManagent.Services.Imp.StaffModule.StaffDirectoryService.GetPagedAsync(StaffListQuery q, CancellationToken ct) in E:\PRN212\Project_222\project5\PRN_CafeManagement\CafeManagent\Services\Imp\StaffModule\StaffDirectoryService.cs:line 62
+   at CafeManagent.Controllers.Staffs.StaffModule.StaffDirectoryController.Index(StaffListQuery q, CancellationToken ct) in E:\PRN212\Project_222\project5\PRN_CafeManagement\CafeManagent\Controllers\Staffs\StaffModule\StaffDirectoryController.cs:line 33
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at CafeManagent.Middlewares.NotifyMiddleware.Invoke(HttpContext context, NotifyUlti ulti, IHubContext`1 hub) in E:\PRN212\Project_222\project5\PRN_CafeManagement\CafeManagent\Middlewares\NotifyMiddleware.cs:line 20
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at CafeManagent.Middlewares.AuthenticationMiddleware.InvokeAsync(HttpContext context) in E:\PRN212\Project_222\project5\PRN_CafeManagement\CafeManagent\Middlewares\AuthenticationMiddleware.cs:line 69
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in E:\PRN212\Project_222\project5\PRN_CafeManagement\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
+

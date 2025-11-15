@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@using CafeManagent.Models
+@using Microsoft.AspNetCore.Http
+@inject CafeManagementContext Db
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -116,8 +120,67 @@
                             <li class="text-center text-muted">Chưa có thông báo nào</li>
                         </ul>
                     </div>
-                    <span class="me-3 text-muted">Xin chào, Admin</span>
-                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="rounded-circle" width="35" height="35" alt="User" />
+                    @{
+                        int? staffId = Context.Session.GetInt32("StaffId");
+
+                        string displayName = "Khách";
+                        string avatarUrl = "/images/avatars/default.png";
+                        int profileId = 0;
+
+                        if (staffId.HasValue)
+                        {
+                            var staff = Db.Staff
+                            .Where(s => s.StaffId == staffId.Value)
+                            .Select(s => new
+                            {
+                                s.StaffId,
+                                s.FullName,
+                                s.Img
+                            })
+                            .FirstOrDefault();
+
+                            if (staff != null)
+                            {
+                                profileId = staff.StaffId;
+                                displayName = string.IsNullOrWhiteSpace(staff.FullName)
+                                ? "Nhân viên"
+                                : staff.FullName;
+                                avatarUrl = string.IsNullOrWhiteSpace(staff.Img)
+                                ? "/images/avatars/default.png"
+                                : staff.Img;
+                            }
+                        }
+                    }
+
+                    @if (staffId.HasValue && profileId != 0)
+                    {
+                        <a asp-controller="StaffProfile"
+                           asp-action="Profile"
+                           asp-route-id="@profileId"
+                           class="d-flex align-items-center"
+                           style="text-decoration:none;">
+                            <span class="me-3 text-muted">Xin chào, @displayName</span>
+                            <img src="@avatarUrl"
+                                 class="rounded-circle"
+                                 width="35"
+                                 height="35"
+                                 alt="@displayName" />
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Login", "Home")"
+                           class="d-flex align-items-center"
+                           style="text-decoration:none;">
+                            <span class="me-3 text-muted">Đăng nhập</span>
+                            <img src="/images/avatars/default.png"
+                                 class="rounded-circle"
+                                 width="35"
+                                 height="35"
+                                 alt="Guest" />
+                        </a>
+                    }
+
                 </div>
             </nav>
 

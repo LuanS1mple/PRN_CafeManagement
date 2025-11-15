@@ -68,5 +68,8 @@
         public static readonly NotifyMessage PHAN_HOI_THIEU_THONG_TIN_NHAN_VIEN = new("Không tìm thấy ca làm của nhân viên trong ngày!");
         public static readonly NotifyMessage CHECK_IN_THANH_CONG = new("Đã check in thành công cho nhân viên ");
         public static readonly NotifyMessage CHECK_OUT_THANH_CONG = new("Đã check out thành công cho nhân viên ");
+
+        //Staff
+        public static readonly NotifyMessage CHANGE_STATUS_SUCCESSFULLY = new("Cập nhật trạng thái nhân viên thành công ");
     }
 }

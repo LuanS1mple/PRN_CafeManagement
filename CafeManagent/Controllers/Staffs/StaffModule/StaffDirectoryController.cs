@@ -1,5 +1,8 @@
 ﻿using CafeManagent.dto.request.StaffModuleDTO;
+using CafeManagent.dto.response.NotifyModuleDTO;
 using CafeManagent.dto.response.StaffModuleDTO;
+using CafeManagent.Enums;
+using CafeManagent.Hubs;
 using CafeManagent.Services.Interface.StaffModule;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -172,6 +175,15 @@ namespace CafeManagent.Controllers.Staffs.StaffModule
         {
             var (ok, sVal, name, badgeClass) = await _service.UpdateStatusAsync(id, status, ct);
             if (!ok) return NotFound(new { ok = false, message = "Không tìm thấy nhân viên." });
+
+            int STAFF_ID = HttpContext.Session.GetInt32("StaffId") ?? 0;
+            SystemNotify systemNotify = new SystemNotify()
+            {
+                IsSuccess = true,
+                Message = NotifyMessage.CHANGE_STATUS_SUCCESSFULLY.Message
+            };
+            ResponseHub.SetNotify(STAFF_ID, systemNotify);
+
 
             // Trả JSON cho client gọi; các client khác sẽ nhận qua SignalR
             return Json(new { ok = true, status = sVal, name, badgeClass });
