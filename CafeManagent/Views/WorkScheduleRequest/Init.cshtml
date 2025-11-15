@@ -3,9 +3,6 @@
 @model WorkScheduleRequestDTO;
 
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
-
-    // Lấy danh sách WorkScheduleBasicDTO từ ViewBag
     var schedules = ViewBag.WorkSchedules as List<WorkScheduleBasicDTO>;
 }
 
@@ -35,7 +32,7 @@
                         <option value="">-- Chọn ca làm --</option>
                         @foreach (var s in schedules)
                         {
-                            <option value="@s.WorkShiftId">Ngày @s.Date - Ca @s.WorkShiftId</option>
+                            <option value="@s.WorkShiftId" data-id="@s.Id">Ngày @s.Date - Ca @s.WorkShiftId</option>
                         }
                     </select>
                     <span asp-validation-for="OldShiftId" class="text-danger"></span>

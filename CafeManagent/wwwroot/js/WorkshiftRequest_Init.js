@@ -34,7 +34,10 @@
 
     // ✅ Load thông tin ca
     scheduleSelect.addEventListener("change", () => {
-        const val = scheduleSelect.value;
+        const selected = scheduleSelect.options[scheduleSelect.selectedIndex];
+
+        const val = selected.dataset.id;
+        console.log(val)
         if (!val) {
             scheduleInfo.classList.add("d-none");
             resetFields();

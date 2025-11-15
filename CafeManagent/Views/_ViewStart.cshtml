@@ -1,6 +1,11 @@
 ﻿@{
-    var role = Context.Session.GetString("StaffRole");
-
+    string role;
+    try{
+        role = Context.Session.GetString("StaffRole");
+    }
+    catch{
+        role = "Branch Manager";
+    }
     // Nếu chưa login (role = null) → dùng layout staff (hoặc layout login)
     if (role != null && role == "Branch Manager")
     {
