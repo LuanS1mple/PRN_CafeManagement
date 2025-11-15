@@ -1,67 +1,9 @@
-﻿$(document).ready(function () {
+﻿// File: ~/js/addOrder.js
+
+$(document).ready(function () {
     let cart = [];
     const VAT_PERCENT = 0.05;
     let currentDraftOrderId = 0;
-
-    // --- HÀM XÁC THỰC DỮ LIỆU ---
-
-    // HÀM KIỂM TRA & XÁC THỰC SỐ ĐIỆN THOẠI
-    function validateCustomerPhone() {
-        const phoneInput = $('#customerPhone');
-        const phone = phoneInput.val().trim();
-        const customerInfo = $('#customerInfo');
-
-        // 1. Kiểm tra Rỗng (Khách vãng lai - KHÔNG LỖI)
-        if (phone === '') {
-            phoneInput.removeClass('is-invalid');
-            customerInfo.html('Không nhập SĐT nếu khách vãng lai.').removeClass('text-danger').addClass('text-muted');
-            return true; // Hợp lệ (vãng lai)
-        }
-
-        // 2. Kiểm tra định dạng số và độ dài (Phải là 10 chữ số và là số)
-        const phoneRegex = /^\d{10}$/; // Chỉ cho phép 10 chữ số
-
-        if (!phoneRegex.test(phone)) {
-            phoneInput.addClass('is-invalid');
-            customerInfo.html('<i class="fas fa-exclamation-triangle me-1"></i> **LỖI:** SĐT phải là **10 chữ số** và chỉ chứa ký tự số.').removeClass('text-muted').addClass('text-danger');
-            return false; // KHÔNG Hợp lệ
-        }
-
-        // Hợp lệ (Đủ 10 số)
-        phoneInput.removeClass('is-invalid');
-        customerInfo.html('Đang tìm kiếm thông tin khách hàng...').removeClass('text-danger').addClass('text-muted');
-        return true;
-    }
-
-    // HÀM KIỂM TRA & XÁC THỰC GIẢM GIÁ
-    function validateDiscountPercent() {
-        const discountInput = $('#discountPercent');
-        const discount = parseFloat(discountInput.val());
-
-        // Kiểm tra có phải là số âm không
-        if (isNaN(discount) || discount < 0) {
-            discountInput.addClass('is-invalid');
-            alert('Giảm giá không được nhập số âm. Đã đặt lại về 0%.');
-            discountInput.val(0); // Đặt lại giá trị về 0
-            discountInput.removeClass('is-invalid');
-            return false;
-        }
-
-        // Kiểm tra vượt quá 100%
-        if (discount > 100) {
-            discountInput.addClass('is-invalid');
-            alert('Giảm giá không được vượt quá 100%. Đã đặt lại về 100%.');
-            discountInput.val(100);
-            discountInput.removeClass('is-invalid');
-            return false;
-        }
-
-        discountInput.removeClass('is-invalid');
-        return true;
-    }
-
-    // --- HÀM TẢI DỮ LIỆU BAN ĐẦU ---
-
     function loadDraftFromInitialData() {
         if (initialDraftData && initialDraftData.Items) {
             console.log("Đang tải dữ liệu bản nháp từ Session...");
@@ -74,8 +16,8 @@
                 UnitPrice: item.UnitPrice
             }));
 
-            $('#customerPhone').val(draft.CustomerPhone || '');
-            $('#discountPercent').val(draft.DiscountPercent || 0);
+            $('#customerPhone').val(draft.CustomerPhone || ''); 
+            $('#discountPercent').val(draft.DiscountPercent || 0); 
             $('#orderNote').val(draft.Note || '');
 
             $('#submitDraft').text('Cập Nhật Bản Nháp').removeClass('btn-info').addClass('btn-primary');
@@ -85,7 +27,7 @@
         updateCartUI();
     }
 
-    // HÀM FORMAT GIÁ
+    // HÀM FORMAT GIÁ (GIỮ NGUYÊN)
     function formatCurrency(amount) {
         return (amount || 0).toLocaleString('vi-VN', {
             minimumFractionDigits: 0,
@@ -93,28 +35,21 @@
         }) + ' VNĐ';
     }
 
-    // HÀM CẬP NHẬT TỔNG TIỀN (GỌI API TÍNH TOÁN)
+    // HÀM CẬP NHẬT TỔNG TIỀN (SỬA ĐỔI - Thêm OrderId vào DraftDto)
+    // File: ~/js/addOrder.js
+
+    // File: ~/js/addOrder.js
+
     function updateTotals() {
-        // Áp dụng kiểm tra validation trước khi lấy giá trị
-        validateDiscountPercent();
-
-        const isPhoneValid = validateCustomerPhone();
-        if (!isPhoneValid) {
-            // Nếu SĐT không hợp lệ, không chặn gọi API, nhưng API server sẽ tự loại bỏ SĐT sai
-            // hoặc trả về lỗi nếu cần.
-        }
-
         // 1. Logic Thoát Sớm (Cart Rỗng)
         if (cart.length === 0 && currentDraftOrderId === 0) {
+            // ... (Giữ nguyên) ...
             $('#subtotal').text(formatCurrency(0));
             $('#discountAmount').text(formatCurrency(0));
             $('#vatAmount').text(formatCurrency(0));
             $('#grandTotal').text(formatCurrency(0));
             $('#emptyCartMessage').show();
-            // Cập nhật lại thông báo khách vãng lai nếu không có SĐT
-            if ($('#customerPhone').val().trim() === '') {
-                $('#customerInfo').html('Không nhập SĐT nếu khách vãng lai.').removeClass('text-danger').addClass('text-muted');
-            }
+            $('#customerInfo').html('Không nhập SĐT nếu khách vãng lai.');
             $('#newCustomerNameContainer').empty().hide();
             return;
         }
@@ -124,6 +59,7 @@
         const note = $('#orderNote').val();
 
         // LẤY TÊN KHÁCH HÀNG MỚI ĐÃ NHẬP
+        // Lấy giá trị hiện tại, dù ô input có đang được hiển thị hay không.
         const newCustomerNameValue = $('#newCustomerName').val() || '';
 
         const draftDto = {
@@ -145,17 +81,12 @@
                 if (response.success) {
                     const data = response.data;
 
-                    // Cập nhật các trường tổng tiền
+                    // Cập nhật các trường tổng tiền (Không gây mất focus)
                     $('#subtotal').text(formatCurrency(data.subtotal));
                     $('#discountAmount').text(formatCurrency(data.discountAmount));
                     $('#vatAmount').text(formatCurrency(data.vatAmount));
                     $('#grandTotal').text(formatCurrency(data.grandTotal));
-
-                    // Chỉ cập nhật customerInfo nếu validatePhone thành công (10 số hoặc rỗng)
-                    if (isPhoneValid) {
-                        $('#customerInfo').html(data.customerStatus);
-                    }
-
+                    $('#customerInfo').html(data.customerStatus);
 
                     // --- XỬ LÝ RENDER/TẠO Ô NHẬP TÊN (CHỈ KHI CẦN THIẾT) ---
                     const newCustomerContainer = $('#newCustomerNameContainer');
@@ -163,23 +94,19 @@
                     // Trường hợp 1: SĐT mới (cần nhập tên) VÀ container CHƯA có input
                     if (data.customerFoundStatus === 2 && newCustomerContainer.is(':empty')) {
                         const html = `
-                        <div class="alert alert-info py-2 mt-2" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i> Đây là **SĐT mới**. Vui lòng nhập **Tên khách hàng** để lưu thông tin và tích lũy ${data.pointsEarned} điểm.
-                        </div>
-                        <div class="form-group mb-2">
-                            <label for="newCustomerName" class="form-label small fw-bold">Tên Khách Hàng Mới:</label>
-                            <input type="text" class="form-control" id="newCustomerName" placeholder="Ví dụ: Nguyễn Văn A" value="${newCustomerNameValue}">
-                            <div class="invalid-feedback">Vui lòng nhập tên khách hàng.</div>
-                        </div>
-                        `;
+                    <div class="alert alert-info py-2 mt-2" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i> Đây là **SĐT mới**. Vui lòng nhập **Tên khách hàng** để lưu thông tin và tích lũy ${data.pointsEarned} điểm.
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="newCustomerName" class="form-label small fw-bold">Tên Khách Hàng Mới:</label>
+                        <input type="text" class="form-control" id="newCustomerName" placeholder="Ví dụ: Nguyễn Văn A" value="${newCustomerNameValue}">
+                        <div class="invalid-feedback">Vui lòng nhập tên khách hàng.</div>
+                    </div>
+                    `;
                         newCustomerContainer.html(html).show();
 
-                        // QUAN TRỌNG: Gắn sự kiện để gọi updateTotals khi nhập TÊN KHÁCH HÀNG MỚI
-                        // Điều này đảm bảo NewCustomerNameValue được cập nhật ngay lập tức
-                        $('#newCustomerName').on('input change', function () {
-                            updateTotals();
-                        });
-
+                        // QUAN TRỌNG: Gắn sự kiện để gọi updateTotals chỉ khi thay đổi SĐT, Discount, hoặc Cart
+                        // Nếu gỡ bỏ event này ở đây, bạn cần đảm bảo SĐT/Discount luôn kích hoạt updateTotals
                     }
                     // Trường hợp 2: Đang có input (customerFoundStatus=2) nhưng SĐT bị xóa/thay đổi sang khách cũ
                     else if (data.customerFoundStatus !== 2) {
@@ -195,8 +122,6 @@
             }
         });
     }
-
-    // HÀM CẬP NHẬT GIAO DIỆN GIỎ HÀNG
     function updateCartUI() {
         $('#cartItems').empty();
         if (cart.length === 0) {
@@ -234,7 +159,7 @@
         updateTotals();
     }
 
-    // --- 2. XỬ LÝ SỰ KIỆN CART & TÍNH TOÁN ---
+    // --- 2. XỬ LÝ SỰ KIỆN CART & TÍNH TOÁN (GIỮ NGUYÊN) ---
     // A. Thêm sản phẩm
     $(document).on('click', '.btn-add-to-cart', function () {
         const $item = $(this).closest('.product-item');
@@ -269,23 +194,9 @@
         updateCartUI();
     });
 
-    // D. Thay đổi Discount/Phone (Kèm Validation)
+    // D. Thay đổi Discount/Phone
     $('#discountPercent, #customerPhone').on('input change', function () {
-        const isDiscountValid = validateDiscountPercent();
-        const isPhoneValid = validateCustomerPhone();
-
-        // Nếu discount bị reset (nhập âm), hoặc phone hợp lệ/vãng lai, thì gọi updateTotals
-        if (isDiscountValid && isPhoneValid) {
-            updateTotals();
-        } else if ($(this).attr('id') === 'discountPercent') {
-            // Trường hợp discount bị reset về 0/100, cần updateTotals để cập nhật lại tổng tiền
-            updateTotals();
-        } else if ($(this).attr('id') === 'customerPhone' && isPhoneValid) {
-            // Khi SĐT chuyển sang hợp lệ (10 số) hoặc rỗng, cần updateTotals
-            updateTotals();
-        }
-        // Nếu SĐT không hợp lệ (nhập chữ/thiếu số), không gọi updateTotals 
-        // để tránh spam API, chỉ hiển thị lỗi.
+        updateTotals();
     });
 
 
@@ -293,7 +204,7 @@
     $('#productSearch').on('keyup', function () {
         const query = $(this).val().toLowerCase();
         $('.product-item').each(function () {
-            const name = $(this).data('name').toLowerCase();
+            const name = $(this).data('name');
             if (name.includes(query)) {
                 $(this).show();
             } else {
@@ -311,26 +222,17 @@
             return;
         }
 
-        // BẮT BUỘC: Kiểm tra tính hợp lệ trước khi Submit
-        const isDiscountValid = validateDiscountPercent();
-        const isPhoneValid = validateCustomerPhone();
-
-        if (!isDiscountValid || !isPhoneValid) {
-            alert('Vui lòng kiểm tra và sửa các lỗi nhập liệu (SĐT, Giảm giá).');
-            return;
-        }
-
         const customerPhone = $('#customerPhone').val();
         let newCustomerName = '';
 
         // Lấy tên khách hàng mới nếu ô đó đang hiển thị
         if ($('#newCustomerNameContainer').is(':visible')) {
-            newCustomerName = $('#newCustomerName').val().trim();
+            newCustomerName = $('#newCustomerName').val();
 
             // Bổ sung: Kiểm tra tên khách hàng mới đã được nhập chưa
             if (!newCustomerName) {
                 $('#newCustomerName').addClass('is-invalid'); // Thêm class báo lỗi
-                alert('Đây là SĐT mới. Vui lòng nhập Tên khách hàng để lưu thông tin và tích lũy điểm.');
+                alert('Vui lòng nhập tên khách hàng mới để tích lũy điểm.');
                 return;
             } else {
                 $('#newCustomerName').removeClass('is-invalid');
@@ -343,7 +245,7 @@
             DiscountPercent: parseFloat($('#discountPercent').val()) || 0,
             Note: $('#orderNote').val(),
             OrderId: currentDraftOrderId,
-            NewCustomerName: newCustomerName
+            NewCustomerName: newCustomerName 
         };
 
         $.ajax({
