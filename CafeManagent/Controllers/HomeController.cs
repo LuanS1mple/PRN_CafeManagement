@@ -98,6 +98,8 @@ namespace CafeManagent.Controllers
             {
                 Response.Cookies.Delete("RememberUsername");
             }
+            Response.Cookies.Delete("AccessToken");
+            Response.Cookies.Delete("RefreshToken");
             return RedirectToAction("Login", "Home");
         }
     }
