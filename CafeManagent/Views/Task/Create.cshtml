@@ -1,0 +1,80 @@
+﻿@model CafeManagent.Models.Task
+@using CafeManagent.Models
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Tạo công việc mới";
+}
+
+<div class="container-fluid px-4 py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">@ViewData["Title"]</h4>
+                </div>
+                <form method="post" asp-action="Create" asp-controller="Task">
+                    <div class="card-body">
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Người giao việc</label>
+                            <input type="text"
+                                   class="form-control"
+                                   value="@User.FindFirstValue(ClaimTypes.Name)"
+                                   disabled />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="TasktypeId">Loại công việc</label>
+                            <select asp-for="TasktypeId" class="form-select" required>
+                                <option value="">-- Chọn loại công việc --</option>
+                                @if (ViewBag.TaskTypes != null)
+                                {
+                                    foreach (var type in (IEnumerable<TaskType>)ViewBag.TaskTypes)
+                                    {
+                                        <option value="@type.TasktypeId">@type.TaskName</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="TasktypeId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="AssignTime">Thời gian bắt đầu</label>
+                            <input type="datetime-local" asp-for="AssignTime" class="form-control" />
+                            <span asp-validation-for="AssignTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="DueTime">Thời hạn</label>
+                            <input type="datetime-local" asp-for="DueTime" class="form-control" />
+                            <span asp-validation-for="DueTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="StaffId">Nhân viên</label>
+                            <select asp-for="StaffId" class="form-select">
+                                <option value="0">-- Chọn nhân viên (Không bắt buộc) --</option>
+                                @if (ViewBag.Staffs != null)
+                                {
+                                    foreach (var staff in (IEnumerable<Staff>)ViewBag.Staffs)
+                                    {
+                                        <option value="@staff.StaffId">@staff.FullName</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="StaffId" class="text-danger"></span>
+                        </div>
+
+                    </div>
+                    <div class="card-footer text-end">
+                        <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+                        <button type-="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

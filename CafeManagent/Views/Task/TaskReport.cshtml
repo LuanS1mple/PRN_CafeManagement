@@ -1,6 +1,6 @@
 ﻿@using CafeManagent.Models
 @using System.Linq
-@* LƯU Ý: ĐÃ LOẠI BỎ TẤT CẢ CÁC THAM CHIẾU ĐẾN ReportTaskViewModel GÂY LỖI CS0246 *@
+
 @{
     ViewData["Title"] = "Báo Cáo Công Việc";
     var taskSummary = ViewBag.TaskSummary as Dictionary<int, int> ?? new Dictionary<int, int>();
@@ -8,6 +8,9 @@
 
 <div class="container-fluid">
     <h2 class="mb-4">📊 Báo Cáo Tình Hình Công Việc</h2>
+    <a asp-action="ExportTaskReport" asp-controller="Task" target="_blank" class="btn btn-success">
+        Xuất File Excel
+    </a>
 
     <div class="row">
 
@@ -28,7 +31,7 @@
                             <tbody>
                                 @if (taskSummary.Any())
                                 {
-                                    @foreach (var item in taskSummary)
+                                    @foreach (var item in taskSummary.OrderBy(kv => kv.Key))
                                     {
                                         <tr class="task-summary-row" data-status-id="@item.Key" style="cursor: pointer;">
                                             <td>@GetStatusLabel(item.Key)</td>
@@ -64,14 +67,14 @@
                                     <th>Mô Tả</th>
                                     <th>Nhân Viên</th>
                                     <th>Quản Lý</th>
-                                    <th>Bắt đầu</th> @* <-- CỘT MỚI *@
+                                    <th>Bắt đầu</th>
                                     <th>Thời Hạn</th>
                                     <th>Trạng Thái</th>
                                 </tr>
                             </thead>
                             <tbody id="taskDetailTableBody">
                                 <tr id="no-selection-row">
-                                    <td colspan="8" class="text-center text-muted py-3">Chọn một trạng thái ở bảng bên cạnh để xem chi tiết.</td> @* <-- Tăng colspan lên 8 *@
+                                    <td colspan="8" class="text-center text-muted py-3">Chọn một trạng thái ở bảng bên cạnh để xem chi tiết.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -95,26 +98,27 @@
             let statusLabel = "Không xác định";
             let statusClass = "badge rounded-pill task-status-badge ";
             switch (status) {
-                case 0: statusLabel = "Chờ"; statusClass += "bg-secondary"; break;
-                case 1: statusLabel = "Đang làm"; statusClass += "bg-warning text-dark"; break;
+                case 0: statusLabel = "Chưa bắt đầu"; statusClass += "bg-primary"; break;
+                case 1: statusLabel = "Đang tiến hành"; statusClass += "bg-warning text-dark"; break;
                 case 2: statusLabel = "Hoàn thành"; statusClass += "bg-success"; break;
                 case 3: statusLabel = "Đã hủy"; statusClass += "bg-danger"; break;
-                case 4: statusLabel = "Chưa bắt đầu"; statusClass += "bg-primary"; break;
+                case 4: statusLabel = "Hết hạn"; statusClass += "bg-dark"; break;
+                case 5: statusLabel = "Làm lại"; statusClass += "bg-info"; break;
+                case 6: statusLabel = "Chờ xác nhận"; statusClass += "bg-secondary"; break;
                 default: statusLabel = "—"; statusClass += "bg-light text-secondary"; break;
             }
             return { statusLabel, statusClass };
         }
 
         $(document).ready(function () {
-
             $('.task-summary-row').on('click', function() {
                 const statusId = $(this).data('status-id');
                 const statusLabel = $(this).find('td:first').text();
-
+                $('.task-summary-row').removeClass('table-active');
+                $(this).addClass('table-active');
                 $('#detail-status-title').text(`(${statusLabel})`);
                 $('#taskDetailTableBody').empty();
                 $('#taskDetailTableBody').append('<tr><td colspan="8" class="text-center text-info py-3"><i class="fas fa-spinner fa-spin me-2"></i> Đang tải dữ liệu...</td></tr>');
-
                 const url = `@Url.Action("GetTasksByStatus", "Task")?statusId=${statusId}`;
 
                 $.ajax({
@@ -122,17 +126,14 @@
                     type: 'GET',
                     success: function(tasks) {
                         $('#taskDetailTableBody').empty();
-
                         if (tasks.length === 0) {
                             const noDataRow = `<tr><td colspan="8" class="text-center text-muted py-3">Không có công việc nào ở trạng thái ${statusLabel}.</td></tr>`;
                             $('#taskDetailTableBody').append(noDataRow);
                             return;
                         }
 
-                        // HIỂN THỊ DỮ LIỆU
                         tasks.forEach(task => {
                             const { statusLabel: detailLabel, statusClass: detailClass } = getStatusBadgeInfo(task.status);
-
                             const rowHtml = `
                                 <tr>
                                     <td>${task.taskId}</td>
@@ -140,20 +141,17 @@
                                     <td>${task.description || '—'}</td>
                                     <td>${task.staffName || '—'}</td>
                                     <td>${task.managerName || '—'}</td>
-                                    <td>${formatDateTime(task.startTime)}</td>
+                                    <td>${formatDateTime(task.assignTime)}</td>
                                     <td>${formatDateTime(task.dueTime)}</td>
                                     <td><span class="${detailClass}">${detailLabel}</span></td>
-                                </tr>
-                            `;
+                                </tr>`;
                             $('#taskDetailTableBody').append(rowHtml);
                         });
                     },
                     error: function(xhr, status, error) {
                         $('#taskDetailTableBody').empty();
-                        // Tăng colspan lên 8
                         const errorRow = `<tr><td colspan="8" class="text-center text-danger py-3">Lỗi khi tải dữ liệu: ${error}</td></tr>`;
                         $('#taskDetailTableBody').append(errorRow);
-                        console.error("AJAX Error:", error);
                     }
                 });
             });
@@ -161,17 +159,18 @@
     </script>
 }
 
-@* C# Helper functions (Giữ nguyên) *@
 @functions {
     string GetStatusLabel(int status)
     {
         return status switch
         {
-            0 => "Chờ",
-            1 => "Đang làm",
+            0 => "Chưa bắt đầu",
+            1 => "Đang tiến hành",
             2 => "Hoàn thành",
             3 => "Đã hủy",
-            4 => "Chưa bắt đầu",
+            4 => "Hết hạn",
+            5 => "Làm lại",
+            6 => "Chờ xác nhận",
             _ => "Không xác định",
         };
     }
@@ -180,11 +179,13 @@
     {
         return status switch
         {
-            0 => "badge bg-secondary",
+            0 => "badge bg-primary",
             1 => "badge bg-warning text-dark",
             2 => "badge bg-success",
             3 => "badge bg-danger",
-            4 => "badge bg-primary",
+            4 => "badge bg-dark",
+            5 => "badge bg-info",
+            6 => "badge bg-secondary",
             _ => "badge bg-light text-secondary",
         };
     }

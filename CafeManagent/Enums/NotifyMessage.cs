@@ -54,5 +54,14 @@
         public static readonly NotifyMessage KHACH_HANG_KHONG_TON_TAI = new("Khách hàng không tồn tại.");
         public static readonly NotifyMessage SUA_KHACH_HANG_THANH_CONG = new("Sửa khách hàng thành công.");
         public static readonly NotifyMessage SUA_KHACH_HANG_THAT_BAI = new("Sửa khách hàng thất bại.");
+        // Thông báo Task
+        public static readonly NotifyMessage TASK_CREATED_SUCCESS = new("Task mới đã được tạo thành công");
+        public static readonly NotifyMessage TASK_CREATED_FAIL = new("Task mới đã được tạo thất bại");
+        public static readonly NotifyMessage TASK_UPDATED_SUCCESS = new("Task đã được cập nhật thành công");
+        public static readonly NotifyMessage TASK_UPDATED_FAIL = new("Task đã được cập nhật thất bại");
+        public static readonly NotifyMessage TASK_COMPLETED = new("Task đã được hoàn thành");
+        public static readonly NotifyMessage TASK_ERROR = new("Task lỗi");
+        public static readonly NotifyMessage TASK_CANCELLED = new("Task bị hủy");
+
     }
 }
