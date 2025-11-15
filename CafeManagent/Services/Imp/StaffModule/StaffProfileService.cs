@@ -140,16 +140,6 @@ namespace CafeManagent.Services.Imp.StaffModule
             var user = await _db.Staff.FirstOrDefaultAsync(x => x.StaffId == dto.StaffId, ct);
             if (user is null) return false;
 
-            // So sánh mật khẩu cũ
-            if (!VerifyPassword(dto.CurrentPassword, user.Password))
-                throw new ValidationException("Mật khẩu hiện tại không đúng");
-
-            if (dto.NewPassword.Length < 6)
-                throw new ValidationException("Mật khẩu mới phải ít nhất 6 ký tự");
-
-            if (dto.NewPassword != dto.ConfirmPassword)
-                throw new ValidationException("Xác nhận mật khẩu không khớp");
-
             // Hash mật khẩu mới với BCrypt
             user.Password = HashPassword(dto.NewPassword);
 
