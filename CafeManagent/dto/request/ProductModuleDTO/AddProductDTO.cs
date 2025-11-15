@@ -8,11 +8,7 @@
 
         public string Description { get; set; }
 
-        public string IngredientName { get; set; }
-
-        public string Unit { get; set; }
-
-        public float QuantityNeeded { get; set; }
+        public List<IngredientItemDTO> Ingredients { get; set; }
 
     }
 }

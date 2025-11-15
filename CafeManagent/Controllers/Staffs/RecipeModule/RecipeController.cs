@@ -1,5 +1,6 @@
 ﻿using CafeManagent.dto.request.ProductModuleDTO;
 using CafeManagent.Models;
+using CafeManagent.Services.Imp.RecipeModule;
 using CafeManagent.Services.Interface.RecipeModule;
 using Microsoft.AspNetCore.Mvc;
 
@@ -46,5 +47,21 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
 
             return RedirectToAction("Index");
         }
+
+        [HttpPost]
+        public async Task<IActionResult> EditProduct(int productId, AddProductDTO dto)
+        {
+            var ok = await _service.EditProductAsync(productId, dto);
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var ok = await _service.DeleteProductAsync(id);
+            return RedirectToAction("Index");
+        }
+
+
     }
 }

@@ -32,11 +32,10 @@ namespace CafeManagent.Services.Imp.RecipeModule
 
         public async Task<bool> AddProductAsync(AddProductDTO dto)
         {
-            // Kiểm tra trùng tên sản phẩm
+            // Kiểm tra trùng tên
             if (await _context.Products.AnyAsync(p => p.ProductName == dto.ProductName))
                 return false;
 
-            // ✅ Tạo sản phẩm mới
             var product = new Product
             {
                 ProductName = dto.ProductName,
@@ -47,44 +46,128 @@ namespace CafeManagent.Services.Imp.RecipeModule
             };
 
             await _context.Products.AddAsync(product);
-            await _context.SaveChangesAsync(); // để có ProductId
+            await _context.SaveChangesAsync(); // cần ProductId
 
-            // ✅ Kiểm tra xem nguyên liệu đã tồn tại chưa
-            Ingredient? ingredient = null;
-
-            if (!string.IsNullOrEmpty(dto.IngredientName))
+            // ---------- ADD NGUYÊN LIỆU -----------
+            if (dto.Ingredients != null && dto.Ingredients.Count > 0)
             {
-                ingredient = await _context.Ingredients
-                    .FirstOrDefaultAsync(i => i.IngredientName == dto.IngredientName);
-
-                if (ingredient == null)
+                foreach (var ing in dto.Ingredients)
                 {
-                    ingredient = new Ingredient
+                    // Tìm hoặc tạo nguyên liệu
+                    var ingredient = await _context.Ingredients
+                        .FirstOrDefaultAsync(i => i.IngredientName == ing.IngredientName);
+
+                    if (ingredient == null)
                     {
-                        IngredientName = dto.IngredientName,
-                        Unit = dto.Unit ?? "đơn vị", // tránh null
-                        QuantityInStock = 0,
-                        Status = true,
-                        CreatedAt = DateTime.Now,
-                        CostPerUnit = 0
+                        ingredient = new Ingredient
+                        {
+                            IngredientName = ing.IngredientName,
+                            Unit = ing.Unit,
+                            QuantityInStock = 0,
+                            Status = true,
+                            CreatedAt = DateTime.Now,
+                            CostPerUnit = 0
+                        };
+
+                        await _context.Ingredients.AddAsync(ingredient);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    // Tạo dòng recipe
+                    var recipe = new Recipe
+                    {
+                        ProductId = product.ProductId,
+                        IngredientId = ingredient.IngredientId,
+                        QuantityNeeded = ing.QuantityNeeded
                     };
-                    await _context.Ingredients.AddAsync(ingredient);
-                    await _context.SaveChangesAsync();
+
+                    await _context.Recipes.AddAsync(recipe);
                 }
-
-                var recipe = new Recipe
-                {
-                    ProductId = product.ProductId,
-                    IngredientId = ingredient.IngredientId,
-                    QuantityNeeded = dto.QuantityNeeded
-                };
-
-                await _context.Recipes.AddAsync(recipe);
             }
 
             await _context.SaveChangesAsync();
             return true;
         }
+
+
+        public async Task<bool> EditProductAsync(int productId, AddProductDTO dto)
+        {
+            var product = await _context.Products
+                .Include(p => p.Recipes)
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
+
+            if (product == null) return false;
+
+            // ===== Cập nhật thông tin sản phẩm =====
+            product.ProductName = dto.ProductName;
+            product.Price = dto.Price;
+            product.Description = dto.Description;
+
+            // ===== Xóa toàn bộ Recipe cũ ======
+            _context.Recipes.RemoveRange(product.Recipes);
+            await _context.SaveChangesAsync();
+
+            // ===== Thêm Recipe mới =====
+            if (dto.Ingredients != null)
+            {
+                foreach (var ing in dto.Ingredients)
+                {
+                    // Tìm hoặc tạo nguyên liệu
+                    var ingredient = await _context.Ingredients
+                        .FirstOrDefaultAsync(i => i.IngredientName == ing.IngredientName);
+
+                    if (ingredient == null)
+                    {
+                        ingredient = new Ingredient
+                        {
+                            IngredientName = ing.IngredientName,
+                            Unit = ing.Unit,
+                            QuantityInStock = 0,
+                            Status = true,
+                            CreatedAt = DateTime.Now,
+                            CostPerUnit = 0
+                        };
+
+                        await _context.Ingredients.AddAsync(ingredient);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    var recipe = new Recipe
+                    {
+                        ProductId = productId,
+                        IngredientId = ingredient.IngredientId,
+                        QuantityNeeded = ing.QuantityNeeded
+                    };
+
+                    await _context.Recipes.AddAsync(recipe);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteProductAsync(int productId)
+        {
+            var product = await _context.Products
+                .Include(p => p.Recipes)
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
+
+            if (product == null) return false;
+
+            // Xóa công thức trước
+            _context.Recipes.RemoveRange(product.Recipes);
+
+            // Xóa sản phẩm
+            _context.Products.Remove(product);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+
     }
+
+
 
 }
