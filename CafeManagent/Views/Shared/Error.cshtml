@@ -7,13 +7,13 @@
 
 <div class="container mt-5">
     <div class="text-center">
-        <h1 class="text-danger fw-bold">⚠ Đã xảy ra lỗi</h1>
+        <h1 class="text-danger fw-bold">Đã xảy ra lỗi</h1>
         <h4 class="text-secondary mt-3">@message</h4>
 
         @if (time.HasValue)
         {
             <p class="text-muted mt-2">
-                <strong>Thời gian:</strong> @time.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                Thời gian: @time.Value.ToString("HH:mm:ss dd/MM/yyyy")
             </p>
         }
 
@@ -30,7 +30,7 @@
 
         <div class="mt-4">
             <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
-                ⬅ Quay lại Trang chủ
+                Quay lại Trang chủ
             </a>
         </div>
     </div>

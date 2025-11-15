@@ -50,6 +50,12 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
         public IActionResult SaveWorkScheduleRequest(WorkScheduleRequestDTO requestDTO)
         {
             int staffId = HttpContext.Session.GetInt32("StaffId").Value;
+            if (!ModelState.IsValid)
+            {
+                List<WorkScheduleBasicDTO> data = MapperHelper.FromWorkSchedule(workScheduleService.Get(staffId));
+                ViewBag.WorkSchedules = data;
+                return View("Init", requestDTO);
+            }
             try
             {
                 Request request = MapperHelper.FromWorkScheduleRequestDTO(requestDTO, staffId);

@@ -33,7 +33,8 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
         [Authorize(Roles = "Cashier,Barista")]
         public IActionResult GetAttendance(DateOnly workDate, int workshiftId)
         {
-            Attendance attendance = attendanceService.GetAttendance(workDate, workshiftId, 1);
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
+            Attendance attendance = attendanceService.GetAttendance(workDate, workshiftId, staffId);
             if (attendance != null)
             {
                 return Json(new
@@ -55,8 +56,12 @@ namespace CafeManagent.Controllers.Staffs.RequestModule
         [HttpPost]
         public async Task<IActionResult> SubmitRequest(AttendanceRequestDTO requestDTO)
         {
-            //tạm
-            requestDTO.StaffId = 1;
+            if (!ModelState.IsValid)
+            {
+                return View("Init", requestDTO);
+            }
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
+            requestDTO.StaffId = staffId;
             Request request = MapperHelper.GetRequestFromAttendanceRequestDTO(requestDTO);
             requestService.Add(request);
 

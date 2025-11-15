@@ -24,21 +24,21 @@
             <form asp-action="SubmitRequest" id="attendanceForm" method="post">
 
                 <div class="mb-3">
-                    <label for="workDate" class="form-label">Ngày làm việc *</label>
-                    <input asp-for="WorkDate" type="date" id="workDate" class="form-control" required>
-                    <div class="invalid-feedback">Vui lòng chọn ngày làm việc</div>
+                    <label asp-for="WorkDate" class="form-label">Ngày làm việc *</label>
+                    <input asp-for="WorkDate" type="date" id="workDate" class="form-control @(ViewData.ModelState["WorkDate"]?.Errors.Count > 0 ? "is-invalid" : "")">
+                    <span asp-validation-for="WorkDate" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label for="workshift" class="form-label">Ca làm việc *</label>
-                    <select asp-for="WorkShiftId" id="workshift" class="form-select" required>
+                    <label asp-for="WorkShiftId" class="form-label">Ca làm việc *</label>
+                    <select asp-for="WorkShiftId" id="workshift" class="form-select @(ViewData.ModelState["WorkShiftId"]?.Errors.Count > 0 ? "is-invalid" : "")">
                         <option value="">-- Chọn ca làm việc --</option>
                         <option value="1">Ca 1</option>
                         <option value="2">Ca 2</option>
                         <option value="3">Ca 3</option>
                         <option value="4">Ca 4</option>
                     </select>
-                    <div class="invalid-feedback">Vui lòng chọn ca làm việc</div>
+                    <span asp-validation-for="WorkShiftId" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
@@ -47,9 +47,9 @@
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="UpdateCheckIn" for="proposedCheckIn" class="form-label">Giờ check-in thay đổi *</label>
-                    <input asp-for="UpdateCheckIn" type="time" id="proposedCheckIn" class="form-control" required>
-                    <div class="invalid-feedback">Vui lòng nhập giờ check-in đề xuất</div>
+                    <label asp-for="UpdateCheckIn" class="form-label">Giờ check-in thay đổi *</label>
+                    <input asp-for="UpdateCheckIn" type="time" id="proposedCheckIn" class="form-control @(ViewData.ModelState["UpdateCheckIn"]?.Errors.Count > 0 ? "is-invalid" : "")">
+                    <span asp-validation-for="UpdateCheckIn" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
@@ -58,47 +58,43 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="proposedCheckOut" class="form-label">Giờ check-out thay đổi *</label>
-                    <input asp-for="UpdateCheckOut" type="time" id="proposedCheckOut" class="form-control" required>
-                    <div class="invalid-feedback">Vui lòng nhập giờ check-out đề xuất</div>
+                    <label asp-for="UpdateCheckOut" class="form-label">Giờ check-out thay đổi *</label>
+                    <input asp-for="UpdateCheckOut" type="time" id="proposedCheckOut" class="form-control @(ViewData.ModelState["UpdateCheckOut"]?.Errors.Count > 0 ? "is-invalid" : "")">
+                    <span asp-validation-for="UpdateCheckOut" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Loại lỗi *</label>
                     <div>
                         <div class="form-check form-check-inline">
-                            <input asp-for="Type" class="form-check-input" type="radio" name="errorType" value="forgot" required>
+                            <input asp-for="Type" class="form-check-input @(ViewData.ModelState["Type"]?.Errors.Count > 0 ? "is-invalid" : "")" type="radio" name="Type" value="forgot">
                             <label class="form-check-label">Quên chấm</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input asp-for="Type" class="form-check-input" type="radio" name="errorType" value="wrong_time">
+                            <input asp-for="Type" class="form-check-input @(ViewData.ModelState["Type"]?.Errors.Count > 0 ? "is-invalid" : "")" type="radio" name="Type" value="wrong_time">
                             <label class="form-check-label">Sai giờ</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input asp-for="Type" class="form-check-input" type="radio" name="errorType" value="leave">
+                            <input asp-for="Type" class="form-check-input @(ViewData.ModelState["Type"]?.Errors.Count > 0 ? "is-invalid" : "")" type="radio" name="Type" value="leave">
                             <label class="form-check-label">Nghỉ có phép</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input asp-for="Type" class="form-check-input" type="radio" name="errorType" value="other">
+                            <input asp-for="Type" class="form-check-input @(ViewData.ModelState["Type"]?.Errors.Count > 0 ? "is-invalid" : "")" type="radio" name="Type" value="other">
                             <label class="form-check-label">Khác</label>
                         </div>
                     </div>
-                    <div class="invalid-feedback d-block" id="errorTypeFeedback"></div>
+                    <span asp-validation-for="Type" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label for="reason" class="form-label">Lý do chi tiết *</label>
-                    <textarea asp-for="Reason" id="reason" rows="4" class="form-control" required></textarea>
-                    <div class="invalid-feedback">Vui lòng nhập lý do chi tiết</div>
+                    <label asp-for="Reason" class="form-label">Lý do chi tiết *</label>
+                    <textarea asp-for="Reason" id="reason" rows="4" class="form-control @(ViewData.ModelState["Reason"]?.Errors.Count > 0 ? "is-invalid" : "")"></textarea>
+                    <span asp-validation-for="Reason" class="text-danger"></span>
                 </div>
 
                 <div class="d-flex gap-2 border-top pt-3">
-                    <button type="reset" class="btn btn-outline-secondary">
-                        <i class="fa-solid fa-xmark me-1"></i> Hủy
-                    </button>
-                    <button type="submit" class="btn btn-primary ms-auto">
-                        <i class="fa-solid fa-paper-plane me-1"></i> Gửi yêu cầu
-                    </button>
+                    <button type="reset" class="btn btn-outline-secondary">Hủy</button>
+                    <button type="submit" class="btn btn-primary ms-auto">Gửi yêu cầu</button>
                 </div>
             </form>
         </div>
