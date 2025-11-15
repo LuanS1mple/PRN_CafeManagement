@@ -1,5 +1,6 @@
 ﻿using CafeManagent.dto.request.WorkShiftModuleDTO;
 using CafeManagent.dto.response.WorkShiftDTO;
+using CafeManagent.Models;
 
 namespace CafeManagent.Services.Interface.WorkShiftModule
 {

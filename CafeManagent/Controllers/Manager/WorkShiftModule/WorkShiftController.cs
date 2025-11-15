@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 using CafeManagent.dto.response.NotifyModuleDTO;
 using CafeManagent.Hubs;
 using CafeManagent.Enums;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.SignalR;
+using CafeManagent.dto.response.WorkShiftDTO;
 
 namespace CafeManagent.Controllers.Manager.WorkShiftModule
 {
@@ -17,12 +20,14 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
         private readonly IWorkShiftService _service;
         private readonly CafeManagementContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IHubContext<WorkShiftHub> _hub;
 
-        public WorkShiftController(IWorkShiftService service, CafeManagementContext context, IConfiguration configuration)
+        public WorkShiftController(IWorkShiftService service, CafeManagementContext context, IConfiguration configuration, IHubContext<WorkShiftHub> hub)
         {
             _service = service;
             _context = context;
             _configuration = configuration;
+            _hub = hub;
         }
 
         public async Task<IActionResult> Index(int page = 1, int pageSize = 6)
@@ -117,6 +122,8 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
                 IsSuccess = success,
                 Message = notify.Message
             });
+
+         
 
             return RedirectToAction("Index");
         }

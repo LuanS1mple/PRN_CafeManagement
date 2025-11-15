@@ -56,23 +56,23 @@
     @section Scripts {
         <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
         <script>
-            const connection = new signalR.HubConnectionBuilder()
+            const connection1 = new signalR.HubConnectionBuilder()
                 .withUrl("/workshifthub")
                 .withAutomaticReconnect()
                 .build();
 
-            connection.on("ReceiveWorkShiftUpdate", function (newShift) {
+            connection1.on("ReceiveWorkShiftUpdate", function (newShift) {
                 if (!newShift) return;
 
                 const tbody = document.querySelector('table tbody');
                 const tr = document.createElement('tr');
-
+                console.log(newShift.date)
                 tr.innerHTML = `
-                    <td>${newShift.Date || ""}</td>
-                    <td>${newShift.Position || ""}</td>
-                    <td>${newShift.ShiftType || ""}</td>
-                    <td>${newShift.StartTime || ""} - ${newShift.EndTime || ""}</td>
-                    <td>${newShift.Description || ""}</td>
+                    <td>${newShift.date}</td>
+                    <td>${newShift.position}</td>
+                    <td>${newShift.shiftType}</td>
+                    <td>${newShift.startTime} - ${newShift.endTime}</td>
+                    <td>${newShift.description}</td>
                     <td class="text-end">
                         <button type="button" class="btn btn-sm btn-outline-primary me-2">
                             <i class="fa-solid fa-pen"></i>
@@ -86,7 +86,7 @@
                 tbody.appendChild(tr);
             });
 
-            connection.start()
+            connection1.start()
                 .then(() => console.log("SignalR connection started"))
                 .catch(err => console.error("SignalR connection error: ", err));
         </script>
