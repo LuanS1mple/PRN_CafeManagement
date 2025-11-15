@@ -339,7 +339,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
         }
 
         //action status
-        [Authorize(Roles = "Cashier")]
+        [Authorize(Roles = "Cashier,Barista")]
         public IActionResult Details(int id)
         {
             string staffRole = HttpContext.Session.GetString("StaffRole");
@@ -350,15 +350,6 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
         }
 
 
-        //[HttpPost]
-        //public async Task<IActionResult> Create([FromForm] Order order)
-        //{
-        //    var o = _svc.Add(order);
-        //    var oWithDetails = _svc.GetById(o.OrderId);
-        //    var dto = ToDto(oWithDetails!);
-        //    await _hub.Clients.All.SendAsync("OrderCreated", dto);
-        //    return Json(new { success = true, order = dto });
-        //}
 
         [HttpPost]
         [Authorize(Roles = "Cashier")]
@@ -393,7 +384,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
         }
 
         [HttpPost]
-        [Authorize(Roles = "Cashier")]
+        [Authorize(Roles = "Barista")]
         public async Task<IActionResult> StartPreparing(int id)
         {
             var ok = _svc.SetPreparing(id);
@@ -415,7 +406,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
         }
 
         [HttpPost]
-        [Authorize(Roles = "Cashier")]
+        [Authorize(Roles = "Barista")]
         public async Task<IActionResult> MarkReady(int id)
         {
             var ok = _svc.SetReady(id);
