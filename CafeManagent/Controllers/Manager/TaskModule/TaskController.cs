@@ -87,7 +87,6 @@ namespace CafeManagent.Controllers.Manager.TaskModule
             {
                 await _taskService.CreateTasksAsync(task, managerId.Value.ToString());
 
-                // gửi Task realtime cho tất cả client
                 var createdTask = await _taskService.GetTaskByIdAsync(task.TaskId);
                 if (createdTask != null)
                 {
@@ -107,7 +106,6 @@ namespace CafeManagent.Controllers.Manager.TaskModule
                     });
                 }
 
-                // gửi thông báo cho manager
                 SystemNotify notify = new SystemNotify()
                 {
                     IsSuccess = true,
@@ -116,7 +114,6 @@ namespace CafeManagent.Controllers.Manager.TaskModule
 
                 ResponseHub.SetNotify(managerId.Value, notify);
 
-                // gửi thông báo cho nhân viên được giao
                 SystemNotify notify1 = new SystemNotify()
                 {
                     IsSuccess = true,

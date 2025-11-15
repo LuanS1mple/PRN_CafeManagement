@@ -132,6 +132,9 @@
 @section Scripts {
     <script src="~/lib/signalr/signalr.min.js"></script>
     <script>
+        const currentStaffId = @(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "null");
+        const currentStaffIdInt = currentStaffId ? parseInt(currentStaffId) : null;
+
         let requestVerificationToken = "";
         function getAntiForgeryToken() {
             if (requestVerificationToken) return requestVerificationToken;
@@ -212,6 +215,10 @@
                 .build();
 
             connection.on("ReceiveTaskUpdate", (task) => {
+                if (currentStaffIdInt == null || task.staffId !== currentStaffIdInt) {
+                    return;
+                }
+
                 const rowId = `task-row-${task.taskId}`;
                 const row = document.getElementById(rowId);
                 const noTasksRow = document.getElementById('no-tasks-row');
