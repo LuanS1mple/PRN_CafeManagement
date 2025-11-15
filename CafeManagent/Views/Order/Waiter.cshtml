@@ -1,14 +1,16 @@
-﻿@model dynamic
+@using CafeManagent.dto.response.OrderModuleDTO
+@model dynamic
 @{
     ViewData["Title"] = "Màn hình Waiter";
-    var activeOrders = ViewBag.ActiveOrders as List<CafeManagent.dto.order.OrderDto> ?? new List<CafeManagent.dto.order.OrderDto>();
-
-    // Sắp xếp mặc định: Đã sẵn sàng (2) > Đang chuẩn bị (1) > Chờ (0)
-    var sortedOrders = activeOrders.OrderByDescending(o => o.Status).ToList();
+    var activeOrders = ViewBag.ActiveOrders as List<OrderDto> ?? new List<OrderDto>();
+    // Sắp xếp đơn hàng: Status giảm dần (2, 1, 0), OrderId tăng dần (đơn cũ hơn lên trước)
+    var sortedOrders = activeOrders
+        .OrderByDescending(o => o.Status)
+        .ThenBy(o => o.OrderId)
+        .ToList();
 }
 
-<h2 class="text-center mb-4">Màn hình Waiter 🧑‍🍳</h2>
-
+<h2 class="text-center mb-4">Màn hình Waiter </h2>
 <hr />
 
 <div class="d-flex justify-content-between mb-3">
@@ -69,7 +71,6 @@
                             {
                                 @foreach (var order in sortedOrders)
                                 {
-                                    @* Sử dụng HTML trực tiếp để tránh Partial View phụ thuộc vào Model.Order *@
                                     <tr class="order-row" id="order-@order.OrderId" data-status="@(order.Status ?? 0)">
                                         <th scope="row">#@order.OrderId</th>
                                         <td>@order.CustomerName</td>
@@ -107,7 +108,7 @@
     </div>
 </div>
 
-@* Modals (Confirm/Cancel - giữ nguyên) *@
+@* Modals *@
 <div class="modal fade" id="confirmWaiterModal" tabindex="-1" aria-labelledby="confirmWaiterModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -143,19 +144,15 @@
         </div>
     </div>
 </div>
-@* Thêm Modal tạo đơn mới nếu cần, hoặc giả định nó đã có ở một Partial View khác *@
 
 @section Scripts {
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
     <script>
-        // --- SignalR Setup ---
+
         const orderHub = new signalR.HubConnectionBuilder()
             .withUrl("/orderHub")
             .build();
-
         orderHub.start().then(() => console.log("Đã kết nối tới OrderHub")).catch(err => console.error("Lỗi kết nối OrderHub:", err));
-
-        // --- Helper Functions ---
 
         function renderOrderCard(orderDto, role) {
             const customerName = orderDto.customerName && orderDto.customerName.trim() !== '' && orderDto.customerName !== 'Khách lẻ' ? orderDto.customerName : 'Khách vãng lai';
@@ -164,8 +161,10 @@
             let badgeClass = '';
             const status = orderDto.status ?? 0;
             const orderId = orderDto.orderId ?? 0;
-            // Định dạng tiền tệ
-            const formattedAmount = (orderDto.totalAmount ?? 0).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            const formattedAmount = (orderDto.totalAmount ?? 0).toLocaleString('vi-VN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
             const statusTextDisplay = orderDto.statusText;
 
             if (role === 'Waiter') {
@@ -178,7 +177,6 @@
                 } else if (status === 1) {
                     badgeClass = 'bg-primary';
                 } else {
-                    // Trạng thái đã kết thúc (3, -1, -2)
                     buttonHtml = '';
                     badgeClass = (status === -1) ? 'bg-danger' : (status === -2) ? 'bg-info' : 'bg-dark';
                 }
@@ -205,13 +203,13 @@
             const list = $("#active-list-waiter");
             const cardHtml = renderOrderCard(orderDto, 'Waiter');
             const newStatus = orderDto.status ?? 0;
+            const newOrderId = orderDto.orderId ?? 0;
 
-            // Loại bỏ đơn hàng cũ (nếu có)
-            $(`#order-${orderDto.orderId}`).remove();
 
-             // Nếu đơn hàng không phải trạng thái hoạt động (0, 1, 2) thì không chèn
+            $(`#order-${newOrderId}`).remove();
+
             if (newStatus < 0 || newStatus > 2) {
-                 if (list.children('.order-row').length === 0) {
+                if (list.children('.order-row').length === 0) {
                     list.parent().parent().parent().append('<p class="text-muted text-center mt-3" id="active-empty-waiter">Không có đơn hàng nào đang hoạt động.</p>');
                 }
                 return;
@@ -219,24 +217,31 @@
 
             let inserted = false;
             list.children('.order-row').each(function() {
-                const currentStatus = parseInt($(this).data('status')) || 0;
-
-                // Sắp xếp: 2 > 1 > 0
+                const $currentOrder = $(this);
+                const currentStatus = parseInt($currentOrder.data('status')) || 0;
+                const currentOrderId = parseInt($currentOrder.attr('id').replace('order-', '')) || 0;
                 if (newStatus > currentStatus) {
-                    $(this).before(cardHtml);
+                    $currentOrder.before(cardHtml);
                     inserted = true;
                     return false;
+                }
+                else if (newStatus === currentStatus) {
+                    if (newOrderId < currentOrderId) {
+                        $currentOrder.before(cardHtml);
+                        inserted = true;
+                        return false;
+                    }
                 }
             });
 
             if (!inserted) {
+
                 list.append(cardHtml);
             }
-            // Xóa thông báo rỗng nếu có đơn hàng
+
             $("#active-empty-waiter").remove();
         }
 
-        // --- Lọc/Tìm kiếm bằng nút bấm (Đã giữ nguyên logic lọc) ---
         let isFilteringWaiter = false;
 
         function checkIsFilteringWaiter() {
@@ -256,7 +261,6 @@
             const params = new URLSearchParams();
             params.append('query', query);
 
-            // Xử lý statusFilter cho Waiter (0, 1, 2)
             if (status === '99') {
                 params.append('statusFilter', '0');
                 params.append('statusFilter', '1');
@@ -279,9 +283,12 @@
                 $("#active-empty-waiter").remove();
 
                 let activeOrders = data.orders.filter(o => o.status >= 0 && o.status <= 2);
-
-                // Sắp xếp: 2 > 1 > 0
-                activeOrders.sort((a, b) => b.status - a.status);
+                activeOrders.sort((a, b) => {
+                    if (b.status !== a.status) {
+                        return b.status - a.status;
+                    }
+                    return a.orderId - b.orderId;
+                });
 
                 if (activeOrders.length > 0) {
                     activeOrders.forEach(order => {
@@ -308,9 +315,9 @@
 
         $('#waiter-status-filter').change(filterAndSearchWaiter);
 
-        // --- Xử lý POST actions DÙNG MODAL (Giữ nguyên) ---
         let selectedOrderId = null;
 
+        // Gắn sự kiện lấy ID cho cả hai modal khi chuẩn bị mở
         $('#confirmWaiterModal').on('show.bs.modal', function (event) {
             const button = $(event.relatedTarget);
             selectedOrderId = button.data('id');
@@ -323,14 +330,23 @@
             $('#waiter-order-id-cancel').text(selectedOrderId);
         });
 
+        // THÊM: Reset selectedOrderId khi Modal đóng hoàn toàn
+        $('#confirmWaiterModal, #confirmCancelModal').on('hidden.bs.modal', function () {
+            selectedOrderId = null;
+        });
+
+
         $("#confirmWaiterBtnAction").click(function() {
             if (selectedOrderId) {
                 $.post("/Order/ConfirmByWaiter", { id: selectedOrderId })
                     .fail(function() {
                         alert("Lỗi kết nối máy chủ khi xác nhận!");
                     });
+
+               
+                $(this).blur();
+
                 $('#confirmWaiterModal').modal('hide');
-                selectedOrderId = null;
             }
         });
 
@@ -340,42 +356,47 @@
                     .fail(function() {
                         alert("Lỗi kết nối máy chủ khi hủy đơn!");
                     });
+
+                // 🛠️ FIX ARIA: Buộc nút mất focus trước khi ẩn modal
+                $(this).blur();
+
                 $('#confirmCancelModal').modal('hide');
-                selectedOrderId = null;
             }
         });
 
 
-        // --- SignalR Real-time Updates (ĐÃ CẬP NHẬT để sử dụng DTO) ---
+        // --- SignalR Real-time Updates ---
 
         orderHub.on("OrderCreated", (orderDto) => {
-            if (orderDto.status === 0 && !checkIsFilteringWaiter()) {
-                sortAndInsertWaiter(orderDto);
+            const status = orderDto.status ?? 0;
+            console.log(`Đã nhận được order mới: #${orderDto.orderId} (Status: ${status})`);
+
+            if (status === 0) {
+                if (!checkIsFilteringWaiter()) {
+                    sortAndInsertWaiter(orderDto);
+                } else {
+                    filterAndSearchWaiter();
+                }
             }
         });
 
         orderHub.on("OrderPreparing", (orderDto) => {
-            // Nhận DTO (status=1) và chèn lại. Tự động loại bỏ hàng cũ.
             if (!checkIsFilteringWaiter()) {
                 sortAndInsertWaiter(orderDto);
             } else {
-                // Nếu đang lọc, gọi lại hàm lọc để cập nhật danh sách theo bộ lọc
                 filterAndSearchWaiter();
             }
         });
 
         orderHub.on("OrderReady", (orderDto) => {
-            // Nhận DTO (status=2) và chèn lại. Tự động loại bỏ hàng cũ.
             if (!checkIsFilteringWaiter()) {
                 sortAndInsertWaiter(orderDto);
             } else {
-                 // Nếu đang lọc, gọi lại hàm lọc để cập nhật danh sách theo bộ lọc
                 filterAndSearchWaiter();
             }
         });
 
         orderHub.on("OrderConfirmed", (orderDto) => {
-            // Đơn hàng đã hoàn thành (status=3) cần được xóa khỏi danh sách đang theo dõi (0, 1, 2)
             $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
                 $(this).remove();
                 if ($("#active-list-waiter").children('.order-row').length === 0 && !checkIsFilteringWaiter()) {
@@ -385,7 +406,6 @@
         });
 
         orderHub.on("OrderCanceled", (orderDto) => {
-             // Đơn hàng bị hủy (status=-1) cần được xóa khỏi danh sách đang theo dõi (0, 1, 2)
             $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
                 $(this).remove();
                 if ($("#active-list-waiter").children('.order-row').length === 0 && !checkIsFilteringWaiter()) {
@@ -394,28 +414,24 @@
             });
         });
 
-        // Thêm xử lý cho hoàn tiền nếu cần Waiter theo dõi
         orderHub.on("OrderRefunded", (orderDto) => {
-            // Đơn hàng hoàn tiền (status=-2) cần được xóa khỏi danh sách đang theo dõi (0, 1, 2)
             $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
                 $(this).remove();
             });
         });
 
-          window.addEventListener("pageshow", function (event) {
-            // Nếu back/forward
+        window.addEventListener("pageshow", function (event) {
             if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
-                if (typeof connection !== "undefined") {
-                    if (connection.state !== "Connected") {
-                        connection.start()
-                            .then(() => console.log("✅ SignalR reconnected"))
+                if (typeof orderHub !== "undefined") {
+                    if (orderHub.state !== signalR.HubConnectionState.Connected) {
+                        orderHub.start()
+                            .then(() => console.log(" SignalR reconnected"))
                             .catch(() => {
                                 console.log(" Reconnect failed → reload page");
                                 window.location.reload();
                             });
                     }
                 } else {
-                    // Không có connection (chưa khởi tạo) → reload lại luôn
                     window.location.reload();
                 }
             }

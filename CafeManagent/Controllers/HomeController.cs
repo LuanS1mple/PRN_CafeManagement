@@ -41,7 +41,7 @@ namespace CafeManagent.Controllers
                 HttpContext.Session.SetInt32("StaffId", staff.StaffId);
                 HttpContext.Session.SetString("StaffName", staff.FullName ?? "");
                 HttpContext.Session.SetString("StaffRole", staff.Role?.RoleName ?? "");
-                await CreateToken(staff, HttpContext);
+                //await CreateToken(staff, HttpContext);
 
                 // Nếu RememberMe được chọn, có thể set cookie (tùy bạn)
                 if (RememberMe)
@@ -70,16 +70,16 @@ namespace CafeManagent.Controllers
             return View("Login");
         }
 
-        private async System.Threading.Tasks.Task CreateToken(Models.Staff staff, HttpContext context)
-        {
-            //Vo hieu hoa cac token cu
-            authenticationService.DisableRefreshToken(staff.StaffId);
-            //gan vao cookie 
-            string accessToken = authenticationService.CreateAccessToken(staff);
-            string refreshToken =await authenticationService.CreateRefreshToken(staff);
-            context.Response.Cookies.Append("RefreshToken", refreshToken);
-            context.Response.Cookies.Append("AccessToken", accessToken);
-        }
+        //private async System.Threading.Tasks.Task CreateToken(Models.Staff staff, HttpContext context)
+        //{
+        //    //Vo hieu hoa cac token cu
+        //    authenticationService.DisableRefreshToken(staff.StaffId);
+        //    //gan vao cookie 
+        //    string accessToken = authenticationService.CreateAccessToken(staff);
+        //    string refreshToken =await authenticationService.CreateRefreshToken(staff);
+        //    context.Response.Cookies.Append("RefreshToken", refreshToken);
+        //    context.Response.Cookies.Append("AccessToken", accessToken);
+        //}
 
         public IActionResult Privacy()
         {

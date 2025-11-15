@@ -6,5 +6,6 @@ namespace CafeManagent.Services.Interface.CustomerModule
     {
         Customer? GetByPhone(string phone);
         void UpdateLoyaltyPoints(int customerId, int points);
+        Customer Add(Customer customer);
     }
 }

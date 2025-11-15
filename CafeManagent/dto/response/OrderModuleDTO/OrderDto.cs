@@ -1,4 +1,4 @@
-﻿namespace CafeManagent.dto.order
+﻿namespace CafeManagent.dto.response.OrderModuleDTO
 {
     public class OrderDto
     {

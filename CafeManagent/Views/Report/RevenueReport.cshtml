@@ -1,0 +1,312 @@
+﻿@{
+    ViewData["Title"] = "Báo Cáo Doanh Thu";
+}
+
+<h2 class="text-center mb-4"><i class="fa-solid fa-chart-line me-2"></i>Báo Cáo Doanh Thu</h2>
+<hr />
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title fw-bold"><i class="fa-solid fa-filter me-2"></i>Bộ Lọc Báo Cáo</h5>
+        <div class="row g-3 align-items-end">
+
+            <div class="col-md-3">
+                <label class="form-label">Phạm vi nhanh:</label>
+                <select id="quickFilter" class="form-select">
+                    <option value="today">Hôm nay</option>
+                    <option value="this_week">Tuần này</option>
+                    <option value="this_month" selected>Tháng này</option>
+                    <option value="last_3_months">3 tháng gần nhất</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Từ ngày:</label>
+                <input type="date" id="startDate" class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Đến ngày:</label>
+                <input type="date" id="endDate" class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+                <button type="button" id="applyFilterBtn" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-magnifying-glass me-1"></i> Xem Báo Cáo
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<hr />
+
+<div class="row mb-5" id="kpiContainer">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-success text-white shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase fw-bold">Doanh Thu Thuần</div>
+                        <h3 class="display-6 fw-light" id="totalRevenue">0 VND</h3>
+                    </div>
+                    <i class="fa-solid fa-money-bill-wave fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-info text-white shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase fw-bold">Tổng Số Đơn Hoàn Thành</div>
+                        <h3 class="display-6 fw-light" id="completedOrders">0</h3>
+                    </div>
+                    <i class="fa-solid fa-check-circle fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-danger text-white shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase fw-bold">Số Đơn Bị Hoàn Tiền</div>
+                        <h3 class="display-6 fw-light" id="refundedOrders">0</h3>
+                    </div>
+                    <i class="fa-solid fa-reply fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-warning text-dark shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase fw-bold">Tổng Tiền Đền Bù</div>
+                        <h3 class="display-6 fw-light" id="compensationAmount">0 VND</h3>
+                    </div>
+                    <i class="fa-solid fa-sack-xmark fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white fw-bold"><i class="fa-solid fa-chart-area me-2"></i>Biểu Đồ Doanh Thu Thuần Theo Ngày/Tuần/Tháng</div>
+    <div class="card-body">
+        <canvas id="revenueChart" style="max-height: 450px;"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+    <script>
+        // Hàm Format tiền tệ Việt Nam
+        function formatCurrency(amount) {
+            return (amount ?? 0).toLocaleString('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+                minimumFractionDigits: 0
+            });
+        }
+
+        let revenueChart = null;
+
+        // Hàm vẽ/cập nhật biểu đồ
+        function updateChart(labels, data) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+
+            revenueChart = new Chart(ctx, {
+                type: 'bar', // Có thể dùng 'line' nếu muốn hiển thị xu hướng
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh Thu Thuần (VND)',
+                        data: data,
+                        backgroundColor: 'rgba(40, 167, 69, 0.7)', // Màu xanh lá của success
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Doanh Thu (VND)'
+                            },
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    // Hiển thị giá trị lớn dưới dạng triệu đồng
+                                    if (value >= 1000000) {
+                                        return (value / 1000000).toFixed(1) + ' Tr';
+                                    }
+                                    return value.toLocaleString('vi-VN');
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += formatCurrency(context.parsed.y);
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Hàm tính toán ngày bắt đầu/kết thúc dựa trên bộ lọc nhanh
+        function calculateDateRange(filterValue) {
+            const now = new Date();
+            let start = new Date(now);
+            let end = new Date(now);
+            end.setHours(23, 59, 59, 999);
+
+            switch (filterValue) {
+                case 'today':
+                    start.setHours(0, 0, 0, 0);
+                    break;
+                case 'this_week':
+                    // Chủ nhật là 0, Thứ Hai là 1
+                    const dayOfWeek = now.getDay();
+                    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Bắt đầu từ T2
+                    start.setDate(diff);
+                    start.setHours(0, 0, 0, 0);
+                    break;
+                case 'this_month':
+                    start.setDate(1);
+                    start.setHours(0, 0, 0, 0);
+                    break;
+                case 'last_3_months':
+                    // Chỉnh sửa để chỉ xem trong 3 tháng gần nhất (bao gồm cả tháng hiện tại)
+                    start.setMonth(now.getMonth() - 2);
+                    start.setDate(1);
+                    start.setHours(0, 0, 0, 0);
+                    // Giới hạn ngày kết thúc là hôm nay
+                    end = new Date(now);
+                    end.setHours(23, 59, 59, 999);
+                    break;
+            }
+
+            // Chuyển về định dạng YYYY-MM-DD
+            const formatDate = (date) => {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            };
+
+            return { start: formatDate(start), end: formatDate(end) };
+        }
+
+        // Hàm chính: Lấy dữ liệu và cập nhật UI
+        async function fetchReportData() {
+            const quickFilter = $('#quickFilter').val();
+            let startDate = $('#startDate').val();
+            let endDate = $('#endDate').val();
+
+            let finalStart, finalEnd;
+
+            if (quickFilter === 'custom' && startDate && endDate) {
+                finalStart = startDate;
+                finalEnd = endDate;
+            } else {
+                const range = calculateDateRange(quickFilter);
+                finalStart = range.start;
+                finalEnd = range.end;
+
+                // Cập nhật lại input date nếu dùng filter nhanh
+                $('#startDate').val(finalStart);
+                $('#endDate').val(finalEnd);
+            }
+
+            // Kiểm tra giới hạn 3 tháng gần nhất (nếu cần)
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            threeMonthsAgo.setDate(1);
+            threeMonthsAgo.setHours(0,0,0,0);
+
+            const selectedStart = new Date(finalStart);
+
+            if (selectedStart < threeMonthsAgo) {
+                alert("Chú ý: Báo cáo chỉ xem được trong vòng 3 tháng gần nhất!");
+                // Có thể reset lại filter nếu cần
+                // return;
+            }
+
+            try {
+                // Giả định bạn có 1 API Endpoint để lấy dữ liệu báo cáo
+                const apiUrl = `/Report/GetRevenueReportData?startDate=${finalStart}&endDate=${finalEnd}`;
+
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error("Lỗi khi tải dữ liệu báo cáo!");
+                }
+                const data = await response.json();
+
+                // 1. Cập nhật KPI
+                $('#totalRevenue').text(formatCurrency(data.totalRevenue));
+                $('#completedOrders').text(data.completedOrders);
+                $('#refundedOrders').text(data.refundedOrders);
+                $('#compensationAmount').text(formatCurrency(data.compensationAmount));
+
+                // 2. Cập nhật Biểu đồ
+                updateChart(data.chartLabels, data.chartData);
+
+            } catch (error) {
+                console.error("Lỗi báo cáo:", error);
+                alert("Không thể tải báo cáo doanh thu. Vui lòng thử lại.");
+            }
+        }
+
+        // Xử lý sự kiện thay đổi filter
+        $('#quickFilter').change(function() {
+            const val = $(this).val();
+            if (val === 'custom') {
+                $('#startDate').prop('disabled', false);
+                $('#endDate').prop('disabled', false);
+            } else {
+                const range = calculateDateRange(val);
+                $('#startDate').val(range.start).prop('disabled', true);
+                $('#endDate').val(range.end).prop('disabled', true);
+            }
+        });
+
+        $('#applyFilterBtn').click(fetchReportData);
+
+        // Khởi tạo trang: Thiết lập mặc định là "Tháng này" và tải dữ liệu ban đầu
+        $(document).ready(function() {
+            // Thiết lập mặc định cho tháng này
+            $('#quickFilter').trigger('change');
+
+            // Tải dữ liệu lần đầu
+            fetchReportData();
+        });
+    </script>
+}

@@ -1,13 +1,13 @@
-﻿using CafeManagent.dto.Order;
+﻿using CafeManagent.dto.request.OrderModuleDTO;
 using CafeManagent.Models;
-using CafeManagent.Services.Interface;
 using CafeManagent.Services.Interface.CustomerModule;
+using CafeManagent.Services.Interface.OrderModule;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CafeManagent.Services
+namespace CafeManagent.Services.Imp.OrderModule
 {
     public class OrderService : IOrderService
     {

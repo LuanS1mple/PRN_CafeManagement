@@ -16,27 +16,51 @@ namespace CafeManagent.Services.Imp
             _vnpayConfig = vnpayConfig.Value;
         }
 
+        // Trong VnPayService.cs
+
+        // Trong VnPayService.cs
+
         public string CreatePaymentUrl(string orderId, decimal amount, HttpContext context)
         {
-            var timeZoneId = "SE Asia Standard Time"; // Timezone cho VN
+            var timeZoneId = "SE Asia Standard Time";
             var createDate = DateTime.Now.InTimezone(timeZoneId);
 
             var vnpay = new VnPayHelper();
 
+            // 1. Lấy và CHUẨN HÓA IP 💡
+            var ipAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                ipAddress = context.Connection.RemoteIpAddress?.ToString();
+            }
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                ipAddress = "127.0.0.1";
+            }
+            // Chuẩn hóa IP IPv6 (::1) thành IPv4 (127.0.0.1) cho VNPAY nếu chạy localhost
+            if (ipAddress == "::1")
+            {
+                ipAddress = "127.0.0.1";
+            }
+
+            // 2. CHUẨN HÓA SỐ TIỀN (nhân 100)
+            long vnpAmount = (long)Math.Round(amount * 100, 0);
+            string orderInfoRaw = $"{orderId}";
+
+
             vnpay.AddRequestData("vnp_Version", "2.1.0");
             vnpay.AddRequestData("vnp_Command", "pay");
             vnpay.AddRequestData("vnp_TmnCode", _vnpayConfig.TmnCode);
-            vnpay.AddRequestData("vnp_Amount", (amount * 100).ToString()); // Số tiền phải nhân 100
+            vnpay.AddRequestData("vnp_Amount", vnpAmount.ToString());
+
             vnpay.AddRequestData("vnp_CreateDate", createDate.ToString("yyyyMMddHHmmss"));
             vnpay.AddRequestData("vnp_CurrCode", "VND");
-            vnpay.AddRequestData("vnp_IpAddr", context.Connection.RemoteIpAddress?.ToString());
+            vnpay.AddRequestData("vnp_IpAddr", ipAddress); 
             vnpay.AddRequestData("vnp_Locale", "vn");
-            vnpay.AddRequestData("vnp_OrderInfo", $"Thanh toan don hang {orderId}");
-            vnpay.AddRequestData("vnp_OrderType", "other"); // Hoặc billpayment
+            vnpay.AddRequestData("vnp_OrderInfo", orderInfoRaw); 
+            vnpay.AddRequestData("vnp_OrderType", "other");
             vnpay.AddRequestData("vnp_ReturnUrl", _vnpayConfig.ReturnUrl);
-            vnpay.AddRequestData("vnp_TxnRef", orderId); // Mã giao dịch của bạn (tạm thời dùng OrderId)
-
-
+            vnpay.AddRequestData("vnp_TxnRef", orderId);
             string paymentUrl = vnpay.CreateRequestUrl(_vnpayConfig.BaseUrl, _vnpayConfig.HashSecret);
             return paymentUrl;
         }
