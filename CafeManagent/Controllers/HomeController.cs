@@ -70,16 +70,16 @@ namespace CafeManagent.Controllers
             return View("Login");
         }
 
-        //private async System.Threading.Tasks.Task CreateToken(Models.Staff staff, HttpContext context)
-        //{
-        //    //Vo hieu hoa cac token cu
-        //    authenticationService.DisableRefreshToken(staff.StaffId);
-        //    //gan vao cookie 
-        //    string accessToken = authenticationService.CreateAccessToken(staff);
-        //    string refreshToken =await authenticationService.CreateRefreshToken(staff);
-        //    context.Response.Cookies.Append("RefreshToken", refreshToken);
-        //    context.Response.Cookies.Append("AccessToken", accessToken);
-        //}
+        private async System.Threading.Tasks.Task CreateToken(Models.Staff staff, HttpContext context)
+        {
+            //Vo hieu hoa cac token cu
+            authenticationService.DisableRefreshToken(staff.StaffId);
+            //gan vao cookie 
+            string accessToken = authenticationService.CreateAccessToken(staff);
+            string refreshToken = await authenticationService.CreateRefreshToken(staff);
+            context.Response.Cookies.Append("RefreshToken", refreshToken);
+            context.Response.Cookies.Append("AccessToken", accessToken);
+        }
 
         public IActionResult Privacy()
         {
