@@ -44,7 +44,7 @@ namespace CafeManagent.Controllers.Manager.TaskModule
             return (userIdInt, null);
         }
 
-        //[Authorize(Roles = "Branch Manager")]
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> Index(string searchString, string statusFilter, string startDate, string endDate)
         {
             var tasks = await _taskService.GetTasksAsync(searchString, statusFilter, startDate, endDate);
@@ -52,7 +52,7 @@ namespace CafeManagent.Controllers.Manager.TaskModule
         }
 
         [HttpGet]
-        //[Authorize(Roles = "Branch Manager")]
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> Create()
         {
             ViewBag.Staffs = await _taskService.GetAllStaffAsync();
@@ -61,7 +61,7 @@ namespace CafeManagent.Controllers.Manager.TaskModule
         }
 
         [HttpPost]
-        //[Authorize(Roles = "Branch Manager")]
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> Create(Models.Task task)
         {
             var (managerId, errorResult) = GetCurrentUserId();
@@ -141,7 +141,7 @@ namespace CafeManagent.Controllers.Manager.TaskModule
             return RedirectToAction("Index");
         }
 
-        //[Authorize(Roles = "Branch Manager")]
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> Edit(int id)
         {
             var task = await _taskService.GetTaskByIdAsync(id);
@@ -154,7 +154,7 @@ namespace CafeManagent.Controllers.Manager.TaskModule
         }
 
         [HttpPost]
-        //[Authorize(Roles = "Branch Manager")]
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> Edit(Models.Task updateTask)
         {
             var (managerId, errorResult) = GetCurrentUserId();
@@ -241,7 +241,7 @@ namespace CafeManagent.Controllers.Manager.TaskModule
 
             try
             {
-                var success = await _taskService.UpdateTaskStatusAsync(taskId, newStatus, staffId.Value);
+                var success = await _taskService.UpdateTaskStatusAsync(taskId, newStatus);
                 if (!success)
                 {
                     SystemNotify notify1 = new SystemNotify()
