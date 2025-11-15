@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Màn hình Waiter";
     var activeOrders = ViewBag.ActiveOrders as List<OrderDto> ?? new List<OrderDto>();
+    // Sắp xếp đơn hàng: Status giảm dần (2, 1, 0), OrderId tăng dần (đơn cũ hơn lên trước)
     var sortedOrders = activeOrders
         .OrderByDescending(o => o.Status)
         .ThenBy(o => o.OrderId)
@@ -70,7 +71,6 @@
                             {
                                 @foreach (var order in sortedOrders)
                                 {
-                                    @* Sử dụng HTML trực tiếp để tránh Partial View phụ thuộc vào Model.Order *@
                                     <tr class="order-row" id="order-@order.OrderId" data-status="@(order.Status ?? 0)">
                                         <th scope="row">#@order.OrderId</th>
                                         <td>@order.CustomerName</td>
@@ -108,7 +108,7 @@
     </div>
 </div>
 
-@* Modals (Confirm/Cancel - giữ nguyên) *@
+@* Modals *@
 <div class="modal fade" id="confirmWaiterModal" tabindex="-1" aria-labelledby="confirmWaiterModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -144,7 +144,6 @@
         </div>
     </div>
 </div>
-@* Thêm Modal tạo đơn mới nếu cần, hoặc giả định nó đã có ở một Partial View khác *@
 
 @section Scripts {
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
@@ -284,13 +283,10 @@
                 $("#active-empty-waiter").remove();
 
                 let activeOrders = data.orders.filter(o => o.status >= 0 && o.status <= 2);
-
-                // Sửa Logic Sắp xếp: Ưu tiên Status cao hơn, nếu Status bằng nhau thì ưu tiên OrderId nhỏ hơn (đơn cũ hơn)
                 activeOrders.sort((a, b) => {
                     if (b.status !== a.status) {
-                        return b.status - a.status; // 2 > 1 > 0
+                        return b.status - a.status;
                     }
-                    // Nếu Status bằng nhau, ưu tiên ID nhỏ hơn (cũ hơn)
                     return a.orderId - b.orderId;
                 });
 
@@ -321,6 +317,7 @@
 
         let selectedOrderId = null;
 
+        // Gắn sự kiện lấy ID cho cả hai modal khi chuẩn bị mở
         $('#confirmWaiterModal').on('show.bs.modal', function (event) {
             const button = $(event.relatedTarget);
             selectedOrderId = button.data('id');
@@ -333,14 +330,23 @@
             $('#waiter-order-id-cancel').text(selectedOrderId);
         });
 
+        // THÊM: Reset selectedOrderId khi Modal đóng hoàn toàn
+        $('#confirmWaiterModal, #confirmCancelModal').on('hidden.bs.modal', function () {
+            selectedOrderId = null;
+        });
+
+
         $("#confirmWaiterBtnAction").click(function() {
             if (selectedOrderId) {
                 $.post("/Order/ConfirmByWaiter", { id: selectedOrderId })
                     .fail(function() {
                         alert("Lỗi kết nối máy chủ khi xác nhận!");
                     });
+
+               
+                $(this).blur();
+
                 $('#confirmWaiterModal').modal('hide');
-                selectedOrderId = null;
             }
         });
 
@@ -350,13 +356,16 @@
                     .fail(function() {
                         alert("Lỗi kết nối máy chủ khi hủy đơn!");
                     });
+
+                // 🛠️ FIX ARIA: Buộc nút mất focus trước khi ẩn modal
+                $(this).blur();
+
                 $('#confirmCancelModal').modal('hide');
-                selectedOrderId = null;
             }
         });
 
 
-        // --- SignalR Real-time Updates (ĐÃ CẬP NHẬT để sử dụng DTO) ---
+        // --- SignalR Real-time Updates ---
 
         orderHub.on("OrderCreated", (orderDto) => {
             const status = orderDto.status ?? 0;
@@ -428,5 +437,4 @@
             }
         });
     </script>
-
 }

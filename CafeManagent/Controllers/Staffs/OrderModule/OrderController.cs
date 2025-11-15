@@ -10,6 +10,7 @@ using CafeManagent.Services.Interface;
 using CafeManagent.Services.Interface.CustomerModule;
 using CafeManagent.Services.Interface.OrderModule;
 using CafeManagent.Services.Interface.ProductModule;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System;
@@ -39,7 +40,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
         }
 
         //view
-
+        [Authorize(Roles = "Cashier")]
         public IActionResult Waiter() 
         {
             var activeOrders = _svc.GetByStatuses(0)
@@ -50,7 +51,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
             ViewBag.ActiveOrders = ToDto(activeOrders);
             return View();
         }
-
+        [Authorize(Roles = "Barista")]
         public IActionResult Bartender()
         {
             var activeOrders = _svc.GetByStatuses(0)
@@ -60,7 +61,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
             ViewBag.ActiveOrders = ToDto(activeOrders);
             return View();
         }
-
+        [Authorize(Roles = "Cashier")]
         public IActionResult AddOrder()
         {
             var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
@@ -70,12 +71,13 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
             return View();
         }
 
-
+        [Authorize(Roles = "Barista")]
         public IActionResult CompletedHistory()
         {
             var completedOrders = ToDto(_svc.GetByStatuses(3));
             return View(completedOrders);
         }
+        [Authorize(Roles = "Barista")]
         public IActionResult BartenderHistory()
         {
             var readyOrders = _svc.GetByStatuses(2);
@@ -156,6 +158,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 }
             });
         }
+
         [HttpPost]
         public IActionResult CreateDraft([FromBody] OrderDraftDto draft)
         {
@@ -209,7 +212,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 return Json(new { success = false, message = $"Lỗi hệ thống khi tạo nháp: {ex.Message}" });
             }
         }
-
+        [Authorize(Roles = "Cashier")]
         public IActionResult DraftView()
         {
             var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
@@ -220,18 +223,24 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
             }
             return View(draftDetails); 
         }
+      
         [HttpPost]
+        [Authorize(Roles = "Cashier")]
         public IActionResult CancelDraft()
         {
             return RedirectToAction("AddOrder");
         }
+
         [HttpPost]
+        [Authorize(Roles = "Cashier")]
         public IActionResult CancelCompleteDraft()
         {
             HttpContext.Session.Remove(SESSION_KEY_DRAFT);
             return RedirectToAction("AddOrder");
         }
+        
         [HttpPost]
+        [Authorize(Roles = "Cashier")]
         public async Task<IActionResult> CompletePayment(string paymentMethod)
         {
             var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
@@ -293,7 +302,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 return Json(new { success = false, message = $"Lỗi lưu DB hoặc cập nhật điểm: {ex.Message}" });
             }
         }
-
+        [Authorize(Roles = "Cashier")]
         public IActionResult AllHistory(string query, int? statusFilter, string dateFilter)
         {
 
@@ -330,6 +339,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
         }
 
         //action status
+        [Authorize(Roles = "Cashier")]
         public IActionResult Details(int id)
         {
             string staffRole = HttpContext.Session.GetString("StaffRole");
@@ -351,6 +361,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
         //}
 
         [HttpPost]
+        [Authorize(Roles = "Cashier")]
         public async Task<IActionResult> Cancel(int id)
         {
             var ok = _svc.Cancel(id);
@@ -382,6 +393,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
         }
 
         [HttpPost]
+        [Authorize(Roles = "Cashier")]
         public async Task<IActionResult> StartPreparing(int id)
         {
             var ok = _svc.SetPreparing(id);
@@ -403,6 +415,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
         }
 
         [HttpPost]
+        [Authorize(Roles = "Cashier")]
         public async Task<IActionResult> MarkReady(int id)
         {
             var ok = _svc.SetReady(id);
@@ -424,6 +437,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
 
 
         [HttpPost]
+        [Authorize(Roles = "Cashier")]
         public async Task<IActionResult> ConfirmByWaiter(int id)
         {
             var ok = _svc.ConfirmDelivered(id);
@@ -444,6 +458,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
         }
 
         [HttpPost]
+        [Authorize(Roles = "Cashier")]
         public async Task<IActionResult> Refund(int id)
         {
             var ok = _svc.SetRefunded(id);
@@ -530,43 +545,177 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
             return Json(new { success = true, orders = result });
         }
 
-        // pament
         [HttpPost]
-public IActionResult ProcessVnPay()
-{
-    var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
-    
-    if (draftDetails == null)
-    {
-        return Json(new { success = false, message = "Không tìm thấy bản nháp để xử lý VNPay." });
-    }
-    
-    try
-    {
-        // 1. Map DTO sang Order Model chính thức VỚI STATUS CHỜ THANH TOÁN (Status: 1)
-        int? staffId = HttpContext.Session.GetInt32("StaffId");
-        var tempOrder = DraftOrderMapper.MapDraftToOrder( // *Lưu ý: Bạn cần đảm bảo đã đổi tên DraftOrderMapper trong file using*
-            draftDetails, 
-            paymentMethod: "Online", 
-            status: 1, 
-            staffId: staffId
-        );
 
-        var savedTempOrder = _svc.Add(tempOrder); 
-        HttpContext.Session.SetInt32("ProcessingOrderId", savedTempOrder.OrderId);
-        string paymentUrl = _vnpaySvc.CreatePaymentUrl(
-            savedTempOrder.OrderId.ToString(), 
-            savedTempOrder.TotalAmount ?? 0, 
-            HttpContext
-        );
-        
-        return Json(new { success = true, redirectUrl = paymentUrl });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = $"Lỗi tạo URL VNPay: {ex.Message}" });
-    }
-}
+        public IActionResult ProcessVnPay()
+        {
+            var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
+
+            if (draftDetails == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy bản nháp để xử lý VNPay." });
+            }
+
+            try
+            {
+                int? customerId = draftDetails.Customer?.CustomerId;
+                if (draftDetails.Customer != null && draftDetails.Customer.CustomerId == 0)
+                {
+                    var newCustomer = new Customer
+                    {
+                        FullName = draftDetails.Customer.FullName,
+                        Phone = draftDetails.Customer.Phone,
+                        LoyaltyPoint = 0
+                    };
+                    var savedCustomer = _customerSvc.Add(newCustomer);
+                    customerId = savedCustomer.CustomerId;
+                }
+                int? staffId = HttpContext.Session.GetInt32("StaffId");
+                var tempOrder = DraftOrderMapper.MapDraftToOrder(
+                    draftDetails,
+                    paymentMethod: "Online",
+                    status: 0, 
+                    staffId: staffId,
+                    newCustomerId: customerId
+                );
+
+                var savedTempOrder = _svc.Add(tempOrder);
+                HttpContext.Session.SetInt32("ProcessingOrderId", savedTempOrder.OrderId);
+
+                string paymentUrl = _vnpaySvc.CreatePaymentUrl(
+                    savedTempOrder.OrderId.ToString(),
+                    savedTempOrder.TotalAmount ?? 0,
+                    HttpContext
+                );
+
+                return Json(new { success = true, redirectUrl = paymentUrl });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Lỗi tạo URL VNPay: {ex.Message}" });
+            }
+        }
+        [HttpGet]
+        public IActionResult CheckOrderStatusApi(int id)
+        {
+            // 1. Tìm đơn hàng theo ID
+            var order = _svc.GetById(id);
+
+            if (order == null)
+            {
+
+                return Json(new
+                {
+                    success = false,
+                    message = "Không tìm thấy đơn hàng.",
+                    orderId = id,
+                    status = -1
+                });
+            }
+
+            return Json(new
+            {
+                success = true,
+                orderId = order.OrderId,
+                status = order.Status ?? 0, // Trạng thái hiện tại
+                statusText = StatusText(order.Status),
+                totalAmount = order.TotalAmount ?? 0,
+                orderTime = order.OrderDate?.ToString("HH:mm:ss dd/MM") ?? ""
+            });
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> VnPayReturn()
+        {
+            // Lấy thông tin phản hồi từ query string
+            var response = _vnpaySvc.ProcessVnPayReturn(Request.Query);
+
+            // Lấy OrderId tạm thời và Draft Details
+            int? tempOrderId = HttpContext.Session.GetInt32("ProcessingOrderId");
+            var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
+
+            // Xóa ProcessingOrderId ngay sau khi lấy
+            HttpContext.Session.Remove("ProcessingOrderId");
+
+            if (tempOrderId == null || draftDetails == null)
+            {
+                // Nếu không tìm thấy ID tạm hoặc Draft, chuyển hướng.
+                return RedirectToAction("CompletedHistory");
+            }
+
+            if (response.ResponseCode == "00" && response.IsSuccess)
+            {
+   
+                try
+                {
+                    _svc.Cancel(tempOrderId.Value);
+                    int? customerId = draftDetails.Customer?.CustomerId;
+                    int pointsEarned = draftDetails.PointsEarned;
+
+                    if (draftDetails.Customer != null && draftDetails.Customer.CustomerId == 0)
+                    {
+                        var newCustomer = new Customer
+                        {
+                            FullName = draftDetails.Customer.FullName,
+                            Phone = draftDetails.Customer.Phone,
+                            LoyaltyPoint = 0
+                        };
+                        var savedCustomer = _customerSvc.Add(newCustomer);
+                        customerId = savedCustomer.CustomerId;
+                    }
+
+                    // Map Draft sang Order Model (Status 0: Chờ)
+                    int? staffId = HttpContext.Session.GetInt32("StaffId");
+                    var newOrder = DraftOrderMapper.MapDraftToOrder(
+                        draftDetails,
+                        paymentMethod: "Online", // Xác định phương thức thanh toán
+                        status: 0, // Trạng thái ban đầu: Chờ
+                        staffId: staffId,
+                        newCustomerId: customerId
+                    );
+                    var savedOrder = _svc.Add(newOrder); // TẠO ORDER MỚI CUỐI CÙNG
+
+                    // 3. CẬP NHẬT ĐIỂM TÍCH LŨY (Vì thanh toán đã xong)
+                    if (customerId.HasValue && pointsEarned > 0)
+                    {
+                        _customerSvc.UpdateLoyaltyPoints(customerId.Value, pointsEarned);
+                    }
+
+                    // 4. Xóa Session Draft
+                    HttpContext.Session.Remove(SESSION_KEY_DRAFT);
+
+                    // 5. Gửi SignalR thông báo đơn hàng mới
+                    int STAFF_ID = HttpContext.Session.GetInt32("StaffId") ?? 0;
+                    SystemNotify systemNotify = new SystemNotify()
+                    {
+                        IsSuccess = true,
+                        Message = NotifyMessage.CREATE_ORDER.Message
+                    };
+                    ResponseHub.SetNotify(STAFF_ID, systemNotify);
+                    await _hub.Clients.All.SendAsync("OrderCreated", ToDto(savedOrder));
+
+                    // 6. CHUYỂN HƯỚNG VỀ TRANG WAITER/DETAILS CỦA ĐƠN HÀNG MỚI
+                    // Hành động này sẽ được thực hiện khi VNPay Redirect trình duyệt người dùng
+                    return RedirectToAction("Details", new { id = savedOrder.OrderId, success = true });
+                }
+                catch (Exception ex)
+                {
+                    // Xử lý lỗi trong quá trình lưu DB (nên hủy đơn hàng tạm để tránh rác DB)
+                    _svc.Cancel(tempOrderId.Value);
+                    TempData["VnPayError"] = $"Thanh toán VNPay thành công nhưng lỗi lưu DB: {ex.Message}";
+                    return RedirectToAction("AddOrder");
+                }
+            }
+            else
+            {
+                // THANH TOÁN THẤT BẠI: Hủy đơn hàng tạm và chuyển hướng về trang tạo đơn
+                _svc.Cancel(tempOrderId.Value);
+                TempData["VnPayError"] = response.Message;
+                return RedirectToAction("AddOrder");
+            }
+        }
+
 
 
         // --- HELPERS ---

@@ -277,21 +277,7 @@
                 notifyCount = 0;
         });
 
-                // XÓA HOẶC COMMENT ĐOẠN CODE NÀY!
-        document.addEventListener('hidden.bs.modal', function (e) {
-            const modal = e.target;
 
-            // Các lệnh can thiệp thủ công này gây xung đột
-            if (modal.querySelector(':focus')) {
-                modal.querySelector(':focus').blur();
-            }
-
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(b => b.remove());
-
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-        });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 
