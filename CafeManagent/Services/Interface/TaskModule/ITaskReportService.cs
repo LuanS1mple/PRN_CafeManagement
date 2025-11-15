@@ -6,5 +6,6 @@ namespace CafeManagent.Services.Interface.TaskModule
     {
         Task<Dictionary<int, int>> GetTaskSummaryAsync();
         Task<List<TaskReportDTO>> GetTasksByStatusAsync(int statusId);
+        Task<byte[]> GenerateExcelReportAsync();
     }
 }

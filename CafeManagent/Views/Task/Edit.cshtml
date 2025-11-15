@@ -1,0 +1,100 @@
+﻿@model CafeManagent.Models.Task
+@using CafeManagent.Models
+
+@{
+    ViewData["Title"] = "Chi tiết công việc";
+}
+
+<div class="container-fluid px-4 py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">@ViewData["Title"] (ID: @Model.TaskId)</h4>
+                </div>
+                <form id="editTaskForm" method="post" asp-controller="Task" asp-action="Edit">
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                        <input type="hidden" asp-for="TaskId" />
+
+                        @* ... (Giữ nguyên các trường: TasktypeId, ManagerId, AssignTime, DueTime, StaffId) ... *@
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="TasktypeId">Loại công việc</label>
+                            <select asp-for="TasktypeId" class="form-select" required>
+                                <option value="">-- Chọn loại công việc --</option>
+                                @if (ViewBag.TaskTypes != null)
+                                {
+                                    foreach (var type in (IEnumerable<TaskType>)ViewBag.TaskTypes)
+                                    {
+                                        <option value="@type.TasktypeId" selected="@(Model.TasktypeId == type.TasktypeId)">@type.TaskName</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="TasktypeId" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="ManagerId">Người quản lý (Người giao việc)</label>
+                            <select asp-for="ManagerId" class="form-select" required>
+                                <option value="">-- Chọn người quản lý --</option>
+                                @if (ViewBag.Managers != null)
+                                {
+                                    foreach (var manager in (IEnumerable<Staff>)ViewBag.Managers)
+                                    {
+                                        <option value="@manager.StaffId" selected="@(Model.ManagerId == manager.StaffId)">@manager.FullName</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="ManagerId" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="AssignTime">Thời gian bắt đầu</label>
+                            <input type="datetime-local" asp-for="AssignTime"
+                                   class="form-control" value="@Model.AssignTime?.ToString("yyyy-MM-ddTHH:mm")" />
+                            <span asp-validation-for="AssignTime" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="DueTime">Thời hạn</label>
+                            <input type="datetime-local" asp-for="DueTime"
+                                   class="form-control" value="@Model.DueTime?.ToString("yyyy-MM-ddTHH:mm")" />
+                            <span asp-validation-for="DueTime" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="StaffId">Nhân viên</label>
+                            <select asp-for="StaffId" class="form-select">
+                                <option value="0">-- Chọn nhân viên (Không bắt buộc) --</option>
+                                @if (ViewBag.Staffs != null)
+                                {
+                                    foreach (var staff in (IEnumerable<Staff>)ViewBag.Staffs)
+                                    {
+                                        <option value="@staff.StaffId" selected="@(Model.StaffId == staff.StaffId)">@staff.FullName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <!-- --- CẬP NHẬT --- -->
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Status">Trạng thái</label>
+                            <select asp-for="Status" class="form-select" required>
+                                <option value="0">Chưa bắt đầu</option>
+                                <option value="1">Đang tiến hành</option>
+                                <option value="2">Hoàn thành</option>
+                                <option value="3">Đã hủy</option>
+                                <option value="4">Hết hạn</option>
+                                <option value="5">Làm lại</option>
+                                <option value="6">Chờ xác nhận</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+                        <!-- --- KẾT THÚC CẬP NHẬT --- -->
+                    </div>
+                    <div class="card-footer text-end">
+                        <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

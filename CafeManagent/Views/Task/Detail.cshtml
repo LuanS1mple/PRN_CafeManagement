@@ -1,0 +1,250 @@
+﻿@model IEnumerable<CafeManagent.Models.Task>
+@using CafeManagent.Models
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = ViewData["Title"] ?? "Công việc của tôi";
+}
+
+@section Styles {
+    <style>
+        .task-status-badge {
+            min-width: 100px;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .highlight-update {
+            animation: highlight-yellow 2s ease-out;
+        }
+
+        @@keyframes highlight-yellow {
+            0% {
+                background-color: #fffb00;
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        .task-actions form {
+            display: inline-block;
+            margin: 0 2px;
+        }
+    </style>
+}
+
+<div class="border-bottom bg-white">
+    <div class="container-fluid px-4 py-3 d-flex align-items-center gap-3">
+        <div class="p-2 bg-primary rounded-3 text-white fw-bold fs-5 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+            📋
+        </div>
+        <div>
+            <h1 class="fs-4 fw-semibold mb-0">@ViewData["Title"]</h1>
+            <p class="text-muted mb-0">Các nhiệm vụ đã được giao cho bạn</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-4 py-4">
+    <div class="table-responsive bg-white shadow-sm rounded">
+        <table class="table table-hover table-striped mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã CV</th>
+                    <th>Tên công việc</th>
+                    <th>Mô tả</th>
+                    <th>Người quản lý</th>
+                    <th>Thời gian bắt đầu</th>
+                    <th>Thời hạn</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end">Chức năng</th>
+                </tr>
+            </thead>
+            <tbody id="tasksTableBody">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var task in Model)
+                    {
+                        <tr class="align-middle" id="task-row-@task.TaskId">
+                            <td>@task.TaskId</td>
+                            <td class="fw-medium text-dark cell-task-name">@((task.Tasktype?.TaskName) ?? "—")</td>
+                            <td class="text-muted cell-task-description">@((task.Tasktype?.Description) ?? "—")</td>
+                            <td class="cell-task-manager">@((task.Manager?.FullName) ?? "—")</td>
+                            <td class="cell-task-assign">@((task.AssignTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td>
+                            <td class="cell-task-due">@((task.DueTime?.ToString("dd/MM/yyyy HH:mm")) ?? "—")</td>
+                            <td class="cell-task-status">
+                                @{
+                                    string statusLabel = "Không xác định";
+                                    string statusClass = "badge rounded-pill task-status-badge ";
+                                    switch (task.Status)
+                                    {
+                                        case 0: statusLabel = "Chưa bắt đầu"; statusClass += "bg-primary"; break;
+                                        case 1: statusLabel = "Đang tiến hành"; statusClass += "bg-warning text-dark"; break;
+                                        case 2: statusLabel = "Hoàn thành"; statusClass += "bg-success"; break;
+                                        case 3: statusLabel = "Đã hủy"; statusClass += "bg-danger"; break;
+                                        case 4: statusLabel = "Hết hạn"; statusClass += "bg-dark"; break;
+                                        case 5: statusLabel = "Làm lại"; statusClass += "bg-info"; break;
+                                        case 6: statusLabel = "Chờ xác nhận"; statusClass += "bg-secondary"; break;
+                                    }
+                                }
+                                <span class="@statusClass">@statusLabel</span>
+                            </td>
+                            <td class="text-end task-actions cell-task-actions">
+                                @if (task.Status == 0 || task.Status == 1 || task.Status == 4 || task.Status == 5)
+                                {
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <form action="@Url.Action("UpdateTaskStatus","Task")" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="taskId" value="@task.TaskId" />
+                                            <button type="submit" name="newStatus" value="6" class="btn btn-success" title="Hoàn thành">✔️</button>
+                                        </form>
+                                        <form action="@Url.Action("UpdateTaskStatus","Task")" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="taskId" value="@task.TaskId" />
+                                            <button type="submit" name="newStatus" value="5" class="btn btn-warning text-dark" title="Báo lỗi / Yêu cầu làm lại">⚠️</button>
+                                        </form>
+                                        <form action="@Url.Action("UpdateTaskStatus","Task")" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="taskId" value="@task.TaskId" />
+                                            <button type="submit" name="newStatus" value="3" class="btn btn-danger" title="Hủy công việc">❌</button>
+                                        </form>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic small">Đã chốt</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr id="no-tasks-row"><td colspan="8" class="text-center text-muted py-4">Bạn không có công việc nào được giao.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/signalr/signalr.min.js"></script>
+    <script>
+        let requestVerificationToken = "";
+        function getAntiForgeryToken() {
+            if (requestVerificationToken) return requestVerificationToken;
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (tokenInput) requestVerificationToken = tokenInput.value;
+            return requestVerificationToken;
+        }
+
+        function getStatusBadgeInfo(status) {
+            let statusLabel = "Không xác định";
+            let statusClass = "badge rounded-pill task-status-badge ";
+            switch (status) {
+                case 0: statusLabel = "Chưa bắt đầu"; statusClass += "bg-primary"; break;
+                case 1: statusLabel = "Đang tiến hành"; statusClass += "bg-warning text-dark"; break;
+                case 2: statusLabel = "Hoàn thành"; statusClass += "bg-success"; break;
+                case 3: statusLabel = "Đã hủy"; statusClass += "bg-danger"; break;
+                case 4: statusLabel = "Hết hạn"; statusClass += "bg-dark"; break;
+                case 5: statusLabel = "Làm lại"; statusClass += "bg-info"; break;
+                case 6: statusLabel = "Chờ xác nhận"; statusClass += "bg-secondary"; break;
+            }
+            return { statusLabel, statusClass };
+        }
+
+        function formatDateTime(dateTimeString) {
+            if (!dateTimeString) return "—";
+            const date = new Date(dateTimeString);
+            return date.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function createTaskActionsHtml(task) {
+            const postUrl = "@Url.Action("UpdateTaskStatus", "Task")";
+            const token = getAntiForgeryToken();
+            const tokenInput = `<input name="__RequestVerificationToken" type="hidden" value="${token}" />`;
+
+            if ([0, 1, 4, 5].includes(task.status)) {
+                return `
+                    <div class="btn-group btn-group-sm" role="group">
+                        <form action="${postUrl}" method="post" class="d-inline">${tokenInput}<input type="hidden" name="taskId" value="${task.taskId}" /><button type="submit" name="newStatus" value="6" class="btn btn-success" title="Hoàn thành">✔️</button></form>
+                        <form action="${postUrl}" method="post" class="d-inline">${tokenInput}<input type="hidden" name="taskId" value="${task.taskId}" /><button type="submit" name="newStatus" value="5" class="btn btn-warning text-dark" title="Báo lỗi / Yêu cầu làm lại">⚠️</button></form>
+                        <form action="${postUrl}" method="post" class="d-inline">${tokenInput}<input type="hidden" name="taskId" value="${task.taskId}" /><button type="submit" name="newStatus" value="3" class="btn btn-danger" title="Hủy công việc">❌</button></form>
+                    </div>`;
+            } else {
+                return `<span class="text-muted fst-italic small">Đã chốt</span>`;
+            }
+        }
+
+        function updateTaskRow(row, task) {
+            const { statusLabel, statusClass } = getStatusBadgeInfo(task.status);
+            row.querySelector('.cell-task-name').textContent = task.tasktypeName || "—";
+            row.querySelector('.cell-task-description').textContent = task.description || "—";
+            row.querySelector('.cell-task-manager').textContent = task.managerName || "—";
+            row.querySelector('.cell-task-assign').textContent = formatDateTime(task.assignTime);
+            row.querySelector('.cell-task-due').textContent = formatDateTime(task.dueTime);
+            row.querySelector('.cell-task-status').innerHTML = `<span class="${statusClass}">${statusLabel}</span>`;
+            row.querySelector('.cell-task-actions').innerHTML = createTaskActionsHtml(task);
+        }
+
+        function createTaskRowHtml(task) {
+            const { statusLabel, statusClass } = getStatusBadgeInfo(task.status);
+            return `
+                <tr class="align-middle" id="task-row-${task.taskId}">
+                    <td>${task.taskId}</td>
+                    <td class="fw-medium text-dark cell-task-name">${task.tasktypeName || "—"}</td>
+                    <td class="text-muted cell-task-description">${task.description || "—"}</td>
+                    <td class="cell-task-manager">${task.managerName || "—"}</td>
+                    <td class="cell-task-assign">${formatDateTime(task.assignTime)}</td>
+                    <td class="cell-task-due">${formatDateTime(task.dueTime)}</td>
+                    <td class="cell-task-status"><span class="${statusClass}">${statusLabel}</span></td>
+                    <td class="text-end task-actions cell-task-actions">${createTaskActionsHtml(task)}</td>
+                </tr>`;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/taskHub")
+                .configureLogging(signalR.LogLevel.Information)
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("ReceiveTaskUpdate", (task) => {
+                const rowId = `task-row-${task.taskId}`;
+                const row = document.getElementById(rowId);
+                const noTasksRow = document.getElementById('no-tasks-row');
+                if (noTasksRow) noTasksRow.remove();
+
+                if (row) {
+                    updateTaskRow(row, task);
+                    row.classList.add('highlight-update');
+                    setTimeout(() => row.classList.remove('highlight-update'), 2000);
+                } else {
+                    const newRowHtml = createTaskRowHtml(task);
+                    document.getElementById("tasksTableBody").insertAdjacentHTML('afterbegin', newRowHtml);
+                    const newRow = document.getElementById(rowId);
+                    newRow.classList.add('highlight-update');
+                    setTimeout(() => newRow.classList.remove('highlight-update'), 2000);
+                }
+            });
+
+            connection.on("ReceiveTaskRemove", (taskId) => {
+                const row = document.getElementById(`task-row-${taskId}`);
+                if (row) row.remove();
+            });
+
+            async function start() {
+                try {
+                    await connection.start();
+                } catch {
+                    setTimeout(start, 5000);
+                }
+            }
+
+            connection.onclose(start);
+            start();
+        });
+    </script>
+}

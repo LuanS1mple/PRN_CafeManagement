@@ -28,6 +28,7 @@ using CafeManagent.Services.Interface.WorkShiftModule;
 using CafeManagent.Ulties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CafeManagent.BackgroundWorkers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,7 +84,8 @@ builder.Services.AddRazorPages(o =>
 {
     o.Conventions.ConfigureFilter(new AutoValidateAntiforgeryTokenAttribute());
 });
-
+// workder service
+builder.Services.AddHostedService<TaskStatusBackgroundWorker>();
 
 var app = builder.Build();
 

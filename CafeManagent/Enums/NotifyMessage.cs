@@ -20,5 +20,15 @@
         public static readonly NotifyMessage THONG_BAO_CA_LAM = new("Ca làm của bạn đã bắt đầu");
         public static readonly NotifyMessage UPDATE_STATUS_ORDER = new("Cập nhật nhật trạng thái thành công ");
         public static readonly NotifyMessage CREATE_ORDER = new("Đơn hàng đã tạo mới thành công");
+
+        // Thông báo Task
+        public static readonly NotifyMessage TASK_CREATED_SUCCESS = new("Task mới đã được tạo thành công");
+        public static readonly NotifyMessage TASK_CREATED_FAIL = new("Task mới đã được tạo thất bại");
+        public static readonly NotifyMessage TASK_UPDATED_SUCCESS = new("Task đã được cập nhật thành công");
+        public static readonly NotifyMessage TASK_UPDATED_FAIL = new("Task đã được cập nhật thất bại");
+        public static readonly NotifyMessage TASK_COMPLETED = new("Task đã được hoàn thành");
+        public static readonly NotifyMessage TASK_ERROR = new("Task lỗi");
+        public static readonly NotifyMessage TASK_CANCELLED = new("Task bị hủy");
+
     }
 }
