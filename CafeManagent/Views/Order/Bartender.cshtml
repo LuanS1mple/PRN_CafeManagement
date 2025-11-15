@@ -1,13 +1,17 @@
-﻿@model dynamic
+﻿@using CafeManagent.dto.response.OrderModuleDTO
+@model dynamic
 @{
+    // Thiết lập tiêu đề trang
     ViewData["Title"] = "Màn hình Bartender";
-    var activeOrders = ViewBag.ActiveOrders as List<CafeManagent.dto.order.OrderDto> ?? new List<CafeManagent.dto.order.OrderDto>();
+
+    // Lấy danh sách đơn hàng đang hoạt động (Status 0: Chờ, 1: Đang chuẩn bị)
+    var activeOrders = ViewBag.ActiveOrders as List<OrderDto> ?? new List<OrderDto>();
 
     // Sắp xếp mặc định: Đang chuẩn bị (1) > Chờ (0)
-    var sortedOrders = activeOrders.OrderByDescending(o => o.Status).ToList();
+    var sortedOrders = activeOrders.OrderByDescending(o => o.Status).ThenBy(o => o.OrderId).ToList();
 }
 
-<h2 class="text-center mb-4">Màn hình Bartender </h2>
+<h2 class="text-center mb-4"><i class="fa-solid fa-mug-hot me-2"></i>Màn hình Bartender</h2>
 
 <div class="d-flex justify-content-between mb-3">
     <a href="/Order/BartenderHistory" class="btn btn-secondary">
@@ -15,8 +19,7 @@
     </a>
 </div>
 
-
-
+@* --- Bộ lọc và Tìm kiếm --- *@
 <div class="card mb-4 shadow-sm">
     <div class="card-body">
         <form id="bartenderFilterForm">
@@ -41,12 +44,11 @@
     </div>
 </div>
 
-
-
+@* --- Danh sách Đơn hàng Đang Xử Lý --- *@
 <div class="row">
     <div class="col-md-12">
         <div class="card bg-light mb-4 shadow-sm">
-            <div class="card-header bg-dark text-white fw-bold">Đơn Hàng Đang Xử Lý</div>
+            <div class="card-header bg-dark text-white fw-bold"><i class="fa-solid fa-clipboard-list me-2"></i>Đơn Hàng Đang Xử Lý</div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-striped table-hover align-middle">
@@ -65,15 +67,14 @@
                             {
                                 @foreach (var order in sortedOrders)
                                 {
-                                    @* Sử dụng logic nút bấm mới trong JS thay vì Partial View *@
                                     <tr class="order-row" id="order-@order.OrderId" data-status="@(order.Status ?? 0)">
                                         <th scope="row">#@order.OrderId</th>
-                                        <td>@order.CustomerName</td>
+                                        <td>@(string.IsNullOrWhiteSpace(order.CustomerName) || order.CustomerName == "Khách lẻ" ? "Khách vãng lai" : order.CustomerName)</td>
                                         <td><strong data-amount="@order.TotalAmount">@order.TotalAmount.ToString() VND</strong></td>
                                         <td>@order.OrderTime</td>
                                         <td>
                                             @{
-                                                string badgeClass = (order.Status == 0) ? "bg-warning text-dark" : (order.Status == 1) ? "bg-primary" : "";
+                                                string badgeClass = (order.Status == 0) ? "bg-warning text-dark" : (order.Status == 1) ? "bg-primary" : "bg-secondary";
                                             }
                                             <span class="badge @badgeClass">@order.StatusText</span>
                                         </td>
@@ -119,7 +120,7 @@
     </div>
 </div>
 
-
+@* --- Modal Xác nhận --- *@
 <div class="modal fade" id="confirmBartenderModal" tabindex="-1" aria-labelledby="confirmBartenderModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -138,6 +139,7 @@
     </div>
 </div>
 
+@* --- Khối Script --- *@
 @section Scripts {
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
     <script>
@@ -146,22 +148,20 @@
             .withUrl("/orderHub")
             .build();
 
-        orderHub.start().then(() => console.log("Đã kết nối tới OrderHub")).catch(err => console.error("Lỗi kết nối OrderHub:", err));
+        orderHub.start().then(() => console.log("✅ Đã kết nối tới OrderHub")).catch(err => console.error("Lỗi kết nối OrderHub:", err));
 
-        // --- Helper Functions ---
-
-        function renderOrderCardBartender(orderDto) {
+        function renderOrderRowBartender(orderDto) {
             const customerName = orderDto.customerName && orderDto.customerName.trim() !== '' && orderDto.customerName !== 'Khách lẻ' ? orderDto.customerName : 'Khách vãng lai';
-
             let buttonHtml = '';
             let badgeClass = '';
             const status = orderDto.status ?? 0;
             const orderId = orderDto.orderId ?? 0;
-            // Định dạng tiền tệ
-            const formattedAmount = (orderDto.totalAmount ?? 0).toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            const formattedAmount = (orderDto.totalAmount ?? 0).toLocaleString('vi-VN', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
             const statusTextDisplay = orderDto.statusText;
 
-            // Logic nút bấm mới cho Bartender
             if (status === 0) { // Chờ -> Nút Chuẩn bị
                 badgeClass = 'bg-warning text-dark';
                 buttonHtml = `
@@ -186,8 +186,8 @@
                             title="Xác nhận hoàn thành">
                         <i class="fa-solid fa-check"></i> Hoàn thành
                     </button>`;
-            } else if (status === 2 || status === 3 || status < 0) {
-                 // Không hiển thị nút bấm nếu đã Sẵn sàng, Hoàn thành, Hủy, Hoàn tiền
+            } else {
+                 // Không hiển thị nút bấm nếu đã Sẵn sàng (2), Hoàn thành (3), Hủy (-1), Hoàn tiền (-2)
                  buttonHtml = '';
                  badgeClass = (status === 2) ? 'bg-success' : (status === 3) ? 'bg-dark' : 'bg-danger';
             }
@@ -209,43 +209,47 @@
             `;
         }
 
+
         function sortAndInsertBartender(orderDto) {
             const list = $("#active-list-bartender");
-            const cardHtml = renderOrderCardBartender(orderDto);
             const newStatus = orderDto.status ?? 0;
+            const newOrderId = orderDto.orderId ?? 0;
+            const cardHtml = renderOrderRowBartender(orderDto);
 
-            // Loại bỏ đơn hàng cũ (nếu có)
-            $(`#order-${orderDto.orderId}`).remove();
+            $(`#order-${newOrderId}`).remove();
 
-            // Nếu đơn hàng không phải trạng thái 0 hoặc 1 thì không chèn
             if (newStatus !== 0 && newStatus !== 1) {
-                // Đảm bảo thông báo rỗng xuất hiện nếu danh sách trống
-                 if (list.children('.order-row').length === 0) {
+                if (list.children('.order-row').length === 0 && !$("#active-empty-bartender").length) {
                     list.parent().parent().parent().append('<p class="text-muted text-center mt-3" id="active-empty-bartender">Không có đơn hàng nào đang hoạt động.</p>');
                 }
                 return;
             }
-
             let inserted = false;
             list.children('.order-row').each(function() {
-                const currentStatus = parseInt($(this).data('status')) || 0;
-
-                // Sắp xếp: 1 (Đang chuẩn bị) > 0 (Chờ)
+                const $currentOrder = $(this);
+                const currentStatus = parseInt($currentOrder.data('status')) || 0;
+                const currentOrderId = parseInt($currentOrder.attr('id').replace('order-', '')) || 0;
                 if (newStatus > currentStatus) {
-                    $(this).before(cardHtml);
+                    $currentOrder.before(cardHtml);
                     inserted = true;
-                    return false;
+                    return false; 
+                }
+                else if (newStatus === currentStatus && newOrderId < currentOrderId) {
+                    $currentOrder.before(cardHtml);
+                    inserted = true;
+                    return false; 
                 }
             });
 
             if (!inserted) {
                 list.append(cardHtml);
             }
-            // Xóa thông báo rỗng nếu có đơn hàng
+
             $("#active-empty-bartender").remove();
         }
 
-        // --- Lọc/Tìm kiếm bằng nút bấm (Giữ nguyên) ---
+
+
         let isFilteringBartender = false;
 
         function checkIsFilteringBartender() {
@@ -266,7 +270,7 @@
             const params = new URLSearchParams();
             params.append('query', query);
 
-            // Truyền statusFilter là list (0 và 1) cho Bartender
+            // Bartender chỉ xử lý status 0 và 1
             if (status === '99') {
                 params.append('statusFilter', '0');
                 params.append('statusFilter', '1');
@@ -287,15 +291,18 @@
                 tbody.empty();
                 $("#active-empty-bartender").remove();
 
-                // Bartender chỉ xử lý status 0 và 1, API đã lọc nhưng ta sắp xếp lại.
+                // Sắp xếp: 1 > 0 (và theo ID nếu cần)
                 let activeOrders = data.orders.filter(o => o.status === 0 || o.status === 1);
-
-                // Sắp xếp: 1 > 0
-                activeOrders.sort((a, b) => b.status - a.status);
+                activeOrders.sort((a, b) => {
+                    if (b.status !== a.status) {
+                        return b.status - a.status; // Sắp xếp giảm dần theo Status (1 trước 0)
+                    }
+                    return a.orderId - b.orderId; // Sắp xếp tăng dần theo ID (ID nhỏ trước)
+                });
 
                 if (activeOrders.length > 0) {
                     activeOrders.forEach(order => {
-                        tbody.append(renderOrderCardBartender(order));
+                        tbody.append(renderOrderRowBartender(order));
                     });
                 } else {
                     tbody.parent().parent().parent().append('<p class="text-muted text-center mt-3" id="active-empty-bartender">Không có đơn hàng nào đang hoạt động.</p>');
@@ -303,10 +310,12 @@
 
             } catch (error) {
                 console.error("Fetch error:", error);
+                // Dùng thư viện Toast/SweetAlert thay cho alert() trong thực tế
                 alert("Đã xảy ra lỗi khi tìm kiếm!");
             }
         }
 
+        // --- Event Listeners cho Lọc ---
         $('#bartender-search-btn').click(filterAndSearchBartender);
         $('#bartender-query').keypress(function(e) {
             if(e.which === 13) {
@@ -317,31 +326,30 @@
         $('#bartender-status-filter').change(filterAndSearchBartender);
 
 
+        // --- Logic Modal và Thao tác ---
+
         let selectedOrderId = null;
         let selectedAction = null;
 
+        // Cập nhật nội dung Modal khi hiển thị
         $('#confirmBartenderModal').on('show.bs.modal', function (event) {
             const button = $(event.relatedTarget);
             selectedOrderId = button.data('id');
             selectedAction = button.data('action');
             const statusText = button.data('status-text');
 
-            // Cập nhật nội dung modal
             const isReady = selectedAction === 'ready';
             const modalHeaderColor = isReady ? 'bg-success' : 'bg-primary';
             const modalIcon = isReady ? 'fa-check-circle' : 'fa-hourglass-start';
-
-            // Xử lý lỗi nếu không tìm thấy phần tử
-            if ($('#bartender-order-id-confirm').length) {
-                 $('#bartender-order-id-confirm').text(selectedOrderId);
-            }
+            const buttonClass = `btn btn-${isReady ? 'success' : 'primary'}`;
 
             $('#confirmBartenderModal .modal-header').removeClass('bg-primary bg-success').addClass(modalHeaderColor);
             $('#confirmBartenderModalLabel').html(`<i class="fa-solid ${modalIcon} me-2"></i>Xác nhận ${statusText}`);
             $('#confirmBartenderModal .modal-body').html(`Bạn có chắc chắn muốn xác nhận **${statusText}** đơn hàng **#<span id="bartender-order-id-confirm-body">${selectedOrderId}</span>** này không?`);
-            $('#confirmBartenderBtnAction').text(statusText).removeClass().addClass(`btn btn-${isReady ? 'success' : 'primary'}`);
+            $('#confirmBartenderBtnAction').text(statusText).removeClass().addClass(buttonClass);
         });
 
+        // Xử lý sự kiện Xác nhận trong Modal
         $("#confirmBartenderBtnAction").click(function() {
             if (selectedOrderId && selectedAction) {
                 let actionUrl = '';
@@ -352,15 +360,17 @@
                 }
 
                 if (actionUrl) {
+                    // Gọi API thay đổi trạng thái
                     $.post(actionUrl, { id: selectedOrderId })
                         .done(function(response) {
                             if (!response.success) {
+                                // Xử lý lỗi từ server (nếu có)
                                 alert(`Lỗi khi thực hiện hành động ${selectedAction}!`);
                             }
-                            // SignalR sẽ tự động cập nhật UI
+                            // SignalR sẽ tự động cập nhật UI sau khi action thành công
                         })
                         .fail(function() {
-                            alert("Lỗi kết nối máy chủ!");
+                             alert("Lỗi kết nối máy chủ hoặc API!");
                         });
                 }
 
@@ -371,75 +381,78 @@
         });
 
 
-        // --- SignalR Real-time Updates (ĐÃ CẬP NHẬT để nhận DTO) ---
+        // --- SignalR Real-time Updates ---
 
+        // Đơn hàng mới được tạo (Status 0)
         orderHub.on("OrderCreated", (orderDto) => {
-            // Mặc định statusText là 'Chờ' (0)
-            if (orderDto.status === 0 && !checkIsFilteringBartender()) {
-                sortAndInsertBartender(orderDto);
-            }
-        });
+            const status = orderDto.status ?? 0;
+            console.log(`Đã nhận được order mới: #${orderDto.orderId} (Status: ${status})`);
 
-        orderHub.on("OrderPreparing", (orderDto) => {
-            // OrderDto có status = 1
-            if (!checkIsFilteringBartender()) {
-                // Sử dụng DTO được truyền để chèn lại và sắp xếp
+            // Chỉ xử lý nếu đang ở trạng thái mặc định (không lọc)
+            if (status === 0 && !checkIsFilteringBartender()) {
                 sortAndInsertBartender(orderDto);
-            } else {
-                // Nếu đang lọc, gọi lại hàm lọc để cập nhật danh sách
+            } else if (checkIsFilteringBartender()) {
+                // Nếu đang lọc, chạy lại bộ lọc để cập nhật
                 filterAndSearchBartender();
             }
         });
 
+        // Đơn hàng được chuyển sang Đang chuẩn bị (Status 1)
+        orderHub.on("OrderPreparing", (orderDto) => {
+            if (!checkIsFilteringBartender()) {
+                // Sử dụng DTO được truyền để chèn lại và sắp xếp
+                sortAndInsertBartender(orderDto);
+            } else {
+                // Nếu đang lọc, chạy lại bộ lọc để cập nhật
+                filterAndSearchBartender();
+            }
+        });
+
+        // Đơn hàng Sẵn sàng (Status 2)
         orderHub.on("OrderReady", (orderDto) => {
-            // Đơn hàng hoàn thành (status=2) cần được xóa khỏi danh sách đang xử lý
+            // Đơn hàng sẵn sàng được xóa khỏi màn hình Bartender
             $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
                 $(this).remove();
-                if ($("#active-list-bartender").children('.order-row').length === 0) {
+                if ($("#active-list-bartender").children('.order-row').length === 0 && !$("#active-empty-bartender").length) {
                     $("#active-list-bartender").parent().parent().parent().append('<p class="text-muted text-center mt-3" id="active-empty-bartender">Không có đơn hàng nào đang hoạt động.</p>');
                 }
             });
         });
 
+        // Đơn hàng bị Hủy (Status -1)
         orderHub.on("OrderCanceled", (orderDto) => {
-            // Đơn hàng bị hủy (status=-1) cần được xóa khỏi danh sách đang xử lý
+            // Đơn hàng bị hủy cần được xóa khỏi danh sách đang xử lý
             $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
                 $(this).remove();
-                if ($("#active-list-bartender").children('.order-row').length === 0) {
+                 if ($("#active-list-bartender").children('.order-row').length === 0 && !$("#active-empty-bartender").length) {
                     $("#active-list-bartender").parent().parent().parent().append('<p class="text-muted text-center mt-3" id="active-empty-bartender">Không có đơn hàng nào đang hoạt động.</p>');
                 }
             });
         });
 
-        // Thêm xử lý cho các trạng thái kết thúc (Waiter Confirmed / Refunded)
-        orderHub.on("OrderConfirmed", (orderDto) => {
-            // Xóa đơn hàng hoàn thành (status=3) khỏi danh sách đang hoạt động (Bartender chỉ thấy 0, 1)
+        // Đơn hàng Hoàn thành (Status 3) hoặc Hoàn tiền (Status -2) - Xóa khỏi Bartender
+        orderHub.on("OrderConfirmed OrderRefunded", (orderDto) => {
             $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
                 $(this).remove();
+                 if ($("#active-list-bartender").children('.order-row').length === 0 && !$("#active-empty-bartender").length) {
+                    $("#active-list-bartender").parent().parent().parent().append('<p class="text-muted text-center mt-3" id="active-empty-bartender">Không có đơn hàng nào đang hoạt động.</p>');
+                }
             });
         });
 
-        orderHub.on("OrderRefunded", (orderDto) => {
-            // Xóa đơn hàng hoàn tiền (status=-2) khỏi danh sách đang hoạt động
-            $(`#order-${orderDto.orderId}`).fadeOut(300, function() {
-                $(this).remove();
-            });
-        });
-
-         window.addEventListener("pageshow", function (event) {
-            // Nếu back/forward
+        // --- Xử lý sự kiện Quay lại (pageshow) ---
+        window.addEventListener("pageshow", function (event) {
             if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
-                if (typeof connection !== "undefined") {
-                    if (connection.state !== "Connected") {
-                        connection.start()
+                if (typeof orderHub !== "undefined") {
+                    if (orderHub.state !== signalR.HubConnectionState.Connected) {
+                        orderHub.start()
                             .then(() => console.log("✅ SignalR reconnected"))
                             .catch(() => {
-                                console.log(" Reconnect failed → reload page");
+                                console.log("🚨 Reconnect failed → reload page");
                                 window.location.reload();
                             });
                     }
                 } else {
-                    // Không có connection (chưa khởi tạo) → reload lại luôn
                     window.location.reload();
                 }
             }

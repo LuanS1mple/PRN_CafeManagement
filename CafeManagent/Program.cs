@@ -4,11 +4,12 @@ using CafeManagent.ErrorHandler;
 using CafeManagent.Hubs;
 using CafeManagent.Middlewares;
 using CafeManagent.Models;
-using CafeManagent.Services;
 using CafeManagent.Services.Imp;
 using CafeManagent.Services.Imp.AttendanceModule;
 using CafeManagent.Services.Imp.AuthenticationModule;
 using CafeManagent.Services.Imp.CustomerModule;
+using CafeManagent.Services.Imp.OrderModule;
+using CafeManagent.Services.Imp.ProductModule;
 using CafeManagent.Services.Imp.RecipeModule;
 using CafeManagent.Services.Imp.RequestModule;
 using CafeManagent.Services.Imp.StaffModule;
@@ -19,6 +20,8 @@ using CafeManagent.Services.Interface;
 using CafeManagent.Services.Interface.AttendanceModule;
 using CafeManagent.Services.Interface.AuthenticationModule;
 using CafeManagent.Services.Interface.CustomerModule;
+using CafeManagent.Services.Interface.OrderModule;
+using CafeManagent.Services.Interface.ProductModule;
 using CafeManagent.Services.Interface.RecipeModule;
 using CafeManagent.Services.Interface.RequestModuleDTO;
 using CafeManagent.Services.Interface.StaffModule;
@@ -100,8 +103,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSession();
-app.UseMiddleware<AuthenticationMiddleware>();
-app.UseAuthorization();
+//app.UseMiddleware<AuthenticationMiddleware>();
+//app.UseAuthorization();
 //bất cứ request nào cũng đi qua để thnog báo
 app.UseMiddleware<NotifyMiddleware>();
 app.MapControllerRoute(

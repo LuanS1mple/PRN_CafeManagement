@@ -1,8 +1,8 @@
-﻿using CafeManagent.dto.Order;
+﻿using CafeManagent.dto.request.OrderModuleDTO;
 using CafeManagent.Models;
 using System.Collections.Generic;
 
-namespace CafeManagent.Services.Interface
+namespace CafeManagent.Services.Interface.OrderModule
 {
     public interface IOrderService
     {

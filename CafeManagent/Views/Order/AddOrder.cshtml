@@ -1,12 +1,14 @@
 ﻿@model dynamic
-
+@using CafeManagent.dto.response;
+@using CafeManagent.dto.request.OrderModuleDTO
 @{
     ViewData["Title"] = "Tạo Đơn Hàng Mới";
     var products = ViewBag.Products as List<CafeManagent.Models.Product>;
+    // Đảm bảo OrderDraftDetailsDto được tham chiếu đúng
+    var draftDetails = ViewBag.DraftDetails as OrderDraftDetailsDto;
 }
 
 <div class="container-fluid py-4">
-    <!-- Tiêu đề trang -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="m-0 text-primary fw-bold">
             <i class="fas fa-cash-register me-2"></i> Tạo Đơn Hàng Mới
@@ -17,7 +19,6 @@
     </div>
 
     <div class="row g-4">
-        <!-- Cột Menu sản phẩm -->
         <div class="col-lg-8">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-gradient text-white fw-semibold"
@@ -26,11 +27,9 @@
                 </div>
 
                 <div class="card-body" style="height: 85vh; display: flex; flex-direction: column; padding-bottom: 0;">
-                    <!-- Ô tìm kiếm -->
                     <input type="text" id="productSearch" class="form-control mb-3 shadow-sm"
-                           placeholder="🔍 Tìm kiếm sản phẩm...">
+                           placeholder="Tìm kiếm sản phẩm...">
 
-                    <!-- Danh sách sản phẩm -->
                     <div id="scrollableProductList"
                          style="flex: 1; overflow-y: auto; padding-right: 10px;">
                         <div id="productList" class="row gy-4">
@@ -75,7 +74,6 @@
             </div>
         </div>
 
-        <!-- Cột Giỏ hàng -->
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 sticky-top" style="top: 15px;">
                 <div class="card-header bg-success text-white fw-semibold">
@@ -83,7 +81,6 @@
                 </div>
 
                 <div class="card-body">
-                    <!-- Thông tin khách hàng -->
                     <h6 class="fw-semibold text-secondary mb-2">
                         <i class="fas fa-user me-1"></i> Thông tin Khách hàng
                     </h6>
@@ -92,10 +89,11 @@
                                placeholder="Nhập SĐT khách hàng...">
                         <small id="customerInfo" class="form-text text-muted">Không nhập SĐT nếu khách vãng lai.</small>
                     </div>
+                    <div id="newCustomerNameContainer" style="display:none;">
+                    </div>
 
                     <hr class="my-3" />
 
-                    <!-- Chi tiết đơn hàng -->
                     <h6 class="fw-semibold text-secondary mb-2">
                         <i class="fas fa-list me-1"></i> Chi tiết Đơn hàng
                     </h6>
@@ -146,6 +144,19 @@
     </div>
 </div>
 
+@using CafeManagent.dto.request.OrderModuleDTO;
+
 @section Scripts {
-    <script src="~/js/addOrder.js"></script>
+    <script>
+        @{
+                var draftDetails = ViewBag.DraftDetails as CafeManagent.dto.request.OrderModuleDTO.OrderDraftDetailsDto;
+
+                var draft = draftDetails?.Draft;
+        }
+        var initialDraftData = @(draft != null ?
+                                                                      Html.Raw(System.Text.Json.JsonSerializer.Serialize(draft)) : Html.Raw("null"));
+
+    console.log("Dữ liệu draft được tải từ Server:", initialDraftData);
+</script>
+<script src="~/js/addOrder.js"></script>
 }

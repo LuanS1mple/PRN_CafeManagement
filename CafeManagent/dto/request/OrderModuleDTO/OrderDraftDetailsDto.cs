@@ -1,6 +1,6 @@
 ﻿using CafeManagent.Models;
 
-namespace CafeManagent.dto.Order
+namespace CafeManagent.dto.request.OrderModuleDTO
 {
     public class OrderDraftDetailsDto
     {
@@ -11,6 +11,6 @@ namespace CafeManagent.dto.Order
         public decimal VATAmount { get; set; }
         public decimal GrandTotal { get; set; }
         public Customer? Customer { get; set; }
-        public int PointsEarned { get; set; } = 0;
+        public int PointsEarned { get; set; } 
     }
 }

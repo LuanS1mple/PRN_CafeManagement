@@ -1,45 +1,118 @@
-﻿
+﻿// File: ~/js/addOrder.js
+
 $(document).ready(function () {
-    let cart = []; 
+    let cart = [];
     const VAT_PERCENT = 0.05;
+    let currentDraftOrderId = 0;
+    function loadDraftFromInitialData() {
+        if (initialDraftData && initialDraftData.Items) {
+            console.log("Đang tải dữ liệu bản nháp từ Session...");
+            const draft = initialDraftData;
+            currentDraftOrderId = draft.OrderId || 0;
+            cart = draft.Items.map(item => ({
+                ProductId: item.ProductId,
+                ProductName: item.ProductName,
+                Quantity: item.Quantity,
+                UnitPrice: item.UnitPrice
+            }));
+
+            $('#customerPhone').val(draft.CustomerPhone || ''); 
+            $('#discountPercent').val(draft.DiscountPercent || 0); 
+            $('#orderNote').val(draft.Note || '');
+
+            $('#submitDraft').text('Cập Nhật Bản Nháp').removeClass('btn-info').addClass('btn-primary');
+
+            console.log(`Đã tải bản nháp Order #${currentDraftOrderId} thành công.`);
+        }
+        updateCartUI();
+    }
+
+    // HÀM FORMAT GIÁ (GIỮ NGUYÊN)
     function formatCurrency(amount) {
         return (amount || 0).toLocaleString('vi-VN', {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }) + ' VNĐ';
     }
+
+    // HÀM CẬP NHẬT TỔNG TIỀN (SỬA ĐỔI - Thêm OrderId vào DraftDto)
+    // File: ~/js/addOrder.js
+
+    // File: ~/js/addOrder.js
+
     function updateTotals() {
-        const subtotal = cart.reduce((sum, item) => sum + (item.Quantity * item.UnitPrice), 0);
+        // 1. Logic Thoát Sớm (Cart Rỗng)
+        if (cart.length === 0 && currentDraftOrderId === 0) {
+            // ... (Giữ nguyên) ...
+            $('#subtotal').text(formatCurrency(0));
+            $('#discountAmount').text(formatCurrency(0));
+            $('#vatAmount').text(formatCurrency(0));
+            $('#grandTotal').text(formatCurrency(0));
+            $('#emptyCartMessage').show();
+            $('#customerInfo').html('Không nhập SĐT nếu khách vãng lai.');
+            $('#newCustomerNameContainer').empty().hide();
+            return;
+        }
+
         const discountPercent = parseFloat($('#discountPercent').val()) || 0;
         const phone = $('#customerPhone').val();
         const note = $('#orderNote').val();
+
+        // LẤY TÊN KHÁCH HÀNG MỚI ĐÃ NHẬP
+        // Lấy giá trị hiện tại, dù ô input có đang được hiển thị hay không.
+        const newCustomerNameValue = $('#newCustomerName').val() || '';
 
         const draftDto = {
             Items: cart,
             CustomerPhone: phone,
             DiscountPercent: discountPercent,
-            Note: note
+            Note: note,
+            OrderId: currentDraftOrderId,
+            NewCustomerName: newCustomerNameValue // Gửi tên đã nhập
         };
+
+        // 2. Gọi API tính toán
         $.ajax({
-            url: '/Order/CalculateDraftApi', 
+            url: '/Order/CalculateDraftApi',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(draftDto),
             success: function (response) {
                 if (response.success) {
                     const data = response.data;
-                    console.log("Dữ liệu tổng tiền từ Server:", data);
 
-                    console.log("GrandTotal truoc format:", data.grandTotal);
-                    console.log("GrandTotal sau format:", formatCurrency(data.grandTotal));
+                    // Cập nhật các trường tổng tiền (Không gây mất focus)
                     $('#subtotal').text(formatCurrency(data.subtotal));
                     $('#discountAmount').text(formatCurrency(data.discountAmount));
                     $('#vatAmount').text(formatCurrency(data.vatAmount));
                     $('#grandTotal').text(formatCurrency(data.grandTotal));
+                    $('#customerInfo').html(data.customerStatus);
 
+                    // --- XỬ LÝ RENDER/TẠO Ô NHẬP TÊN (CHỈ KHI CẦN THIẾT) ---
+                    const newCustomerContainer = $('#newCustomerNameContainer');
 
-                    // Cập nhật thông tin khách hàng
-                    $('#customerInfo').html(data.CustomerStatus);
+                    // Trường hợp 1: SĐT mới (cần nhập tên) VÀ container CHƯA có input
+                    if (data.customerFoundStatus === 2 && newCustomerContainer.is(':empty')) {
+                        const html = `
+                    <div class="alert alert-info py-2 mt-2" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i> Đây là **SĐT mới**. Vui lòng nhập **Tên khách hàng** để lưu thông tin và tích lũy ${data.pointsEarned} điểm.
+                    </div>
+                    <div class="form-group mb-2">
+                        <label for="newCustomerName" class="form-label small fw-bold">Tên Khách Hàng Mới:</label>
+                        <input type="text" class="form-control" id="newCustomerName" placeholder="Ví dụ: Nguyễn Văn A" value="${newCustomerNameValue}">
+                        <div class="invalid-feedback">Vui lòng nhập tên khách hàng.</div>
+                    </div>
+                    `;
+                        newCustomerContainer.html(html).show();
+
+                        // QUAN TRỌNG: Gắn sự kiện để gọi updateTotals chỉ khi thay đổi SĐT, Discount, hoặc Cart
+                        // Nếu gỡ bỏ event này ở đây, bạn cần đảm bảo SĐT/Discount luôn kích hoạt updateTotals
+                    }
+                    // Trường hợp 2: Đang có input (customerFoundStatus=2) nhưng SĐT bị xóa/thay đổi sang khách cũ
+                    else if (data.customerFoundStatus !== 2) {
+                        newCustomerContainer.empty().hide();
+                    }
+
                 } else {
                     console.error("Lỗi tính toán API:", response.message);
                 }
@@ -49,8 +122,6 @@ $(document).ready(function () {
             }
         });
     }
-
-    // Hàm Render Cart
     function updateCartUI() {
         $('#cartItems').empty();
         if (cart.length === 0) {
@@ -58,6 +129,8 @@ $(document).ready(function () {
             updateTotals();
             return;
         }
+
+        $('#emptyCartMessage').hide();
 
         cart.forEach(item => {
             const itemTotal = item.Quantity * item.UnitPrice;
@@ -71,7 +144,7 @@ $(document).ready(function () {
                                min="1"
                                value="${item.Quantity}"
                                data-product-id="${item.ProductId}">
-                               
+                                
                         <span class="text-dark fw-semibold me-3" style="font-size: 0.9em; width: 70px; text-align: right;">${formatCurrency(itemTotal)}</span>
                         
                         <button class="btn btn-sm btn-outline-danger btn-remove-item" data-product-id="${item.ProductId}">
@@ -83,12 +156,11 @@ $(document).ready(function () {
             $('#cartItems').append(cartItemHtml);
         });
 
-        updateTotals(); // Gọi hàm tính toán và cập nhật giá
+        updateTotals();
     }
 
-
-    // --- 2. XỬ LÝ SỰ KIỆN CART & TÍNH TOÁN ---
-    
+    // --- 2. XỬ LÝ SỰ KIỆN CART & TÍNH TOÁN (GIỮ NGUYÊN) ---
+    // A. Thêm sản phẩm
     $(document).on('click', '.btn-add-to-cart', function () {
         const $item = $(this).closest('.product-item');
         const productId = parseInt($item.data('id'));
@@ -100,46 +172,35 @@ $(document).ready(function () {
         if (existingItem) {
             existingItem.Quantity++;
         } else {
-            cart.push({
-                ProductId: productId,
-                ProductName: productName,
-                Quantity: 1,
-                UnitPrice: unitPrice
-            });
-        }
-        updateCartUI(); // Cập nhật UI và gọi updateTotals()
-    });
-
-    $(document).on('change', '.item-quantity', function () {
-        const productId = parseInt($(this).data('product-id'));
-        const newQuantity = parseInt($(this).val());
-
-        if (newQuantity <= 0 || isNaN(newQuantity)) {
-            $(this).val(1);
-            return;
-        }
-
-        const item = cart.find(item => item.ProductId === productId);
-        if (item) {
-            item.Quantity = newQuantity;
+            cart.push({ ProductId: productId, ProductName: productName, Quantity: 1, UnitPrice: unitPrice });
         }
         updateCartUI();
     });
 
-    // C. Xóa sản phẩm khỏi Cart
+    // B. Thay đổi số lượng
+    $(document).on('change', '.item-quantity', function () {
+        const productId = parseInt($(this).data('product-id'));
+        const newQuantity = parseInt($(this).val());
+        if (newQuantity <= 0 || isNaN(newQuantity)) { $(this).val(1); return; }
+        const item = cart.find(item => item.ProductId === productId);
+        if (item) { item.Quantity = newQuantity; }
+        updateCartUI();
+    });
+
+    // C. Xóa sản phẩm
     $(document).on('click', '.btn-remove-item', function () {
         const productId = parseInt($(this).data('product-id'));
         cart = cart.filter(item => item.ProductId !== productId);
         updateCartUI();
     });
+
+    // D. Thay đổi Discount/Phone
     $('#discountPercent, #customerPhone').on('input change', function () {
         updateTotals();
-        if ($(this).attr('id') === 'customerPhone') {
-            // Tối ưu: updateTotals() đã tự động gọi API để kiểm tra SĐT và cập nhật customerInfo
-        }
     });
 
 
+    // E. Tìm kiếm
     $('#productSearch').on('keyup', function () {
         const query = $(this).val().toLowerCase();
         $('.product-item').each(function () {
@@ -153,7 +214,7 @@ $(document).ready(function () {
     });
 
 
-    // --- 3. GỌI API TẠO BẢN NHÁP (SUBMIT DRAFT) ---
+    // --- 3. GỌI API TẠO/CẬP NHẬT BẢN NHÁP (SUBMIT DRAFT) ---
 
     $('#submitDraft').click(function () {
         if (cart.length === 0) {
@@ -161,33 +222,54 @@ $(document).ready(function () {
             return;
         }
 
+        const customerPhone = $('#customerPhone').val();
+        let newCustomerName = '';
+
+        // Lấy tên khách hàng mới nếu ô đó đang hiển thị
+        if ($('#newCustomerNameContainer').is(':visible')) {
+            newCustomerName = $('#newCustomerName').val();
+
+            // Bổ sung: Kiểm tra tên khách hàng mới đã được nhập chưa
+            if (!newCustomerName) {
+                $('#newCustomerName').addClass('is-invalid'); // Thêm class báo lỗi
+                alert('Vui lòng nhập tên khách hàng mới để tích lũy điểm.');
+                return;
+            } else {
+                $('#newCustomerName').removeClass('is-invalid');
+            }
+        }
+
         const draftData = {
             Items: cart,
-            CustomerPhone: $('#customerPhone').val(),
+            CustomerPhone: customerPhone,
             DiscountPercent: parseFloat($('#discountPercent').val()) || 0,
-            Note: $('#orderNote').val()
+            Note: $('#orderNote').val(),
+            OrderId: currentDraftOrderId,
+            NewCustomerName: newCustomerName 
         };
+
         $.ajax({
             url: '/Order/CreateDraft',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(draftData),
             beforeSend: function () {
-                $('#submitDraft').prop('disabled', true).text('Đang xử lý...');
+                $('#submitDraft').prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> Đang xử lý...');
             },
             success: function (response) {
                 if (response.success) {
-                    window.location.href = response.redirectUrl; 
+                    window.location.href = response.redirectUrl;
                 } else {
-                    alert('Lỗi tạo bản nháp: ' + response.message);
-                    $('#submitDraft').prop('disabled', false).text('Tạo Bản Nháp & Tiếp tục');
+                    alert('Lỗi tạo/cập nhật bản nháp: ' + response.message);
+                    $('#submitDraft').prop('disabled', false).text(currentDraftOrderId ? 'Cập Nhật Bản Nháp' : 'Tạo Bản Nháp & Tiếp tục');
                 }
             },
             error: function (xhr) {
                 alert('Lỗi server khi tạo bản nháp. Vui lòng thử lại.');
-                $('#submitDraft').prop('disabled', false).text('Tạo Bản Nháp & Tiếp tục');
+                $('#submitDraft').prop('disabled', false).text(currentDraftOrderId ? 'Cập Nhật Bản Nháp' : 'Tạo Bản Nháp & Tiếp tục');
             }
         });
     });
-    updateCartUI();
+
+    loadDraftFromInitialData();
 });

@@ -1,6 +1,6 @@
 ﻿using CafeManagent.Models;
 
-namespace CafeManagent.Services.Interface
+namespace CafeManagent.Services.Interface.ProductModule
 {
     public interface IProductService
     {

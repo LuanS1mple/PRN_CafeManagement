@@ -1,4 +1,4 @@
-﻿namespace CafeManagent.dto.Order
+﻿namespace CafeManagent.dto.request.OrderModuleDTO
 {
      public class OrderDraftDto
  {
@@ -6,5 +6,6 @@
      public string CustomerPhone { get; set; } 
      public decimal DiscountPercent { get; set; } 
      public string Note { get; set; }
- }
+     public string NewCustomerName { get; set; }
+    }
 }

@@ -1,4 +1,5 @@
-﻿@model CafeManagent.dto.order.OrderDto
+﻿@using CafeManagent.dto.response.OrderModuleDTO
+@model OrderDto
 @{
     // Lấy vai trò (Role) từ ViewData để quyết định hiển thị nút
     var role = ViewData["Role"]?.ToString();

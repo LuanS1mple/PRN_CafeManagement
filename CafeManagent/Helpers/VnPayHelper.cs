@@ -14,15 +14,14 @@ namespace CafeManagent.Ulties
         {
             try
             {
-                // Lấy thông tin TimeZoneInfo theo ID (vd: SE Asia Standard Time)
+
                 TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
                 // Chuyển đổi thời gian hiện tại sang múi giờ đó
                 return TimeZoneInfo.ConvertTime(dateTime, timeZone);
             }
             catch (TimeZoneNotFoundException)
             {
-                // Nếu không tìm thấy múi giờ (chỉ xảy ra trên một số hệ điều hành non-Windows),
-                // thì dùng thời gian UTC để tránh lỗi, tuy nhiên VNPay yêu cầu múi giờ chuẩn.
+              
                 return dateTime.ToUniversalTime();
             }
             catch (Exception)
@@ -59,18 +58,31 @@ namespace CafeManagent.Ulties
             return _responseData.ContainsKey(key) ? _responseData[key] : string.Empty;
         }
 
+        // Trong VnPayHelper.cs
         public string CreateRequestUrl(string baseUrl, string hashSecret)
         {
             var data = new StringBuilder();
             foreach (var key in _requestData.Keys)
             {
+                // Vẫn UrlEncode các tham số
                 data.Append(WebUtility.UrlEncode(key) + "=" + WebUtility.UrlEncode(_requestData[key]) + "&");
             }
 
+            // --- BỔ SUNG LOGIC XÓA KÝ TỰ & CUỐI CÙNG TRONG CHUỖI PARAMETERS ---
+            if (data.Length > 0)
+            {
+                data.Length--; // Xóa ký tự '&' cuối cùng
+            }
+
+            // Tạo URL cơ bản (chỉ có parameters đã được UrlEncode)
             string url = baseUrl + "?" + data.ToString();
+
+            // Tạo Secure Hash (GetHashData() của bạn đã xử lý việc xóa & ở cuối)
             string rawData = GetHashData();
             string secureHash = HmacSHA512(hashSecret, rawData);
-            return url + "vnp_SecureHash=" + secureHash;
+
+            // Nối Secure Hash vào cuối bằng ký tự '&' chuẩn
+            return url + "&vnp_SecureHash=" + secureHash;
         }
 
         private string GetHashData()

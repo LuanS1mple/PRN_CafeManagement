@@ -1,11 +1,15 @@
-﻿using CafeManagent.dto.order;
-using CafeManagent.dto.Order;
+﻿using CafeManagent.dto.request.OrderModuleDTO;
+using CafeManagent.dto.response.NotifyModuleDTO;
+using CafeManagent.dto.response.OrderModuleDTO;
+using CafeManagent.Enums;
 using CafeManagent.Helpers;
 using CafeManagent.Hubs;
 using CafeManagent.mapper;
 using CafeManagent.Models;
 using CafeManagent.Services.Interface;
 using CafeManagent.Services.Interface.CustomerModule;
+using CafeManagent.Services.Interface.OrderModule;
+using CafeManagent.Services.Interface.ProductModule;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System;
@@ -13,11 +17,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CafeManagent.Controllers
+namespace CafeManagent.Controllers.Staffs.OrderModule
 {
     public class OrderController : Controller
     {
         private const string SESSION_KEY_DRAFT = "OrderDraft";
+        
         private readonly IOrderService _svc;
         private readonly IHubContext<OrderHub> _hub;
         private readonly IProductService _productSvc; 
@@ -30,6 +35,7 @@ namespace CafeManagent.Controllers
             _productSvc = productSvc;
             _customerSvc = customerSvc;
             _vnpaySvc = vnpaySvc;
+
         }
 
         //view
@@ -57,10 +63,10 @@ namespace CafeManagent.Controllers
 
         public IActionResult AddOrder()
         {
-            var products = _productSvc.GetAllActive();
-            ViewBag.Products = products;
             var draftDetails = HttpContext.Session.GetObject<OrderDraftDetailsDto>(SESSION_KEY_DRAFT);
             ViewBag.DraftDetails = draftDetails;
+            ViewBag.Products = _productSvc.GetAllActive();
+
             return View();
         }
 
@@ -85,6 +91,8 @@ namespace CafeManagent.Controllers
             return View("CompletedHistory", sortedHistory);
         }
 
+
+
         [HttpPost]
         public IActionResult CalculateDraftApi([FromBody] OrderDraftDto draft)
         {
@@ -100,30 +108,37 @@ namespace CafeManagent.Controllers
             const decimal VAT_PERCENT = 0.05m;
             decimal vatAmount = totalBeforeVAT * VAT_PERCENT;
             decimal grandTotal = totalBeforeVAT + vatAmount;
-
             Customer? customer = null;
             string customerStatus = "Khách vãng lai";
+            int pointsEarned = 0;
+            int customerFoundStatus = 0;
 
-            if (!string.IsNullOrEmpty(draft.CustomerPhone))
+            if (!string.IsNullOrEmpty(draft.CustomerPhone) && draft.CustomerPhone.Length >= 10)
             {
+
                 customer = _customerSvc.GetByPhone(draft.CustomerPhone);
+                const decimal POINTS_PER_VND = 1000m;
+                pointsEarned = (int)Math.Floor(grandTotal / POINTS_PER_VND);
+
                 if (customer != null)
                 {
-                    customerStatus = $"<span class='text-success fw-bold'>Khách thân thiết: {customer.FullName}</span> (Điểm: {customer.LoyaltyPoint ?? 0})";
+                    customerFoundStatus = 1;
+
+                    customerStatus = $"<span class='text-success fw-bold'>Khách thân thiết: {customer.FullName}</span> (Điểm hiện có: {customer.LoyaltyPoint ?? 0})";
                 }
                 else
                 {
-                    customerStatus = "SĐT mới. (Khách hàng vãng lai)";
+                    customerFoundStatus = 2; 
+                    customerStatus = $"<span class='text-info fw-bold'>SĐT mới ({draft.CustomerPhone})</span>. Sẽ nhận {pointsEarned} điểm.";
                 }
             }
             else
             {
-                customerStatus = "Chưa nhập SĐT.";
+                customerFoundStatus = 0;
+                customerStatus = "Chưa nhập SĐT/SĐT không hợp lệ.";
+                pointsEarned = 0; 
             }
 
-            int pointsEarned = (int)Math.Floor(grandTotal / 100000);
-
-            // --- 3. Trả về kết quả ---
             return Json(new
             {
                 success = true,
@@ -134,9 +149,10 @@ namespace CafeManagent.Controllers
                     VATAmount = vatAmount,
                     GrandTotal = grandTotal,
                     CustomerName = customer?.FullName ?? "N/A",
-                    CustomerPhone = customer?.Phone ?? "N/A",
+                    CustomerPhone = draft.CustomerPhone ?? "N/A",
                     CustomerStatus = customerStatus,
-                    PointsEarned = pointsEarned
+                    PointsEarned = pointsEarned,
+                    CustomerFoundStatus = customerFoundStatus 
                 }
             });
         }
@@ -158,7 +174,22 @@ namespace CafeManagent.Controllers
                 decimal grandTotal = totalBeforeVAT + vatAmount;
 
                 Customer? customer = string.IsNullOrEmpty(draft.CustomerPhone) ? null : _customerSvc.GetByPhone(draft.CustomerPhone);
-                int pointsEarned = (int)Math.Floor(grandTotal / 100000);
+                const decimal POINTS_PER_VND = 1000m;
+                int pointsEarned = (int)Math.Floor(grandTotal / POINTS_PER_VND);
+                if (!string.IsNullOrEmpty(draft.CustomerPhone) && draft.CustomerPhone.Length >= 10)
+                {
+                    customer = _customerSvc.GetByPhone(draft.CustomerPhone);
+                    if (customer == null && !string.IsNullOrEmpty(draft.NewCustomerName))
+                    {
+                        customer = new Customer
+                        {
+                            CustomerId = 0,
+                            FullName = draft.NewCustomerName,
+                            Phone = draft.CustomerPhone,
+                            LoyaltyPoint = 0
+                        };
+                    }
+                }
                 var draftData = new OrderDraftDetailsDto
                 {
                     Draft = draft,
@@ -194,7 +225,12 @@ namespace CafeManagent.Controllers
         {
             return RedirectToAction("AddOrder");
         }
-
+        [HttpPost]
+        public IActionResult CancelCompleteDraft()
+        {
+            HttpContext.Session.Remove(SESSION_KEY_DRAFT);
+            return RedirectToAction("AddOrder");
+        }
         [HttpPost]
         public async Task<IActionResult> CompletePayment(string paymentMethod)
         {
@@ -205,24 +241,56 @@ namespace CafeManagent.Controllers
                 return Json(new { success = false, message = "Không tìm thấy bản nháp để hoàn tất thanh toán." });
             }
 
+            int pointsEarned = draftDetails.PointsEarned;
+            int? customerId = draftDetails.Customer?.CustomerId;
+
             try
             {
+                if(draftDetails.Customer!=null && draftDetails.Customer.CustomerId == 0)
+                {
+                    var newCustomer = new Customer
+                    {
+                        FullName = draftDetails.Customer.FullName,
+                        Phone = draftDetails.Customer.Phone,
+                        LoyaltyPoint = 0
+                    };
+                    var savedCustomer = _customerSvc.Add(newCustomer);
+                    customerId = savedCustomer.CustomerId;
+                }
                 int? staffId = HttpContext.Session.GetInt32("StaffId");
                 var newOrder = DraftOrderMapper.MapDraftToOrder(
                     draftDetails,
                     paymentMethod,
-                    status: 3, 
-                    staffId: staffId
+                    status: 0,
+                    staffId: staffId,
+                    newCustomerId: customerId
                 );
-
                 var savedOrder = _svc.Add(newOrder);
+                if (customerId.HasValue && pointsEarned > 0)
+                {
+                    _customerSvc.UpdateLoyaltyPoints(customerId.Value, pointsEarned);
+                }
+
+
                 HttpContext.Session.Remove(SESSION_KEY_DRAFT);
-                return Json(new { success = true, redirectUrl = Url.Action("Details", new { id = savedOrder.OrderId }) });
+                int STAFF_ID = HttpContext.Session.GetInt32("StaffId") ?? 0;
+                SystemNotify systemNotify = new SystemNotify()
+                {
+                    IsSuccess = true,
+                    Message = NotifyMessage.CREATE_ORDER.Message
+                };
+                ResponseHub.SetNotify(STAFF_ID, systemNotify);
+                await _hub.Clients.All.SendAsync("OrderCreated", ToDto(savedOrder));
+                return Json(new
+                {
+                    success = true,
+                   
+                    redirectUrl = Url.Action("Waiter", "Order", new { id = savedOrder.OrderId })
+                });
             }
             catch (Exception ex)
             {
-
-                return Json(new { success = false, message = $"Lỗi lưu DB: {ex.Message}" });
+                return Json(new { success = false, message = $"Lỗi lưu DB hoặc cập nhật điểm: {ex.Message}" });
             }
         }
 
@@ -272,28 +340,45 @@ namespace CafeManagent.Controllers
         }
 
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromForm] Order order)
-        {
-            var o = _svc.Add(order);
-            var oWithDetails = _svc.GetById(o.OrderId);
-            var dto = ToDto(oWithDetails!);
-            await _hub.Clients.All.SendAsync("OrderCreated", dto);
-            return Json(new { success = true, order = dto });
-        }
+        //[HttpPost]
+        //public async Task<IActionResult> Create([FromForm] Order order)
+        //{
+        //    var o = _svc.Add(order);
+        //    var oWithDetails = _svc.GetById(o.OrderId);
+        //    var dto = ToDto(oWithDetails!);
+        //    await _hub.Clients.All.SendAsync("OrderCreated", dto);
+        //    return Json(new { success = true, order = dto });
+        //}
 
         [HttpPost]
         public async Task<IActionResult> Cancel(int id)
         {
             var ok = _svc.Cancel(id);
-           
+
             if (ok)
             {
                 var o = _svc.GetById(id);
-                if (ok) await _hub.Clients.All.SendAsync("OrderCanceled", ToDto(o!));
-                return Json(new { success = ok, order = ToDto(o!) });
+
+                if (o != null)
+                {
+                    if (o.CustomerId.HasValue )
+                    {
+                        int pointsEarned = (int)Math.Floor(o.TotalAmount.Value / 1000m);
+                        _customerSvc.UpdateLoyaltyPoints(o.CustomerId.Value, -pointsEarned);
+                    }
+                    int STAFF_ID = HttpContext.Session.GetInt32("StaffId") ?? 0;
+                    SystemNotify systemNotify = new SystemNotify()
+                    {
+                        IsSuccess = true,
+                        Message = NotifyMessage.UPDATE_STATUS_ORDER.Message
+                    };
+                    ResponseHub.SetNotify(STAFF_ID, systemNotify);
+                    await _hub.Clients.All.SendAsync("OrderCanceled", ToDto(o!));
+                    return Json(new { success = ok, order = ToDto(o!) });
+                }
             }
-            return Json(new { success = ok });
+
+            return Json(new { success = ok, message = ok ? "Đã hủy đơn hàng nhưng không tìm thấy dữ liệu để trả về." : "Lỗi hủy đơn hàng trong Service." });
         }
 
         [HttpPost]
@@ -303,6 +388,13 @@ namespace CafeManagent.Controllers
             if (ok)
             {
                 var o = _svc.GetById(id);
+                SystemNotify systemNotify = new SystemNotify()
+                {
+                    IsSuccess = true,
+                    Message = NotifyMessage.UPDATE_STATUS_ORDER.Message
+                };
+                int STAFF_ID = HttpContext.Session.GetInt32("StaffId") ?? 0;
+                ResponseHub.SetNotify(STAFF_ID, systemNotify);
                 await _hub.Clients.All.SendAsync("OrderPreparing", ToDto(o!));
                 return Json(new { success = ok, order = ToDto(o!) });
             }
@@ -317,6 +409,13 @@ namespace CafeManagent.Controllers
             if (ok)
             {
                 var o = _svc.GetById(id);
+                SystemNotify systemNotify = new SystemNotify()
+                {
+                    IsSuccess = true,
+                    Message = NotifyMessage.UPDATE_STATUS_ORDER.Message
+                };
+                int STAFF_ID = HttpContext.Session.GetInt32("StaffId") ?? 0;
+                ResponseHub.SetNotify(STAFF_ID, systemNotify);
                 await _hub.Clients.All.SendAsync("OrderReady", ToDto(o!));
                 return Json(new { success = ok, order = ToDto(o!) });
             }
@@ -331,6 +430,13 @@ namespace CafeManagent.Controllers
             if (ok)
             {
                 var o = _svc.GetById(id);
+                SystemNotify systemNotify = new SystemNotify()
+                {
+                    IsSuccess = true,
+                    Message = NotifyMessage.UPDATE_STATUS_ORDER.Message
+                };
+                int STAFF_ID = HttpContext.Session.GetInt32("StaffId") ?? 0;
+                ResponseHub.SetNotify(STAFF_ID, systemNotify);
                 await _hub.Clients.All.SendAsync("OrderConfirmed", ToDto(o!));
                 return Json(new { success = ok, order = ToDto(o!) });
             }
@@ -345,6 +451,13 @@ namespace CafeManagent.Controllers
             if (ok)
             {
                 var o = _svc.GetById(id);
+                SystemNotify systemNotify = new SystemNotify()
+                {
+                    IsSuccess = true,
+                    Message = NotifyMessage.UPDATE_STATUS_ORDER.Message
+                };
+                int STAFF_ID = (int)HttpContext.Session.GetInt32("StaffId");
+                ResponseHub.SetNotify(STAFF_ID, systemNotify);
                 await _hub.Clients.All.SendAsync("OrderRefunded", ToDto(o!));
                 return Json(new { success = ok, order = ToDto(o!) });
             }
@@ -435,19 +548,15 @@ public IActionResult ProcessVnPay()
         var tempOrder = DraftOrderMapper.MapDraftToOrder( // *Lưu ý: Bạn cần đảm bảo đã đổi tên DraftOrderMapper trong file using*
             draftDetails, 
             paymentMethod: "Online", 
-            status: 1, // Status 1: Chờ thanh toán
+            status: 1, 
             staffId: staffId
         );
 
-        var savedTempOrder = _svc.Add(tempOrder); // Lưu tạm để lấy OrderId
-        
-        // Lưu OrderId vào Session để biết Order nào đang chờ thanh toán
+        var savedTempOrder = _svc.Add(tempOrder); 
         HttpContext.Session.SetInt32("ProcessingOrderId", savedTempOrder.OrderId);
-
-        // 2. Gọi Service tạo URL thanh toán
         string paymentUrl = _vnpaySvc.CreatePaymentUrl(
             savedTempOrder.OrderId.ToString(), 
-            savedTempOrder.TotalAmount ?? 0, // Đảm bảo TotalAmount có giá trị
+            savedTempOrder.TotalAmount ?? 0, 
             HttpContext
         );
         

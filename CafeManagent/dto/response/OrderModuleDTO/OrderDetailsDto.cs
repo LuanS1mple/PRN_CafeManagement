@@ -1,7 +1,5 @@
-﻿
-
-using System.Collections.Generic;
-namespace CafeManagent.dto.order;
+﻿using System.Collections.Generic;
+namespace CafeManagent.dto.response.OrderModuleDTO;
 public class OrderDetailsDto : OrderDto 
 {
     public string CustomerPhone { get; set; }

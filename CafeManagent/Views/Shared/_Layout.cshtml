@@ -140,6 +140,27 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     @* code cho phần thông báo response *@
     <script>
+        document.addEventListener('hidden.bs.modal', function (e) {
+            const modal = e.target;
+
+            // Xóa focus
+            if (modal.querySelector(':focus')) {
+                modal.querySelector(':focus').blur();
+            }
+
+            // Xóa backdrop nếu còn tồn tại
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(b => b.remove());
+
+            // Xóa class modal-open nếu bị kẹt
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+        });
+    </script>
+
+
+    <script>
+
         // Sidebar toggle
         $("#menu-toggle").click(function (e) {
             e.preventDefault();
@@ -254,6 +275,22 @@
                 .catch(err => console.error("error:", err));
                 dot.classList.add("d-none");
                 notifyCount = 0;
+        });
+
+                // XÓA HOẶC COMMENT ĐOẠN CODE NÀY!
+        document.addEventListener('hidden.bs.modal', function (e) {
+            const modal = e.target;
+
+            // Các lệnh can thiệp thủ công này gây xung đột
+            if (modal.querySelector(':focus')) {
+                modal.querySelector(':focus').blur();
+            }
+
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(b => b.remove());
+
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)

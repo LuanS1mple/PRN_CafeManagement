@@ -7,6 +7,20 @@ namespace CafeManagent.Services.Imp.CustomerModule
     {
         private readonly CafeManagementContext _db;
         public CustomerService(CafeManagementContext db) { _db = db; }
+        public Customer Add(Customer customer)
+        {
+            if (customer == null)
+            {
+                throw new ArgumentNullException(nameof(customer));
+            }
+
+
+            customer.LoyaltyPoint = customer.LoyaltyPoint ?? 0;
+
+            _db.Customers.Add(customer);
+            _db.SaveChanges();
+            return customer;
+        }
 
         public Customer? GetByPhone(string phone)
         {
