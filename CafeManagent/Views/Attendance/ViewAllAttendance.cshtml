@@ -1,7 +1,13 @@
 ﻿
 @using CafeManagent.dto.response.attendance;
 @model List<AttendanceDTO>
-
+<!-- Nút quay lại căn trái -->
+ <div class="mb-3 text-start">
+    <a asp-controller="WorkSchedule" asp-action="WorkScheduleToday"
+       class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">
+        <i class="bi bi-arrow-left-circle me-1"></i> Quay lại
+    </a>
+</div>
 <div class="container mt-4">
     <h3 class="mb-3">Danh sách điểm danh</h3>
 

@@ -76,14 +76,14 @@
                 </li>
                 @if (Context.Session.GetString("StaffRole")?.Equals("Barista") == true){
                     <li class="nav-item mb-2">
-                    <a class="nav-link text-white" asp-controller="Order" asp-action="Waiter">
+                        <a class="nav-link text-white" asp-controller="Order" asp-action="Bartender">
                        <i class="fa-solid fa-receipt me-2"></i>Đơn hàng
                     </a>
                     </li>
                 }
                 else{
                      <li class="nav-item mb-2">
-                        <a class="nav-link text-white" asp-controller="Order" asp-action="Bartender">
+                        <a class="nav-link text-white" asp-controller="Order" asp-action="Waiter">
                        <i class="fa-solid fa-receipt me-2"></i>Đơn hàng
                     </a>
                      </li>
