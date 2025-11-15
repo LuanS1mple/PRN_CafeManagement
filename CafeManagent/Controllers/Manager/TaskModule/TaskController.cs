@@ -306,6 +306,7 @@ namespace CafeManagent.Controllers.Manager.TaskModule
             return RedirectToAction("Detail");
         }
 
+        [Authorize(Roles = "Cashier, Barista")]
         public async Task<IActionResult> Detail()
         {
             var (staffId, errorResult) = GetCurrentUserId();
