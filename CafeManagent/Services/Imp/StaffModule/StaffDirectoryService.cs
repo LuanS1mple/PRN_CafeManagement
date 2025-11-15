@@ -139,8 +139,40 @@ namespace CafeManagent.Services.Imp.StaffModule
                 throw new ValidationException(
                     new ValidationResult("Tên đăng nhập đã tồn tại.", new[] { nameof(req.UserName) }), null, req.UserName);
 
-            // ====== Random password 6 ký tự (prod: nên hash) ======
-            var password = GeneratePassword(6);
+            if (req.BirthDate.HasValue)
+            {
+                var dob = req.BirthDate.Value;
+
+                var minDob = new DateOnly(1900, 1, 1);
+                if (dob < minDob)
+                {
+                    throw new ValidationException(
+                        new ValidationResult(
+                            "Ngày sinh không hợp lệ (phải sau 01/01/1900).",
+                            new[] { nameof(req.BirthDate) }
+                        ),
+                        null,
+                        req.BirthDate
+                    );
+                }
+
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                if (dob > today)
+                {
+                    throw new ValidationException(
+                        new ValidationResult(
+                            "Ngày sinh không hợp lệ (không được ở tương lai).",
+                            new[] { nameof(req.BirthDate) }
+                        ),
+                        null,
+                        req.BirthDate
+                    );
+                }
+            }
+
+            // ====== Random password 6 ký tự + hash BCrypt ======
+            var rawPassword = GeneratePassword(6);                      
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(rawPassword);
 
             var s = new Staff
             {
@@ -152,7 +184,7 @@ namespace CafeManagent.Services.Imp.StaffModule
                 Phone = req.Phone,
                 Email = req.Email,
                 UserName = req.UserName,
-                Password = password,
+                Password = passwordHash,      // 🔐 lưu HASH vào DB
                 Status = 1,
                 CreateAt = DateTime.UtcNow
             };
@@ -189,12 +221,16 @@ namespace CafeManagent.Services.Imp.StaffModule
             try
             {
                 if (!string.IsNullOrWhiteSpace(s.Email))
-                    await SendPasswordEmailAsync(s.Email, s.FullName ?? s.Email, password, ct);
+                    await SendPasswordEmailAsync(s.Email, s.FullName ?? s.Email, rawPassword, ct); // gửi mật khẩu rõ
             }
-            catch { /* log nếu cần */ }
+            catch
+            {
+                /* log nếu cần */
+            }
 
             return s.StaffId;
         }
+
 
         // --- UPDATE ---
         public async Task<bool> UpdateAsync(UpdateStaffProfile dto, IFormFile? avatarFile, string webRootPath, CancellationToken ct = default)
@@ -204,51 +240,85 @@ namespace CafeManagent.Services.Imp.StaffModule
                 .FirstOrDefaultAsync(x => x.StaffId == dto.StaffId, ct);
             if (s is null) return false;
 
-            // ====== Validate nghiệp vụ (map vào field cụ thể) ======
-            if (string.IsNullOrWhiteSpace(dto.FullName))
-                throw new ValidationException(new ValidationResult("Họ và tên là bắt buộc", new[] { nameof(dto.FullName) }), null, dto.FullName);
-
-            if (string.IsNullOrWhiteSpace(dto.Address))
-                throw new ValidationException(new ValidationResult("Địa chỉ là bắt buộc", new[] { nameof(dto.Address) }), null, dto.Address);
-
-            if (string.IsNullOrWhiteSpace(dto.Phone) || !System.Text.RegularExpressions.Regex.IsMatch(dto.Phone, @"^\d{9}$"))
-                throw new ValidationException(new ValidationResult("SĐT phải gồm đúng 9 chữ số", new[] { nameof(dto.Phone) }), null, dto.Phone);
-
-            if (string.IsNullOrWhiteSpace(dto.Email))
-                throw new ValidationException(new ValidationResult("Email là bắt buộc", new[] { nameof(dto.Email) }), null, dto.Email);
-
-            // trùng email
             if (await _db.Staff.AnyAsync(x => x.Email == dto.Email && x.StaffId != dto.StaffId, ct))
-                throw new ValidationException(new ValidationResult("Email đã tồn tại.", new[] { nameof(dto.Email) }), null, dto.Email);
+                throw new ValidationException(
+                    new ValidationResult("Email đã tồn tại.", new[] { nameof(dto.Email) }), null, dto.Email);
 
-            // trùng phone
             if (await _db.Staff.AnyAsync(x => x.Phone == dto.Phone && x.StaffId != dto.StaffId, ct))
-                throw new ValidationException(new ValidationResult("Số điện thoại đã tồn tại.", new[] { nameof(dto.Phone) }), null, dto.Phone);
+                throw new ValidationException(
+                    new ValidationResult("Số điện thoại đã tồn tại.", new[] { nameof(dto.Phone) }), null, dto.Phone);
 
-            // Contract validations
-            if (string.IsNullOrWhiteSpace(dto.Position))
-                throw new ValidationException(new ValidationResult("Chức danh (HĐ) là bắt buộc", new[] { nameof(dto.Position) }), null, dto.Position);
-
-            if (!dto.ContractEndDate.HasValue)
-                throw new ValidationException(new ValidationResult("Ngày hết hạn HĐ là bắt buộc", new[] { nameof(dto.ContractEndDate) }), null, dto.ContractEndDate);
-
-            // ==== Validate ngày hết hạn mới phải ≥ cũ + 3 tháng (nếu đã có ngày cũ) ====
-            if (s.Contract?.EndDate is DateOnly oldEnd)
+            if (dto.BirthDate.HasValue)
             {
-                var minNew = oldEnd.AddMonths(3);
-                if (dto.ContractEndDate.Value < minNew)
+                var dob = dto.BirthDate.Value;
+
+                // Không được trước năm 1900
+                var minDob = new DateOnly(1900, 1, 1);
+                if (dob < minDob)
                 {
                     throw new ValidationException(
                         new ValidationResult(
-                            $"Ngày hết hạn HĐ mới phải ≥ {minNew:dd/MM/yyyy} (ít nhất +3 tháng so với {oldEnd:dd/MM/yyyy})",
-                            new[] { nameof(dto.ContractEndDate) }
+                            "Ngày sinh không hợp lệ (phải sau 01/01/1900).",
+                            new[] { nameof(dto.BirthDate) }
                         ),
                         null,
-                        dto.ContractEndDate
+                        dto.BirthDate
+                    );
+                }
+
+                // Không được ở tương lai
+                var today = DateOnly.FromDateTime(DateTime.Today);
+                if (dob > today)
+                {
+                    throw new ValidationException(
+                        new ValidationResult(
+                            "Ngày sinh không hợp lệ (không được ở tương lai).",
+                            new[] { nameof(dto.BirthDate) }
+                        ),
+                        null,
+                        dto.BirthDate
                     );
                 }
             }
-            if (dto.RoleId.HasValue) s.RoleId = dto.RoleId;
+
+
+            if (string.IsNullOrWhiteSpace(dto.Position))
+                throw new ValidationException(
+                    new ValidationResult("Chức danh (HĐ) là bắt buộc", new[] { nameof(dto.Position) }), null, dto.Position);
+
+            if (!dto.ContractEndDate.HasValue)
+            {
+                throw new ValidationException(
+                    new ValidationResult("Ngày hết hạn HĐ là bắt buộc", new[] { nameof(dto.ContractEndDate) }),
+                    null,
+                    dto.ContractEndDate
+                );
+            }
+
+            if (s.Contract?.EndDate is DateOnly oldEnd)
+            {
+                var newEnd = dto.ContractEndDate.Value;
+
+                if (newEnd > oldEnd)
+                {
+                    var minNew = oldEnd.AddMonths(3);
+                    if (newEnd < minNew)
+                    {
+                        throw new ValidationException(
+                            new ValidationResult(
+                                $"Nếu gia hạn, ngày hết hạn HĐ mới phải ≥ {minNew:dd/MM/yyyy} " +
+                                $"(ít nhất +3 tháng so với {oldEnd:dd/MM/yyyy})",
+                                new[] { nameof(dto.ContractEndDate) }
+                            ),
+                            null,
+                            dto.ContractEndDate
+                        );
+                    }
+                }
+            }
+
+            // ====== Cập nhật Staff ======
+            s.RoleId = dto.RoleId;
             s.FullName = dto.FullName;
             s.Gender = dto.Gender;
             s.BirthDate = dto.BirthDate;
@@ -256,6 +326,7 @@ namespace CafeManagent.Services.Imp.StaffModule
             s.Phone = dto.Phone;
             s.Email = dto.Email;
 
+            // ====== Cập nhật / tạo mới Contract ======
             if (s.Contract is null)
             {
                 s.Contract = new Contract
@@ -281,7 +352,10 @@ namespace CafeManagent.Services.Imp.StaffModule
                 if (!string.IsNullOrWhiteSpace(s.Img) &&
                     s.Img.StartsWith($"/{AvatarFolder}", StringComparison.OrdinalIgnoreCase))
                 {
-                    var absOld = Path.Combine(webRootPath, s.Img.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                    var absOld = Path.Combine(
+                        webRootPath,
+                        s.Img.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+
                     try { if (File.Exists(absOld)) File.Delete(absOld); } catch { }
                 }
 
@@ -292,6 +366,7 @@ namespace CafeManagent.Services.Imp.StaffModule
             await _db.SaveChangesAsync(ct);
             return true;
         }
+
 
 
         // --- SAVE FILE: lưu với tên staff_{staffId}_img.ext ---

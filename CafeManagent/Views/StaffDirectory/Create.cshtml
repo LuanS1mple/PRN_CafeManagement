@@ -70,11 +70,15 @@
                     </div>
                 </div>
 
-                <!-- BirthDate -->
+                <!-- BirthDate: nhập dd/MM/yyyy -->
                 <div class="kv2-row">
                     <div class="kv2-label">Ngày sinh</div>
                     <div class="kv2-value">
-                        <input asp-for="BirthDate" type="date" class="input" />
+                        <input asp-for="BirthDate"
+                               class="input date-ddmmyyyy"
+                               type="text"
+                               autocomplete="off"
+                               placeholder="dd/MM/yyyy" />
                         <span asp-validation-for="BirthDate" class="text-danger"></span>
                     </div>
                 </div>
@@ -124,11 +128,15 @@
                     </div>
                 </div>
 
-                <!-- Base Salary -->
+                <!-- Base Salary: nhập tiền có format -->
                 <div class="kv2-row">
                     <div class="kv2-label">Lương cơ bản</div>
                     <div class="kv2-value">
-                        <input asp-for="BaseSalary" type="number" class="input" min="0" step="0.01" />
+                        <input asp-for="BaseSalary"
+                               class="input money-vnd"
+                               type="text"
+                               autocomplete="off"
+                               placeholder="Ví dụ: 10.000.000 VNĐ" />
                         <span asp-validation-for="BaseSalary" class="text-danger"></span>
                     </div>
                 </div>
@@ -144,17 +152,6 @@
 </div>
 
 @section Scripts {
-    <script>
-        const fileInput = document.getElementById('AvatarFile');
-        const avatar = document.getElementById('avatarPreview');
-        if (fileInput && avatar) {
-            fileInput.addEventListener('change', (e) => {
-                const f = e.target.files && e.target.files[0];
-                if (!f) return;
-                const url = URL.createObjectURL(f);
-                avatar.src = url;
-            });
-        }
-    </script>
+    <script src="~/js/StaffCreate.js"></script>
     <partial name="_ValidationScriptsPartial" />
 }

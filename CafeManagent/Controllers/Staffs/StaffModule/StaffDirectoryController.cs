@@ -1,6 +1,7 @@
 ﻿using CafeManagent.dto.request.StaffModuleDTO;
 using CafeManagent.dto.response.StaffModuleDTO;
 using CafeManagent.Services.Interface.StaffModule;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CafeManagent.Controllers.Staffs.StaffModule
 {
+    [Authorize(Roles = "Branch Manager")]
     [Route("staffs")]
     public class StaffDirectoryController : Controller
     {
@@ -24,7 +26,7 @@ namespace CafeManagent.Controllers.Staffs.StaffModule
         {
             Console.WriteLine($"[QUERY] {Request.QueryString}");
             Console.WriteLine($"[BOUND] Q='{q?.Q}', Status={q?.Status}, Page={q?.Page}, Size={q?.Size}");
-            q ??= new StaffListQuery(); // dự phòng
+            q ??= new StaffListQuery();
             var data = await _service.GetPagedAsync(q, ct);
             ViewBag.Query = q;
             return View(data);
@@ -103,7 +105,7 @@ namespace CafeManagent.Controllers.Staffs.StaffModule
                 BirthDate = detail.BirthDate,
                 Phone = detail.Phone,
                 Address = detail.Address,
-                RoleId = detail.RoleId, // nếu bạn muốn set mặc định từ detail.RoleId hãy sửa chỗ này
+                RoleId = detail.RoleId, 
                 Gender = detail.Gender,
                 Position = detail.Title, // map Contract.Position -> Title trong DTO detail
                 ContractEndDate = detail.ContractEndDate

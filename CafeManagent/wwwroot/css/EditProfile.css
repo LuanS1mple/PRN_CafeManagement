@@ -231,3 +231,13 @@ body {
     color: var(--text-soft);
     font-size: 12px;
 }
+
+/* Tab content ẩn/hiện theo tab */
+.tab-panel {
+    display: none;
+}
+
+    .tab-panel.active {
+        display: block;
+    }
+

@@ -3,40 +3,54 @@
 @{
     ViewData["Title"] = "Sửa hồ sơ";
     var avatar = (string?)(ViewBag.Avatar ?? "/images/avatars/default.png");
+    var activeTab = (string?)ViewBag.ActiveTab ?? "info";   // 👈 tab đang active
 }
 
-<link rel="stylesheet" href="~/css/EditProfile.css" />
+<link rel="stylesheet" href="~/css/EditProfile.css?v=2" />
 
 <div class="container profile-wrap">
-    <form asp-controller="StaffProfile" asp-action="Edit" asp-route-id="@Model.StaffId" method="post" enctype="multipart/form-data">
-        @Html.AntiForgeryToken()
-        <input type="hidden" asp-for="StaffId" />
+    <div class="profile-grid">
 
-        <div class="profile-grid">
-            <!-- LEFT CARD -->
-            <aside class="card left-card">
-                <div class="avatar-wrap">
-                    @{
-                        var bust = DateTimeOffset.UtcNow.Ticks;
-                    }
-                    <img class="avatar-circle" id="avatarPreview" src="@avatar?v=@bust" alt="Avatar" />
-                </div>
+        <!-- LEFT CARD -->
+        <aside class="card left-card">
+            <div class="avatar-wrap">
+                @{
+                    var bust = DateTimeOffset.UtcNow.Ticks;
+                }
+                <img class="avatar-circle" id="avatarPreview" src="@avatar?v=@bust" alt="Avatar" />
+            </div>
 
-                <label class="btn btn-upload" for="avatarFile">
-                    <span class="icon-up">⌃</span> Tải ảnh lên
-                </label>
-                <input id="avatarFile" type="file" name="avatarFile" accept="image/*" style="display:none" />
-                <div class="label" style="margin-top:8px;">PNG/JPG/WEBP ≤ 2MB</div>
-            </aside>
+            <label class="btn btn-upload" for="avatarFile">
+                <span class="icon-up">⌃</span> Tải ảnh lên
+            </label>
 
-            <!-- RIGHT CARD -->
-            <section class="card right-card">
-                <div class="tabs">
-                    <span class="tab active">Thông tin</span>
-                    <a class="tab" href="javascript:void(0)">Bảo mật</a>
-                </div>
+            <!-- input này thuộc form THÔNG TIN -->
+            <input id="avatarFile" type="file" name="avatarFile" accept="image/*"
+                   style="display:none" form="tab-info" />
 
-                <!-- TÓM TẮT LỖI -->
+            <div class="label" style="margin-top:8px;">PNG/JPG/WEBP ≤ 2MB</div>
+        </aside>
+
+        <!-- RIGHT CARD -->
+        <section class="card right-card">
+
+            <!-- TABS -->
+            <div class="tabs">
+                <span class="tab @(activeTab == "info" ? "active" : "")" data-tab="info">Thông tin</span>
+                <span class="tab @(activeTab == "security" ? "active" : "")" data-tab="security">Bảo mật</span>
+            </div>
+
+            <!-- ============= TAB 1: THÔNG TIN ============= -->
+            <form id="tab-info"
+                  asp-controller="StaffProfile"
+                  asp-action="Edit"
+                  asp-route-id="@Model.StaffId"
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="tab-panel @(activeTab == "info" ? "active" : "")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="StaffId" />
+
                 <div asp-validation-summary="All" class="val-summary"></div>
 
                 <div class="kv2">
@@ -94,27 +108,90 @@
                 </div>
 
                 <div class="actions">
-                    <a class="btn secondary" asp-controller="StaffProfile" asp-action="Profile" asp-route-id="@Model.StaffId">Hủy</a>
+                    <a class="btn secondary"
+                       asp-controller="StaffProfile"
+                       asp-action="Profile"
+                       asp-route-id="@Model.StaffId">
+                        Hủy
+                    </a>
                     <button class="btn primary" type="submit">Lưu thay đổi</button>
                 </div>
-            </section>
-        </div>
-    </form>
+            </form>
+
+            <!-- ============= TAB 2: BẢO MẬT ============= -->
+            <form id="tab-security"
+                  asp-controller="StaffProfile"
+                  asp-action="ChangePassword"
+                  method="post"
+                  class="tab-panel @(activeTab == "security" ? "active" : "")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="StaffId" value="@Model.StaffId" />
+
+                <h3>Đổi mật khẩu</h3>
+
+                <div asp-validation-summary="All" class="val-summary"></div>
+
+                <div class="kv2" style="max-width:350px;">
+                    <div class="kv2-row">
+                        <div class="kv2-label">Mật khẩu hiện tại</div>
+                        <div class="kv2-value">
+                            <input class="input" type="password" name="CurrentPassword" required />
+                        </div>
+                    </div>
+
+                    <div class="kv2-row">
+                        <div class="kv2-label">Mật khẩu mới</div>
+                        <div class="kv2-value">
+                            <input class="input" type="password" name="NewPassword" minlength="6" required />
+                        </div>
+                    </div>
+
+                    <div class="kv2-row">
+                        <div class="kv2-label">Xác nhận mật khẩu</div>
+                        <div class="kv2-value">
+                            <input class="input" type="password" name="ConfirmPassword" minlength="6" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn primary" type="submit">Đổi mật khẩu</button>
+                </div>
+            </form>
+
+        </section>
+    </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
     <script>
         // Preview avatar
         const fileInput = document.getElementById('avatarFile');
         const avatar = document.getElementById('avatarPreview');
         if (fileInput && avatar) {
-          fileInput.addEventListener('change', (e) => {
-            const f = e.target.files?.[0];
-            if (!f) return;
-            const url = URL.createObjectURL(f);
-            avatar.src = url;
-          });
+            fileInput.addEventListener('change', (e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                avatar.src = URL.createObjectURL(f);
+            });
         }
+
+        // TAB SWITCHING
+        const tabs = document.querySelectorAll(".tab");
+        const panels = document.querySelectorAll(".tab-panel");
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                tabs.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                panels.forEach(p => p.classList.remove("active"));
+                const panelId = "tab-" + tab.dataset.tab;
+                const panel = document.getElementById(panelId);
+                if (panel) panel.classList.add("active");
+            });
+        });
     </script>
 }
