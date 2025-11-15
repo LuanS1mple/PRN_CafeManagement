@@ -1,6 +1,7 @@
 ﻿using CafeManagent.Models;
 using CafeManagent.Services.Interface.StaffWorkScheduleModule;
 using CafeManagent.Services.Interface.WorkShiftModule;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CafeManagent.Controllers.Staffs.StaffWorkScheduleModule
@@ -15,6 +16,8 @@ namespace CafeManagent.Controllers.Staffs.StaffWorkScheduleModule
             _service = service;
             _context = context;
         }
+
+        [Authorize(Roles = "Cashier , Barista")]
         [HttpGet("StaffWorkSchedule/{staffId}")]
         public async Task<IActionResult> Index(int staffId)
         {

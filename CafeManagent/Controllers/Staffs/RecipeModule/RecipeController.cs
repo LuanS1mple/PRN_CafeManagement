@@ -5,6 +5,7 @@ using CafeManagent.Hubs;
 using CafeManagent.Models;
 using CafeManagent.Services.Imp.RecipeModule;
 using CafeManagent.Services.Interface.RecipeModule;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
@@ -24,12 +25,15 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
             _context = context;
             _hubContext = hubContext;
         }
+
+        [Authorize(Roles = "Cashier , Barista")]
         public async Task<IActionResult> Index()
         {
             var recipes = await _service.GetRecipeProduct();
             return View(recipes);
         }
 
+        [Authorize(Roles = "Cashier , Barista")]
         [HttpPost]
         public async Task<IActionResult> FilterRecipeProduct(string Keyword)
         {
@@ -37,6 +41,7 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
             return View("Index", recipes);
         }
 
+        [Authorize(Roles = "Cashier , Barista")]
         [HttpPost]
         public async Task<IActionResult> AddProduct(AddProductDTO dto)
         {
@@ -66,6 +71,7 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Cashier , Barista")]
         [HttpPost]
         public async Task<IActionResult> EditProduct(int productId, AddProductDTO dto)
         {
@@ -84,7 +90,7 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
             return RedirectToAction("Index");
         }
 
-
+        [Authorize(Roles = "Cashier , Barista")]
         [HttpPost]
         public async Task<IActionResult> DeleteProduct(int id)
         {

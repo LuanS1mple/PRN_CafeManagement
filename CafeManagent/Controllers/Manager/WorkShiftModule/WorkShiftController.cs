@@ -12,6 +12,7 @@ using CafeManagent.Enums;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.SignalR;
 using CafeManagent.dto.response.WorkShiftDTO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CafeManagent.Controllers.Manager.WorkShiftModule
 {
@@ -30,6 +31,7 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
             _hub = hub;
         }
 
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> Index(int page = 1, int pageSize = 6)
         {
             var (shifts, totalItems) = await _service.GetPagedWorkShiftsAsync(page, pageSize);
@@ -68,7 +70,7 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
             return View(shifts);
         }
 
-
+        [Authorize(Roles = "Branch Manager")]
         [HttpPost]
         public async Task<IActionResult> FilterWorkShift([FromForm] FilterWorkShiftDTO filter, int page = 1, int pageSize = 6)
         {
@@ -108,7 +110,7 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
             return View("Index", shifts);
         }
 
-
+        [Authorize(Roles = "Branch Manager")]
         [HttpPost]
         public async Task<IActionResult> AddWorkShift([FromForm] AddWorkShiftDTO dto)
         {
@@ -128,6 +130,7 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Branch Manager")]
         [HttpPost]
         public async Task<IActionResult> DeleteWorkShift(int id)
         {
@@ -144,6 +147,7 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Branch Manager")]
         [HttpPost]
         public async Task<IActionResult> UpdateWorkShift([FromForm] UpdateWorkShiftDTO dto)
         {
@@ -160,6 +164,7 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Branch Manager")]
         [HttpGet]
         public IActionResult SendMail(string email)
         {
@@ -170,6 +175,7 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
             return View(model);
         }
 
+        [Authorize(Roles = "Branch Manager")]
         [HttpPost]
         public async Task<IActionResult> SendMail(SendMailDTO dto)
         {

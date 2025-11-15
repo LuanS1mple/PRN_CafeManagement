@@ -5,6 +5,7 @@ using CafeManagent.Enums;
 using CafeManagent.Hubs;
 using CafeManagent.Models;
 using CafeManagent.Services.Interface.CustomerModule;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -26,6 +27,8 @@ namespace CafeManagent.Controllers.Staffs.CustomerModule
             _context = context;
             _hubContext = hubContext;
         }
+
+        [Authorize(Roles = "Cashier , Barista")]
         public async Task<IActionResult> Index(int page = 1, int pageSize = 6)
         {
 
@@ -37,6 +40,7 @@ namespace CafeManagent.Controllers.Staffs.CustomerModule
             return View(customers);
         }
 
+        [Authorize(Roles = "Cashier , Barista")]
         [HttpPost]
         public async Task<IActionResult> AddCustomerProfile(AddCustomerProfileDTO dto)
         {
@@ -65,6 +69,7 @@ namespace CafeManagent.Controllers.Staffs.CustomerModule
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Cashier , Barista")]
         public async Task<IActionResult> FilterCustomerProfile([FromForm] FilterCustomerProfileDTO filter, int page = 1, int pageSize = 6)
         {
             var (customers, totalItem) = await _service.FilterCustomerProfile(filter, page, pageSize);
@@ -75,6 +80,7 @@ namespace CafeManagent.Controllers.Staffs.CustomerModule
             return View("Index", customers);
         }
 
+        [Authorize(Roles = "Cashier , Barista")]
         [HttpPost]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
@@ -91,6 +97,7 @@ namespace CafeManagent.Controllers.Staffs.CustomerModule
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Cashier , Barista")]
         [HttpPost]
         public async Task<IActionResult> UpdateCustomerProfile([FromForm] UpdateCustomerProfileDTO dto)
         {
