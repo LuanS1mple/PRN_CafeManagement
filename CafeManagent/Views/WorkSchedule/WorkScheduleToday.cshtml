@@ -1,14 +1,20 @@
 ﻿@model List<CafeManagent.Models.WorkSchedule>
-
 <div class="container mt-4">
-    <h3 class="mb-3 text-center">Danh sách ca làm việc hôm nay (@DateTime.Now.ToString("dd/MM/yyyy"))</h3>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Danh sách ca làm việc hôm nay (@DateTime.Now.ToString("dd/MM/yyyy"))</h3>
+        <a asp-controller="Attendance" asp-action="ViewAllAttendance"
+           class="btn btn-sm btn-teal">
+            <i class="bi bi-clock-history me-1"></i> Lịch sử chấm công
+        </a>
+    </div>
+
     @if (TempData["success"] != null)
     {
-                <div class="alert alert-success">@TempData["success"]</div>
+            <div class="alert alert-success">@TempData["success"]</div>
     }
     @if (TempData["error"] != null)
     {
-                <div class="alert alert-danger">@TempData["error"]</div>
+            <div class="alert alert-danger">@TempData["error"]</div>
     }
 
     <table class="table table-hover table-bordered align-middle text-center">
@@ -26,36 +32,46 @@
         <tbody>
             @if (Model == null || !Model.Any())
             {
-                <tr>
-                    <td colspan="7" class="text-muted text-center">Không có ca làm nào trong ngày hôm nay</td>
-                </tr>
+                    <tr>
+                        <td colspan="7" class="text-muted text-center">Không có ca làm nào trong ngày hôm nay</td>
+                    </tr>
             }
             else
             {
                 var count = 1;
                 foreach (var ws in Model)
                 {
-                    <tr>
-                        <td>@count</td>
-                        <td>@ws.Staff?.FullName</td>
-                        <td>@ws.Workshift?.ShiftName</td>
-                        <td>@ws.Workshift?.StartTime?.ToString(@"hh\:mm")</td>
-                        <td>@ws.Workshift?.EndTime?.ToString(@"hh\:mm")</td>
-                        <td>@ws.Manager?.FullName</td>
-                        <td>
+                            <tr>
+                                <td>@count</td>
+                                <td>@ws.Staff?.FullName</td>
+                                <td>@ws.Workshift?.ShiftName</td>
+                                <td>@ws.Workshift?.StartTime?.ToString(@"hh\:mm")</td>
+                                <td>@ws.Workshift?.EndTime?.ToString(@"hh\:mm")</td>
+                                <td>@ws.Manager?.FullName</td>
+                                <td>
                                     <a asp-controller="Attendance" asp-action="CheckInPage"
-                            asp-route-shiftId="@ws.ShiftId"
-                            asp-route-workshiftId="@ws.WorkshiftId"
-                            asp-route-date="@ws.Date"
-                                    asp-route-staffId="@ws.StaffId"
-                            class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-people"></i> Check In
-                            </a>
-                        </td>
-                    </tr>
+                                       asp-route-shiftId="@ws.ShiftId"
+                                       asp-route-workshiftId="@ws.WorkshiftId"
+                                       asp-route-date="@ws.Date"
+                                       asp-route-staffId="@ws.StaffId"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-people"></i> Check In
+                                    </a>
+                                </td>
+                            </tr>
                     count++;
                 }
             }
         </tbody>
     </table>
 </div>
+<style>
+    .btn-teal {
+        background-color: #20c997;
+        color: white;
+    }
+    .btn-teal:hover {
+        background-color: #17a589;
+        color: white;
+    }
+</style>
