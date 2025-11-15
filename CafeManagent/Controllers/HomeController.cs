@@ -54,10 +54,7 @@ namespace CafeManagent.Controllers
 
                 if(staff.Role.RoleName.Equals("Branch Manager"))
                 {
-                    return RedirectToAction("Index", "BranchManager");
-                }else if (staff.Role.RoleName.Equals("Serve"))
-                {
-                    return RedirectToAction("Index", "Serve");
+                    return RedirectToAction("WorkScheduleToday", "WorkSchedule");
                 }
                 else if(staff.Role.RoleName.Equals("Cashier"))
                 {

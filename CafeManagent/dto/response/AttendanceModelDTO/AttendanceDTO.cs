@@ -1,4 +1,4 @@
-﻿namespace CafeManagent.dto.attendance
+﻿namespace CafeManagent.dto.response.attendance
 {
     public class AttendanceDTO
     {

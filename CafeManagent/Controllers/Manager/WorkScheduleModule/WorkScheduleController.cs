@@ -1,4 +1,5 @@
 ﻿using CafeManagent.Services.Interface.WorkScheduleModule;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CafeManagent.Controllers.Manager.WorkScheduleModule
@@ -10,6 +11,7 @@ namespace CafeManagent.Controllers.Manager.WorkScheduleModule
         {
             this.scheduleService = scheduleService;
         }
+        [Authorize(Roles = "Branch Manager")]
         public IActionResult WorkScheduleToday()
         {
             var schedule = scheduleService.GetWorkSchedulesToday();

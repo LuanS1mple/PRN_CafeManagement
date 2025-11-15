@@ -67,8 +67,13 @@ namespace CafeManagent.Hubs
             {
                 ClearManager();
             }
+            else
+            {
+                ClearStaff();
+            }
 
         }
+        
         public List<Notify> GetAllStaff()
         {
             return _notify.AllStaff();
@@ -80,6 +85,10 @@ namespace CafeManagent.Hubs
         public void ClearManager()
         {
             _notify.ClearManager();
+        }
+        public void ClearStaff()
+        {
+            _notify.ClearStaff();
         }
     }
 }

@@ -19,7 +19,7 @@ namespace CafeManagent.Ulties
         }
         public void ClearStaff()
         {
-            StaffNotify.Clear();
+            StaffNotify.RemoveAll(n => (DateTime.Now - n.Time).TotalDays >= 7);
         }
         public void ClearManager()
         {

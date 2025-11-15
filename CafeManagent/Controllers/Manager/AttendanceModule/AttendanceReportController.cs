@@ -1,6 +1,7 @@
-﻿using CafeManagent.dto.attendance;
+﻿using CafeManagent.dto.response.attendance;
 using Microsoft.AspNetCore.Mvc;
 using CafeManagent.Services.Interface.AttendanceModule;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CafeManagent.Controllers.Manager.AttendanceModule
 {
@@ -13,6 +14,7 @@ namespace CafeManagent.Controllers.Manager.AttendanceModule
             _attendanceService = attendanceService;
         }
 
+        [Authorize(Roles = "Branch Manager")]
         [HttpGet]
         public async Task<IActionResult> MonthlyAttendanceReport(int? month, int? year)
         {
@@ -28,7 +30,7 @@ namespace CafeManagent.Controllers.Manager.AttendanceModule
             return View(reports);
         }
 
-
+        [Authorize(Roles = "Branch Manager")]
         [HttpGet]
         public async Task<IActionResult> ExportMonthlyReport(int? month, int? year)
         {

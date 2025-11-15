@@ -1,4 +1,4 @@
-﻿using CafeManagent.dto.attendance;
+﻿using CafeManagent.dto.response.attendance;
 using CafeManagent.Models;
 
 namespace CafeManagent.Services.Interface.AttendanceModule
@@ -14,8 +14,8 @@ namespace CafeManagent.Services.Interface.AttendanceModule
         public Task<Attendance?> GetAttendanceWithShiftAsync(int workshiftId, int staffId, DateOnly date, int shiftId);
 
         public List<Attendance> GetAttendanceByMonth(int? staffId, int? month, int? year);
-        public Task<List<MonthlyReport>> GetMonthlyReportAsync(int? staffId, int month, int year);
-        public Task<byte[]> ExportMonthlyReportToExcelAsync(List<MonthlyReport> monthlyReportList);
+        public Task<List<MonthlyReportDTO>> GetMonthlyReportAsync(int? staffId, int month, int year);
+        public Task<byte[]> ExportMonthlyReportToExcelAsync(List<MonthlyReportDTO> monthlyReportList);
 
     }
 }

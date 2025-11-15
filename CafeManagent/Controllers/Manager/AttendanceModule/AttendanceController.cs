@@ -1,18 +1,26 @@
-﻿using CafeManagent.dto.attendance;
+﻿using CafeManagent.dto.response.attendance;
+using CafeManagent.dto.response.NotifyModuleDTO;
+using CafeManagent.Enums;
+using CafeManagent.Hubs;
 using CafeManagent.Models;
 using CafeManagent.Services.Imp;
 using CafeManagent.Services.Interface.AttendanceModule;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace CafeManagent.Controllers.Manager.AttendanceModule
 {
     public class AttendanceController : Controller
     {
         private IAttendanceService attendanceService;
-        public AttendanceController(IAttendanceService attendanceService)
+        private readonly IHubContext<ResponseHub> _hub;
+        public AttendanceController(IAttendanceService attendanceService, IHubContext<ResponseHub> hub)
         {
             this.attendanceService = attendanceService;
+            _hub = hub;
         }
+        [Authorize(Roles = "Branch Manager")]
         public IActionResult ViewAllAttendance(string? keyword, DateTime? fromDate, DateTime? toDate)
         {
             DateOnly? from = fromDate.HasValue ? DateOnly.FromDateTime(fromDate.Value) : null;
@@ -38,57 +46,92 @@ namespace CafeManagent.Controllers.Manager.AttendanceModule
 
             return View(attendances);
         }
+        [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> CheckInPage(int? staffId, int? workshiftId, int? shiftId, DateOnly date)
         {
+            int userId = HttpContext.Session.GetInt32("StaffId").Value;
             if (staffId == null || workshiftId == null || shiftId == null)
             {
-                TempData["error"] = "Thiếu thông tin nhân viên hoặc ca làm việc!";
-                return RedirectToAction(nameof(ViewAllAttendance));
+                SystemNotify notify = new SystemNotify
+                {
+                    IsSuccess = false,
+                    Message = NotifyMessage.PHAN_HOI_THIEU_THONG_TIN_CA_LAM.Message
+                };
+                
+                ResponseHub.SetNotify(userId, notify);
+                return RedirectToAction("WorkScheduleToday", "WorkSchedule");
             }
 
             var attendance = await attendanceService.GetAttendanceWithShiftAsync(workshiftId.Value, staffId.Value, date, shiftId.Value);
 
             if (attendance == null)
             {
-                TempData["error"] = "Không tìm thấy ca làm của nhân viên trong ngày!";
-                return RedirectToAction(nameof(ViewAllAttendance));
+                SystemNotify notify = new SystemNotify
+                {
+                    IsSuccess = false,
+                    Message = NotifyMessage.PHAN_HOI_THIEU_THONG_TIN_NHAN_VIEN.Message
+                };
+                ResponseHub.SetNotify(userId, notify);
+                return RedirectToAction("WorkScheduleToday", "WorkSchedule");
             }
 
             return View(attendance);
         }
-
+        [Authorize(Roles = "Branch Manager")]
         [HttpPost]
         public async Task<IActionResult> CheckIn(int staffId, int shiftId, int workshiftId, DateOnly date)
         {
+            int userId = HttpContext.Session.GetInt32("StaffId").Value;
             try
             {
                 var result = await attendanceService.CheckInAsync(workshiftId, shiftId, staffId, date);
-                TempData["success"] = $"Nhân viên {result.Staff?.FullName ?? ""} đã Check-In thành công vào lúc {result.CheckIn?.ToString()}";
+                SystemNotify notify = new SystemNotify
+                {
+                    IsSuccess = true,
+                    Message = NotifyMessage.CHECK_IN_THANH_CONG.Message + $"{result.Staff?.FullName} vào lúc {result.CheckIn?.ToString()}"
+                };
+                ResponseHub.SetNotify(userId, notify);
             }
             catch (Exception ex)
             {
-                TempData["error"] = ex.Message;
+                SystemNotify notify = new SystemNotify
+                {
+                    IsSuccess = false,
+                    Message = ex.Message,
+                };
+                ResponseHub.SetNotify(userId, notify);
             }
 
             return RedirectToAction(nameof(CheckInPage), new { staffId, workshiftId, shiftId, date });
         }
-
+        [Authorize(Roles = "Branch Manager")]
         [HttpPost]
         public async Task<IActionResult> CheckOut(int staffId, int shiftId, int workshiftId, DateOnly date)
         {
+            int userId = HttpContext.Session.GetInt32("StaffId").Value;
             try
             {
                 var result = await attendanceService.CheckOutAsync(workshiftId, shiftId, staffId, date);
-                TempData["success"] = $"Nhân viên {result.Staff?.FullName ?? ""} đã Check-Out thành công vào lúc {result.CheckOut?.ToString()}";
+                SystemNotify notify = new SystemNotify
+                {
+                    IsSuccess = true,
+                    Message = NotifyMessage.CHECK_OUT_THANH_CONG.Message + $"{result.Staff?.FullName ?? ""} vào lúc {result.CheckOut?.ToString()}"
+                };
+                ResponseHub.SetNotify(userId , notify);
             }
             catch (Exception ex)
             {
-                TempData["error"] = ex.Message;
+                SystemNotify notify = new SystemNotify
+                {
+                    IsSuccess = false,
+                    Message = ex.Message
+                };
+                ResponseHub.SetNotify(userId, notify);
             }
 
             return RedirectToAction(nameof(CheckInPage), new { staffId, workshiftId, shiftId, date });
         }
-
+        [Authorize(Roles = "Cashier,Barista")]
         public IActionResult AttendanceDetail(int? month, int? year)
         {
             int selectedMonth = month ?? DateTime.Now.Month;

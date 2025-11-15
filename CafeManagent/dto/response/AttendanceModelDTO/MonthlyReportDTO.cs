@@ -1,6 +1,6 @@
-﻿namespace CafeManagent.dto.attendance
+﻿namespace CafeManagent.dto.response.attendance
 {
-    public class MonthlyReport
+    public class MonthlyReportDTO
     {
         public int StaffId { get; set; }
         public string? StaffName { get; set; }
