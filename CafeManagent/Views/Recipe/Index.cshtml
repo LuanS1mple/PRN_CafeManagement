@@ -64,12 +64,21 @@
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
 
-                                <button type="button" class="btn btn-sm btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#editRecipeModal1">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-primary me-2 edit-recipe-btn" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editRecipeModal"
+                                        data-product='@System.Text.Json.JsonSerializer.Serialize(item, new System.Text.Json.JsonSerializerOptions { ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles, PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })'>
                                     <i class="fa-solid fa-pen"></i>
-                                </button>                                
-                                <button type="button" class="btn btn-sm btn-outline-danger">
-                                    <i class="fa-solid fa-trash"></i>
                                 </button>
+
+                                <form method="post" asp-controller="Recipe" asp-action="DeleteProduct" class="d-inline">
+                                    <input type="hidden" name="id" value="@item.ProductId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+
                         </td>
                         </tr>
                     }
@@ -89,6 +98,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+
                 <form asp-controller="Recipe" asp-action="AddProduct" method="post">
                     <div class="mb-3">
                         <label class="form-label">Tên sản phẩm</label>
@@ -105,20 +115,43 @@
                         <input type="text" name="Description" class="form-control" />
                     </div>
 
+                    <!-- ================== NGUYÊN LIỆU NHIỀU DÒNG ================== -->
                     <div class="mb-3">
                         <label class="form-label">Nguyên liệu</label>
-                        <input type="text" name="IngredientName" class="form-control" />
-                    </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Đơn vị định lượng</label>
-                        <input type="text" name="Unit" class="form-control" />
-                    </div>
+                        <div id="ingredientContainer">
 
-                    <div class="mb-3">
-                        <label class="form-label">Số lượng nguyên liệu cần (QuantityNeeded)</label>
-                        <input type="number" step="0.01" name="QuantityNeeded" class="form-control" required />
+                            <!-- Dòng nguyên liệu mặc định -->
+                            <div class="row g-2 mb-2 ingredient-item">
+                                <div class="col-4">
+                                    <input type="text" name="Ingredients[0].IngredientName"
+                                           class="form-control" placeholder="Tên nguyên liệu" required />
+                                </div>
+
+                                <div class="col-3">
+                                    <select name="Ingredients[0].Unit" class="form-select" required>
+                                        <option value="kg">kg</option>
+                                        <option value="l">l</option>
+                                        <option value="gram">gram</option>
+                                        <option value="ml">ml</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-3">
+                                    <input type="number" step="0.01" name="Ingredients[0].QuantityNeeded"
+                                           class="form-control" placeholder="Số lượng" required />
+                                </div>
+
+                                <div class="col-2 d-flex">
+                                    <button type="button" class="btn btn-success addIngredient w-100">+</button>
+                                </div>
+                            </div>
+
+
+                        </div>
+
                     </div>
+                    <!-- ============================================================= -->
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -130,6 +163,7 @@
         </div>
     </div>
 </div>
+
 
 <div class="modal fade" id="detailRecipeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -160,51 +194,51 @@
 </div>
 
 
-<!-- Modal: Chỉnh sửa công thức -->
-<div class="modal fade" id="editRecipeModal1" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="editRecipeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header">
                 <h5 class="modal-title">Chỉnh sửa công thức</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <!-- Gửi dữ liệu tới Recipe/EditRecipe -->
-                <form asp-controller="Recipe" asp-action="EditRecipe" method="post">
 
-                    <!-- Tên sản phẩm -->
+            <div class="modal-body">
+                <form asp-controller="Recipe" asp-action="EditProduct" method="post">
+
+                    <input type="hidden" name="productId" id="editProductId" />
+
                     <div class="mb-3">
                         <label class="form-label">Tên sản phẩm</label>
-                        <input type="text" name="ProductName" class="form-control" value="Trà sữa truyền thống" required />
+                        <input type="text" name="ProductName" class="form-control" id="editProductName" required />
                     </div>
 
-                    <!-- Nguyên liệu -->
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <input type="text" name="Description" class="form-control" id="editDescription" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Giá</label>
+                        <input type="number" step="0.01" name="Price" class="form-control" id="editPrice" required />
+                    </div>
+
+                    <!-- NGUYÊN LIỆU -->
                     <div class="mb-3">
                         <label class="form-label">Nguyên liệu</label>
-                        <textarea name="Ingredients" class="form-control" rows="3" required>Trà đen: 100ml, Sữa đặc: 50ml, Đường: 30g, Trân châu: 50g</textarea>
-                    </div>
-
-                    <!-- Cách pha -->
-                    <div class="mb-3">
-                        <label class="form-label">Cách pha</label>
-                        <textarea name="Instructions" class="form-control" rows="2" required>Pha trà đen với sữa đặc và đường, thêm trân châu khi hoàn thành.</textarea>
-                    </div>
-
-                    <!-- Ghi chú -->
-                    <div class="mb-3">
-                        <label class="form-label">Ghi chú</label>
-                        <textarea name="Note" class="form-control" rows="2">Dùng đá lạnh, không để lâu quá 10 phút.</textarea>
+                        <div id="editIngredientContainer"></div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
                         <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
                     </div>
+
                 </form>
             </div>
         </div>
     </div>
 </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -233,6 +267,124 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const container = document.getElementById("ingredientContainer");
+
+    function updateIndexes() {
+        const items = container.querySelectorAll(".ingredient-item");
+        items.forEach((item, index) => {
+            item.querySelectorAll("input, select").forEach(el => {
+                let name = el.getAttribute("name");
+                name = name.replace(/\[\d+\]/, `[${index}]`);
+                el.setAttribute("name", name);
+            });
+        });
+    }
+
+
+    container.addEventListener("click", function (e) {
+
+        if (e.target.classList.contains("addIngredient")) {
+
+            const newRow = document.createElement("div");
+            newRow.classList.add("row", "g-2", "mb-2", "ingredient-item");
+
+            newRow.innerHTML = `
+                <div class="col-4">
+                    <input type="text" name="Ingredients[0].IngredientName" class="form-control" placeholder="Tên nguyên liệu" required />
+                </div>
+                <div class="col-3">
+                    <select name="Ingredients[0].Unit" class="form-select" required>
+                        <option value="kg">kg</option>
+                        <option value="l">l</option>
+                        <option value="gram">gram</option>
+                        <option value="ml">ml</option>
+                    </select>
+                </div>
+                <div class="col-3">
+                    <input type="number" step="0.01" name="Ingredients[0].QuantityNeeded" class="form-control" placeholder="Số lượng" required />
+                </div>
+                <div class="col-2 d-flex">
+                    <button type="button" class="btn btn-danger removeIngredient w-100">🗑</button>
+                </div>
+            `;
+
+
+            container.appendChild(newRow);
+            updateIndexes();
+        }
+
+        if (e.target.classList.contains("removeIngredient")) {
+            e.target.closest(".ingredient-item").remove();
+            updateIndexes();
+        }
+
+    });
+
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ====== NÚT EDIT ======
+    document.querySelectorAll('.edit-recipe-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const product = JSON.parse(this.getAttribute('data-product'));
+
+            document.getElementById('editProductId').value = product.productId;
+            document.getElementById('editProductName').value = product.productName;
+            document.getElementById('editDescription').value = product.description;
+            document.getElementById('editPrice').value = product.price;
+
+            const container = document.getElementById('editIngredientContainer');
+            container.innerHTML = "";
+
+            if (product.recipes && product.recipes.length > 0) {
+                product.recipes.forEach((r, index) => {
+
+                    const row = document.createElement("div");
+                    row.classList.add("row", "g-2", "mb-2", "ingredient-item");
+
+                    row.innerHTML = `
+                        <div class="col-4">
+                            <input type="text" name="Ingredients[${index}].IngredientName"
+                                   class="form-control"
+                                   value="${r.ingredient.ingredientName}" required />
+                        </div>
+
+                        <div class="col-3">
+                            <select name="Ingredients[${index}].Unit" class="form-select" required>
+                                <option value="kg" ${r.ingredient.unit == "kg" ? "selected" : ""}>kg</option>
+                                <option value="l" ${r.ingredient.unit == "l" ? "selected" : ""}>l</option>
+                                <option value="gram" ${r.ingredient.unit == "gram" ? "selected" : ""}>gram</option>
+                                <option value="ml" ${r.ingredient.unit == "ml" ? "selected" : ""}>ml</option>
+                            </select>
+                        </div>
+
+                        <div class="col-3">
+                            <input type="number" step="0.01"
+                                   name="Ingredients[${index}].QuantityNeeded"
+                                   class="form-control"
+                                   value="${r.quantityNeeded}" required />
+                        </div>
+
+                        <div class="col-2 d-flex">
+                            <button type="button" class="btn btn-danger removeIngredient w-100">🗑</button>
+                        </div>
+                    `;
+
+                    container.appendChild(row);
+                });
+            }
+        });
+    });
+
 });
 </script>
 

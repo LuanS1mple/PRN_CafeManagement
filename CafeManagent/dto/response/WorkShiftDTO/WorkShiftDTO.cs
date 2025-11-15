@@ -1,16 +1,17 @@
-﻿namespace CafeManagent.dto.response.WorkShiftDTO
-{
-    public class WorkShiftDTO
+﻿    namespace CafeManagent.dto.response.WorkShiftDTO
     {
-        public int ShiftId { get; set; }
-        public string Employee { get; set; }
-        public DateOnly Date { get; set; }
-        public TimeOnly? StartTime { get; set; }
-        public TimeOnly? EndTime { get; set; }
-        public string Position { get; set; }
-        public string ShiftType { get; set; }
-        public double TotalHours { get; set; }
-        public string Description { get; set; }
+        public class WorkShiftDTO
+        {
+            public int ShiftId { get; set; }
+            public string Employee { get; set; }
+            public string Email { get; set; }
+            public DateOnly Date { get; set; }
+            public TimeOnly? StartTime { get; set; }
+            public TimeOnly? EndTime { get; set; }
+            public string Position { get; set; }
+            public string ShiftType { get; set; }
+            public double TotalHours { get; set; }
+            public string Description { get; set; }
 
+        }
     }
-}

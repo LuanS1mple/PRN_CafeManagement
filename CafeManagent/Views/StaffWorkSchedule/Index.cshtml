@@ -1,0 +1,99 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Quản lý ca làm";
+}
+
+<div class="container-fluid py-4">
+
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <h1 class="mb-0">Lịch làm việc</h1>
+        </div>
+    </div>
+
+
+
+    <!-- Table Hard Code -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ngày làm việc</th>
+                        <th>Vị trí</th>
+                        <th>Loại ca</th>
+                        <th>Giờ làm</th>
+                        <th>Mô tả</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var item in Model){
+                        <tr>
+                            <td>@item.Date</td>
+                            <td>@item.Position</td>
+                            <td>@item.ShiftType</td>
+                            <td>@item.StartTime - @item.EndTime</td>
+                            <td>@item.Description</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-primary me-2">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+
+                  
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+        <script>
+            const connection1 = new signalR.HubConnectionBuilder()
+                .withUrl("/workshifthub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection1.on("ReceiveWorkShiftUpdate", function (newShift) {
+                if (!newShift) return;
+
+                const tbody = document.querySelector('table tbody');
+                const tr = document.createElement('tr');
+                console.log(newShift.date)
+                tr.innerHTML = `
+                    <td>${newShift.date}</td>
+                    <td>${newShift.position}</td>
+                    <td>${newShift.shiftType}</td>
+                    <td>${newShift.startTime} - ${newShift.endTime}</td>
+                    <td>${newShift.description}</td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-sm btn-outline-primary me-2">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            connection1.start()
+                .then(() => console.log("SignalR connection started"))
+                .catch(err => console.error("SignalR connection error: ", err));
+        </script>
+    }
+
+    
+
+  
+
+</div>

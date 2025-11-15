@@ -4,7 +4,17 @@
 }
 
 <div class="container-fluid py-4">
-
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <h1 class="mb-0">Thông tin khách hàng</h1>
+            <p class="text-muted mb-0">Thông tin chi tiết của những khách hàng thân thiết</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerProfile">
+                <i class="fa-solid fa-plus"></i> Thêm
+            </button>
+        </div>
+    </div>
     <!-- Bộ lọc -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
@@ -48,8 +58,30 @@
                             <td>@item.Address</td>
                             <td>@item.LoyaltyPoint</td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary me-2"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i></button>
+
+                                <button class="btn btn-sm btn-outline-primary me-2"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editCustomerModal"
+                                        data-id="@item.CustomerId"
+                                        data-name="@item.FullName"
+                                        data-phone="@item.Phone"
+                                        data-address="@item.Address"
+                                        data-point="@item.LoyaltyPoint">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+
+                                <form method="post" 
+                                      asp-controller="CustomerProfile" 
+                                      asp-action="DeleteCustomer" 
+                                      class="d-inline">
+
+                                    <input type="hidden" name="id" value="@item.CustomerId" />
+
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Bạn có chắc muốn xóa khách hàng này?')">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     }
@@ -59,6 +91,97 @@
             </table>
         </div>
     </div>
+
+<div class="modal fade" id="addCustomerProfile" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm khách hàng mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form asp-controller="CustomerProfile" asp-action="AddCustomerProfile" method="post">
+                    @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên khách hàng</label>
+                        <!-- name phải là FullName để map vào AddCustomerProfileDTO.FullName -->
+                        <input type="text" name="FullName" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="text" name="Phone" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <input type="text" name="Address" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Điểm tích lũy</label>
+                        <input type="number" name="LoyaltyPoint" class="form-control" min="0" value="0" required />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm khách hàng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Chỉnh sửa khách hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form asp-controller="CustomerProfile" asp-action="UpdateCustomerProfile" method="post">
+                <div class="modal-body">
+
+                    <input type="hidden" name="CustomerId" id="editCustomerId" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Tên khách hàng</label>
+                        <input type="text" name="FullName" id="editFullName" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="text" name="Phone" id="editPhone" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <input type="text" name="Address" id="editAddress" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Điểm tích lũy</label>
+                        <input type="number" name="LoyaltyPoint" id="editPoint" class="form-control" min="0" />
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
 
     @if (ViewBag.TotalPages > 1)
     {
@@ -83,6 +206,22 @@
             </nav>
     }
 
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('editCustomerModal')
+            .addEventListener('show.bs.modal', function (event) {
+
+                const btn = event.relatedTarget;
+
+                document.getElementById('editCustomerId').value = btn.dataset.id;
+                document.getElementById('editFullName').value = btn.dataset.name;
+                document.getElementById('editPhone').value = btn.dataset.phone;
+                document.getElementById('editAddress').value = btn.dataset.address;
+                document.getElementById('editPoint').value = btn.dataset.point;
+            });
+    });
+    </script>
 
 
 </div>

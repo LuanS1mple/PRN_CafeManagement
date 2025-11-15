@@ -13,6 +13,7 @@ using CafeManagent.Services.Imp.CustomerModule;
 using CafeManagent.Services.Imp.RecipeModule;
 using CafeManagent.Services.Imp.RequestModule;
 using CafeManagent.Services.Imp.StaffModule;
+using CafeManagent.Services.Imp.StaffWorkScheduleModule;
 using CafeManagent.Services.Imp.TaskModule;
 using CafeManagent.Services.Imp.WorkScheduleModule;
 using CafeManagent.Services.Imp.WorkShiftModule;
@@ -23,6 +24,7 @@ using CafeManagent.Services.Interface.CustomerModule;
 using CafeManagent.Services.Interface.RecipeModule;
 using CafeManagent.Services.Interface.RequestModuleDTO;
 using CafeManagent.Services.Interface.StaffModule;
+using CafeManagent.Services.Interface.StaffWorkScheduleModule;
 using CafeManagent.Services.Interface.TaskModule;
 using CafeManagent.Services.Interface.WorkScheduleModule;
 using CafeManagent.Services.Interface.WorkShiftModule;
@@ -73,6 +75,8 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddTransient<IWorkShiftService, WorkShiftService>();
 builder.Services.AddTransient<ICustomerProfileService, CustomerProfileService>();
 builder.Services.AddTransient<IRecipeService, RecipeService>();
+builder.Services.AddTransient<IStaffWorkScheduleService, StaffWorkScheduleService>();
+
 builder.Services.AddTransient<IProductService, ProductService>(); 
 builder.Services.AddTransient<ICustomerService, CustomerService>();
 builder.Services.AddTransient<IVnPayService, VnPayService>();
@@ -120,6 +124,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapHub<ResponseHub>("/response");
 app.MapHub<NotifyHub>("/notify");
+app.MapHub<WorkShiftHub>("/workshifthub");
 
 app.MapHub<OrderHub>("/orderHub");
 app.MapHub<StaffHub>("/hubs/staff");

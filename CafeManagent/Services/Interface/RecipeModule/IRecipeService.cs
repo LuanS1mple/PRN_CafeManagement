@@ -10,5 +10,7 @@ namespace CafeManagent.Services.Interface.RecipeModule
 
         Task<bool> AddProductAsync(AddProductDTO dto);
 
+        Task<bool> EditProductAsync(int productId, AddProductDTO dto);
+        Task<bool> DeleteProductAsync(int productId);
     }
 }
