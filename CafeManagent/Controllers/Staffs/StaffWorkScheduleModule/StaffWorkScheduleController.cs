@@ -15,9 +15,10 @@ namespace CafeManagent.Controllers.Staffs.StaffWorkScheduleModule
             _service = service;
             _context = context;
         }
-        [HttpGet("StaffWorkSchedule/{staffId}")]
-        public async Task<IActionResult> Index(int staffId)
+        [HttpGet("StaffWorkSchedule")]
+        public async Task<IActionResult> Index()
         {
+            int staffId = HttpContext.Session.GetInt32("StaffId").Value;
             var staffSchedule = await _service.GetWorkShiftsByStaffAsync(staffId);
             ViewBag.StaffId = staffId;
             return View(staffSchedule);

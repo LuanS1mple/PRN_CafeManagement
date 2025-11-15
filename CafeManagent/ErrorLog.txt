@@ -885,3 +885,123 @@ StackTrace:    at CafeManagent.Services.Imp.RequestModule.RequestService.GetById
    at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
    at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in C:\Users\thanh\Downloads\Ki7_FALL25\PRN222\Project\CafeManagent\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
 
+--------------------------------------------------
+Time: 2025-11-15 22:06:07
+Exception Type: System.InvalidOperationException
+Message: Endpoint CafeManagent.Controllers.Manager.WorkScheduleModule.WorkScheduleController.WorkScheduleToday (CafeManagent) contains authorization metadata, but a middleware was not found that supports authorization.
+Configure your application startup by adding app.UseAuthorization() in the application startup code. If there are calls to app.UseRouting() and app.UseEndpoints(...), the call to app.UseAuthorization() must go between them.
+StackTrace:    at Microsoft.AspNetCore.Routing.EndpointMiddleware.ThrowMissingAuthMiddlewareException(Endpoint endpoint)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at CafeManagent.Middlewares.NotifyMiddleware.Invoke(HttpContext context, NotifyUlti ulti, IHubContext`1 hub) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\NotifyMiddleware.cs:line 20
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
+
+--------------------------------------------------
+Time: 2025-11-15 22:06:36
+Exception Type: System.InvalidOperationException
+Message: Endpoint CafeManagent.Controllers.Manager.WorkScheduleModule.WorkScheduleController.WorkScheduleToday (CafeManagent) contains authorization metadata, but a middleware was not found that supports authorization.
+Configure your application startup by adding app.UseAuthorization() in the application startup code. If there are calls to app.UseRouting() and app.UseEndpoints(...), the call to app.UseAuthorization() must go between them.
+StackTrace:    at Microsoft.AspNetCore.Routing.EndpointMiddleware.ThrowMissingAuthMiddlewareException(Endpoint endpoint)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.Invoke(HttpContext httpContext)
+   at CafeManagent.Middlewares.NotifyMiddleware.Invoke(HttpContext context, NotifyUlti ulti, IHubContext`1 hub) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\NotifyMiddleware.cs:line 20
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
+
+--------------------------------------------------
+Time: 2025-11-15 22:34:35
+Exception Type: System.NullReferenceException
+Message: Object reference not set to an instance of an object.
+StackTrace:    at AspNetCoreGeneratedDocument.Views_Shared__LayoutStaff.<ExecuteAsync>b__33_1() in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Views\Shared\_LayoutStaff.cshtml:line 74
+   at Microsoft.AspNetCore.Razor.Runtime.TagHelpers.TagHelperExecutionContext.SetOutputContentAsync()
+   at AspNetCoreGeneratedDocument.Views_Shared__LayoutStaff.ExecuteAsync()
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderPageCoreAsync(IRazorPage page, ViewContext context)
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderPageAsync(IRazorPage page, ViewContext context, Boolean invokeViewStarts)
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderLayoutAsync(ViewContext context, ViewBufferTextWriter bodyWriter)
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderAsync(ViewContext context)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ViewContext viewContext, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ViewContext viewContext, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ActionContext actionContext, IView view, ViewDataDictionary viewData, ITempDataDictionary tempData, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewResultExecutor.ExecuteAsync(ActionContext context, ViewResult result)
+   at Microsoft.AspNetCore.Mvc.ViewResult.ExecuteResultAsync(ActionContext context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResultFilterAsync>g__Awaited|30_0[TFilter,TFilterAsync](ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResultExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.ResultNext[TFilter,TFilterAsync](State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeResultFilters()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at CafeManagent.Middlewares.NotifyMiddleware.Invoke(HttpContext context, NotifyUlti ulti, IHubContext`1 hub) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\NotifyMiddleware.cs:line 20
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at CafeManagent.Middlewares.AuthenticationMiddleware.InvokeAsync(HttpContext context) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\AuthenticationMiddleware.cs:line 69
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
+
+--------------------------------------------------
+Time: 2025-11-15 22:35:38
+Exception Type: System.NullReferenceException
+Message: Object reference not set to an instance of an object.
+StackTrace:    at AspNetCoreGeneratedDocument.Views_Shared__LayoutStaff.<ExecuteAsync>b__32_1() in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Views\Shared\_LayoutStaff.cshtml:line 74
+   at Microsoft.AspNetCore.Razor.Runtime.TagHelpers.TagHelperExecutionContext.SetOutputContentAsync()
+   at AspNetCoreGeneratedDocument.Views_Shared__LayoutStaff.ExecuteAsync()
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderPageCoreAsync(IRazorPage page, ViewContext context)
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderPageAsync(IRazorPage page, ViewContext context, Boolean invokeViewStarts)
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderLayoutAsync(ViewContext context, ViewBufferTextWriter bodyWriter)
+   at Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderAsync(ViewContext context)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ViewContext viewContext, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ViewContext viewContext, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewExecutor.ExecuteAsync(ActionContext actionContext, IView view, ViewDataDictionary viewData, ITempDataDictionary tempData, String contentType, Nullable`1 statusCode)
+   at Microsoft.AspNetCore.Mvc.ViewFeatures.ViewResultExecutor.ExecuteAsync(ActionContext context, ViewResult result)
+   at Microsoft.AspNetCore.Mvc.ViewResult.ExecuteResultAsync(ActionContext context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResultFilterAsync>g__Awaited|30_0[TFilter,TFilterAsync](ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResultExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.ResultNext[TFilter,TFilterAsync](State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeResultFilters()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at CafeManagent.Middlewares.NotifyMiddleware.Invoke(HttpContext context, NotifyUlti ulti, IHubContext`1 hub) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\NotifyMiddleware.cs:line 20
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at CafeManagent.Middlewares.AuthenticationMiddleware.InvokeAsync(HttpContext context) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\AuthenticationMiddleware.cs:line 69
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
+
+--------------------------------------------------
+Time: 2025-11-15 22:39:17
+Exception Type: System.InvalidOperationException
+Message: Nullable object must have a value.
+StackTrace:    at System.Nullable`1.get_Value()
+   at CafeManagent.Controllers.Staffs.StaffWorkScheduleModule.StaffWorkScheduleController.Index() in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Controllers\Staffs\StaffWorkScheduleModule\StaffWorkScheduleController.cs:line 21
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at CafeManagent.Middlewares.NotifyMiddleware.Invoke(HttpContext context, NotifyUlti ulti, IHubContext`1 hub) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\NotifyMiddleware.cs:line 20
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at CafeManagent.Middlewares.AuthenticationMiddleware.InvokeAsync(HttpContext context) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\AuthenticationMiddleware.cs:line 69
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in C:\Users\ACER\Documents\GitHub\New folder\PRN_CafeManagement\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
+
