@@ -8,5 +8,6 @@ namespace CafeManagent.Services.Interface.StaffModule
     {
         Task<StaffProfile?> GetByIdAsync(int staffId, CancellationToken ct = default);
         Task<bool> UpdateAsync(UpdateStaffProfile dto, IFormFile? avatarFile, string webRootPath, CancellationToken ct = default);
+        Task<bool> ChangePasswordAsync(ChangePasswordRequest dto, CancellationToken ct = default);
     }
 }

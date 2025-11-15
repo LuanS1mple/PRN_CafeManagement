@@ -6,6 +6,8 @@ using CafeManagent.Services.Interface.StaffModule;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
 using System.Linq;
+using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace CafeManagent.Services.Imp.StaffModule
 {
@@ -44,10 +46,51 @@ namespace CafeManagent.Services.Imp.StaffModule
             var s = await _db.Staff.FirstOrDefaultAsync(x => x.StaffId == dto.StaffId, ct);
             if (s is null) return false;
 
-            // Map DTO -> Entity (không đụng CreateAt, Password...)
+            // Email trùng với người khác
+            if (await _db.Staff.AnyAsync(x => x.Email == dto.Email && x.StaffId != dto.StaffId, ct))
+                throw new ValidationException(
+                    new ValidationResult("Email đã tồn tại.", new[] { nameof(dto.Email) }),
+                    null,
+                    dto.Email
+                );
+
+            // Phone trùng với người khác
+            if (await _db.Staff.AnyAsync(x => x.Phone == dto.Phone && x.StaffId != dto.StaffId, ct))
+                throw new ValidationException(
+                    new ValidationResult("Số điện thoại đã tồn tại.", new[] { nameof(dto.Phone) }),
+                    null,
+                    dto.Phone
+                );
+
+            // Ngày sinh: không ở tương lai, không trước 01/01/1900
+            if (dto.BirthDate.HasValue)
+            {
+                var d = dto.BirthDate.Value;
+                var min = new DateOnly(1900, 1, 1);
+                var today = DateOnly.FromDateTime(DateTime.Today);
+
+                if (d < min)
+                {
+                    throw new ValidationException(
+                        new ValidationResult("Ngày sinh phải từ 01/01/1900 trở đi", new[] { nameof(dto.BirthDate) }),
+                        null,
+                        dto.BirthDate
+                    );
+                }
+
+                if (d > today)
+                {
+                    throw new ValidationException(
+                        new ValidationResult("Ngày sinh không được là ngày trong tương lai", new[] { nameof(dto.BirthDate) }),
+                        null,
+                        dto.BirthDate
+                    );
+                }
+            }
+
             StaffProfileMapper.MapUpdate(dto, s);
 
-            // --- Avatar: đồng bộ với các service khác ---
+            // ====== AVATAR ======
             if (avatarFile is not null && avatarFile.Length > 0)
             {
                 if (avatarFile.Length > 2 * 1024 * 1024)
@@ -70,9 +113,7 @@ namespace CafeManagent.Services.Imp.StaffModule
                         if (File.Exists(absOld))
                             File.Delete(absOld);
                     }
-                    catch
-                    {
-                    }
+                    catch { }
                 }
 
                 var folder = Path.Combine(webRootPath, AvatarFolder);
@@ -93,6 +134,39 @@ namespace CafeManagent.Services.Imp.StaffModule
             await _db.SaveChangesAsync(ct);
             return true;
         }
+
+        public async Task<bool> ChangePasswordAsync(ChangePasswordRequest dto, CancellationToken ct = default)
+        {
+            var user = await _db.Staff.FirstOrDefaultAsync(x => x.StaffId == dto.StaffId, ct);
+            if (user is null) return false;
+
+            // So sánh mật khẩu cũ
+            if (!VerifyPassword(dto.CurrentPassword, user.Password))
+                throw new ValidationException("Mật khẩu hiện tại không đúng");
+
+            if (dto.NewPassword.Length < 6)
+                throw new ValidationException("Mật khẩu mới phải ít nhất 6 ký tự");
+
+            if (dto.NewPassword != dto.ConfirmPassword)
+                throw new ValidationException("Xác nhận mật khẩu không khớp");
+
+            // Hash mật khẩu mới với BCrypt
+            user.Password = HashPassword(dto.NewPassword);
+
+            await _db.SaveChangesAsync(ct);
+            return true;
+        }
+
+        private static string HashPassword(string password)
+        {
+            return BCrypt.Net.BCrypt.HashPassword(password);
+        }
+
+        private static bool VerifyPassword(string password, string hash)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hash);
+        }
+
 
     }
 }
