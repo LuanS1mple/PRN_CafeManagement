@@ -23,10 +23,10 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
     public class OrderController : Controller
     {
         private const string SESSION_KEY_DRAFT = "OrderDraft";
-        
+
         private readonly IOrderService _svc;
         private readonly IHubContext<OrderHub> _hub;
-        private readonly IProductService _productSvc; 
+        private readonly IProductService _productSvc;
         private readonly ICustomerService _customerSvc;
         private readonly IVnPayService _vnpaySvc;
         public OrderController(IOrderService svc, IHubContext<OrderHub> hub, IProductService productSvc, ICustomerService customerSvc, IVnPayService vnpaySvc)
@@ -41,7 +41,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
 
         //view
         [Authorize(Roles = "Cashier")]
-        public IActionResult Waiter() 
+        public IActionResult Waiter()
         {
             var activeOrders = _svc.GetByStatuses(0)
                  .Concat(_svc.GetByStatuses(1))
@@ -87,11 +87,12 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 .ToList();
             var orderDtos = ToDto(historyOrders);
             var sortedHistory = orderDtos
-                .OrderBy(o => o.Status)           
-                .ThenByDescending(o => o.OrderId) 
+                .OrderBy(o => o.Status)
+                .ThenByDescending(o => o.OrderId)
                 .ToList();
             return View("CompletedHistory", sortedHistory);
         }
+
 
 
 
@@ -130,7 +131,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 }
                 else
                 {
-                    customerFoundStatus = 2; 
+                    customerFoundStatus = 2;
                     customerStatus = $"<span class='text-info fw-bold'>SĐT mới ({draft.CustomerPhone})</span>. Sẽ nhận {pointsEarned} điểm.";
                 }
             }
@@ -138,7 +139,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
             {
                 customerFoundStatus = 0;
                 customerStatus = "Chưa nhập SĐT/SĐT không hợp lệ.";
-                pointsEarned = 0; 
+                pointsEarned = 0;
             }
 
             return Json(new
@@ -154,7 +155,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                     CustomerPhone = draft.CustomerPhone ?? "N/A",
                     CustomerStatus = customerStatus,
                     PointsEarned = pointsEarned,
-                    CustomerFoundStatus = customerFoundStatus 
+                    CustomerFoundStatus = customerFoundStatus
                 }
             });
         }
@@ -221,9 +222,9 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
             {
                 return RedirectToAction("AddOrder");
             }
-            return View(draftDetails); 
+            return View(draftDetails);
         }
-      
+
         [HttpPost]
         [Authorize(Roles = "Cashier")]
         public IActionResult CancelDraft()
@@ -238,7 +239,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
             HttpContext.Session.Remove(SESSION_KEY_DRAFT);
             return RedirectToAction("AddOrder");
         }
-        
+
         [HttpPost]
         [Authorize(Roles = "Cashier")]
         public async Task<IActionResult> CompletePayment(string paymentMethod)
@@ -255,7 +256,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
 
             try
             {
-                if(draftDetails.Customer!=null && draftDetails.Customer.CustomerId == 0)
+                if (draftDetails.Customer != null && draftDetails.Customer.CustomerId == 0)
                 {
                     var newCustomer = new Customer
                     {
@@ -293,7 +294,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 return Json(new
                 {
                     success = true,
-                   
+
                     redirectUrl = Url.Action("Waiter", "Order", new { id = savedOrder.OrderId })
                 });
             }
@@ -363,7 +364,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
 
                 if (o != null)
                 {
-                    if (o.CustomerId.HasValue )
+                    if (o.CustomerId.HasValue)
                     {
                         int pointsEarned = (int)Math.Floor(o.TotalAmount.Value / 1000m);
                         _customerSvc.UpdateLoyaltyPoints(o.CustomerId.Value, -pointsEarned);
@@ -401,7 +402,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 await _hub.Clients.All.SendAsync("OrderPreparing", ToDto(o!));
                 return Json(new { success = ok, order = ToDto(o!) });
             }
-            
+
             return Json(new { success = ok });
         }
 
@@ -565,7 +566,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 var tempOrder = DraftOrderMapper.MapDraftToOrder(
                     draftDetails,
                     paymentMethod: "Online",
-                    status: 0, 
+                    status: 0,
                     staffId: staffId,
                     newCustomerId: customerId
                 );
@@ -637,7 +638,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
 
             if (response.ResponseCode == "00" && response.IsSuccess)
             {
-   
+
                 try
                 {
                     _svc.Cancel(tempOrderId.Value);
@@ -735,7 +736,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 OrderTime = o.OrderDate?.ToString("HH:mm:ss dd/MM") ?? ""
             };
         }
-    
+
 
         private OrderDetailsDto ToDetailsDto(Order o)
         {
@@ -761,7 +762,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 Items = itemsDto
             };
         }
-       
+
 
         private string StatusText(int? s) => s switch
         {
@@ -776,3 +777,4 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
 
     }
 }
+

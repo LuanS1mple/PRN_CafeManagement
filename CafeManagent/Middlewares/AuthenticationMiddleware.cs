@@ -40,7 +40,7 @@ namespace CafeManagent.Middlewares
                 ClaimsPrincipal userInfo = authenticationService.GetClaims(accessToken);
                 context.User = userInfo;
                 //gan vao session
-                //AddToSession(userInfo, context);
+                AddToSession(userInfo, context);
             }
             //neu at het han hoac k co, check refresh
             else if (!string.IsNullOrEmpty(refreshToken) && !string.IsNullOrEmpty(accessToken))
@@ -59,7 +59,7 @@ namespace CafeManagent.Middlewares
                     //them vao cookies
                     AddTokenToCookies(newRefreshToken, newAccessToken, context);
                     //them vao session
-                    //AddToSession(userInfo,context);
+                    AddToSession(userInfo,context);
                 }
                 else
                 {
@@ -82,6 +82,10 @@ namespace CafeManagent.Middlewares
         }
         private void AddToSession(ClaimsPrincipal userInfo, HttpContext context)
         {
+            if(context.Session.GetInt32("StaffId") != null)
+            {
+                return;
+            }
             string staffIdClaim = userInfo.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(staffIdClaim, out int staffId))
             {
