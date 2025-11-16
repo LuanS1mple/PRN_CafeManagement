@@ -2,6 +2,7 @@
 using CafeManagent.dto.response.WorkShiftDTO;
 using CafeManagent.Enums;
 using CafeManagent.Hubs;
+using CafeManagent.mapper;
 using CafeManagent.Models;
 using CafeManagent.Services.Interface.WorkShiftModule;
 using Microsoft.AspNetCore.Mvc;
@@ -114,62 +115,27 @@ namespace CafeManagent.Services.Imp.WorkShiftModule
         }
 
 
-        public async Task<(bool Success, NotifyMessage Notify)> AddWorkShiftAsync(AddWorkShiftDTO dto)
+        public async Task<bool> AddWorkShiftAsync(AddWorkShiftDTO dto)
         {
-            var today = DateOnly.FromDateTime(DateTime.Now);
-
-            if (dto.Date < today)
-                return (false, NotifyMessage.CA_CUA_NGAY_CU);
-
-            if (string.IsNullOrWhiteSpace(dto.EmployeeName))
-                return (false, NotifyMessage.NHAN_VIEN_TRONG);
-
-            var staff = await _context.Staff
-                .Include(s => s.Role)
-                .FirstOrDefaultAsync(s => s.FullName == dto.EmployeeName);
-
-            if (staff == null)
-                return (false, NotifyMessage.KHONG_TIM_THAY_NHAN_VIEN);
-
-            var workShift = await _context.WorkShifts
-                .FirstOrDefaultAsync(ws => ws.ShiftName == dto.ShiftType);
-
-            if (workShift == null)
-                return (false, NotifyMessage.KHONG_THAY_CA_LAM);
-
-            var existsSame = await _context.WorkSchedules
-                .AnyAsync(ws => ws.StaffId == staff.StaffId
-                            && ws.Date == dto.Date
-                            && ws.WorkshiftId == workShift.WorkshiftId);
-
-            if (existsSame)
-                return (false, NotifyMessage.TRUNG_CA);
-
-            var schedule = new WorkSchedule
+            try
             {
-                Date = dto.Date,
-                WorkshiftId = workShift.WorkshiftId,
-                StaffId = staff.StaffId,
-                ShiftName = dto.ShiftType,
-                Description = dto.Note
-            };
+                var staff = await _context.Staff.FirstAsync(s => s.FullName == dto.EmployeeName);
+                var shift = await _context.WorkShifts.FirstAsync(s => s.ShiftName == dto.ShiftType);
 
-            _context.WorkSchedules.Add(schedule);
-            await _context.SaveChangesAsync();
+                var ws = WorkShiftMapper.FromAddWorkShiftDTO(dto, staff.StaffId, shift.WorkshiftId);
 
-            // Broadcast realtime summary (optional)
-            await _hubContext.Clients.All.SendAsync("ReceiveWorkShiftUpdate", new
+                _context.WorkSchedules.Add(ws);
+
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch
             {
-                Date = schedule.Date.HasValue ? schedule.Date.Value.ToString("yyyy-MM-dd") : "",
-                Position = staff.Role?.RoleName ?? "",
-                ShiftType = schedule.ShiftName,
-                StartTime = workShift.StartTime.HasValue ? workShift.StartTime.Value.ToString(@"hh\:mm") : "",
-                EndTime = workShift.EndTime.HasValue ? workShift.EndTime.Value.ToString(@"hh\:mm") : "",
-                Description = schedule.Description ?? ""
-            });
-
-            return (true, NotifyMessage.THEM_CA_LAM_OK);
+                return false;
+            }
         }
+
 
         public async Task<(bool Success, NotifyMessage Notify)> DeleteWorkShiftAsync(int id)
         {

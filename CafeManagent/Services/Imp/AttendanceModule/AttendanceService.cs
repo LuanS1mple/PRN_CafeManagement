@@ -109,7 +109,7 @@ namespace CafeManagent.Services.Imp.AttendanceModule
             }
 
             await _context.Attendances.AddAsync(attendance);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();  
             return attendance;
         }
 

@@ -13,6 +13,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.SignalR;
 using CafeManagent.dto.response.WorkShiftDTO;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace CafeManagent.Controllers.Manager.WorkShiftModule
 {
@@ -114,18 +115,28 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
         [HttpPost]
         public async Task<IActionResult> AddWorkShift([FromForm] AddWorkShiftDTO dto)
         {
-            // Lấy staffId từ session giống module Recipe (nếu có)
             int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
 
-            var (success, notify) = await _service.AddWorkShiftAsync(dto);
+            // Nếu DTO hoặc CustomValidation fail
+            if (!ModelState.IsValid)
+            {
+                ResponseHub.SetNotify(staffId, new SystemNotify()
+                {
+                    IsSuccess = false,
+                    Message = NotifyMessage.DU_LIEU_KHONG_HOP_LE.Message
+                });
+                return RedirectToAction("Index");
+            }
+
+            bool success = await _service.AddWorkShiftAsync(dto);
 
             ResponseHub.SetNotify(staffId, new SystemNotify()
             {
                 IsSuccess = success,
-                Message = notify.Message
+                Message = success
+                    ? NotifyMessage.THEM_CA_LAM_OK.Message
+                    : NotifyMessage.THEM_CA_THAT_BAI.Message
             });
-
-         
 
             return RedirectToAction("Index");
         }
