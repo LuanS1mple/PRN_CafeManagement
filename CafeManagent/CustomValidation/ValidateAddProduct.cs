@@ -9,7 +9,7 @@ namespace CafeManagent.CustomValidation
         protected override ValidationResult? IsValid(object? value, ValidationContext context)
         {
             var dto = (AddProductDTO)context.ObjectInstance;
-            var db = (CafeManagementContext)context.GetService(typeof(CafeManagementContext));
+            var db = context.GetService<CafeManagementContext>();
 
             if (string.IsNullOrWhiteSpace(dto.ProductName))
                 return new ValidationResult("Tên sản phẩm không được để trống");

@@ -9,8 +9,8 @@ namespace CafeManagent.CustomValidation
         protected override ValidationResult? IsValid(object? value, ValidationContext context)
         {
             var dto = (AddWorkShiftDTO)context.ObjectInstance;
-            var db = (CafeManagementContext)context.GetService(typeof(CafeManagementContext));
-
+            var db = context.GetService<CafeManagementContext>();
+            
             if (dto.Date < DateOnly.FromDateTime(DateTime.Now))
             {
                 return new ValidationResult("Không thể tạo ca làm trong quá khứ");

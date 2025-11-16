@@ -9,7 +9,7 @@ namespace CafeManagent.CustomValidation
         protected override ValidationResult? IsValid(object? value, ValidationContext context)
         {
             var dto = (UpdateProductDTO)context.ObjectInstance;
-            var db = (CafeManagementContext)context.GetService(typeof(CafeManagementContext));
+            var db = context.GetService<CafeManagementContext>();
 
             var product = db.Products.FirstOrDefault(p => p.ProductId == dto.ProductId);
             if (product == null)

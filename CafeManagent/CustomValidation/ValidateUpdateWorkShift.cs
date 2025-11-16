@@ -9,7 +9,7 @@ namespace CafeManagent.CustomValidation
         protected override ValidationResult? IsValid(object? value, ValidationContext context)
         {
             var dto = (UpdateWorkShiftDTO)context.ObjectInstance;
-            var db = (CafeManagementContext)context.GetService(typeof(CafeManagementContext));
+            var db = context.GetService<CafeManagementContext>();
 
             var schedule = db.WorkSchedules.FirstOrDefault(ws => ws.ShiftId == dto.ShiftId);
             if (schedule == null)
