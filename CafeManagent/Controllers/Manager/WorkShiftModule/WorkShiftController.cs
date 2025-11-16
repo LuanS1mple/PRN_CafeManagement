@@ -137,7 +137,30 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
                     ? NotifyMessage.THEM_CA_LAM_OK.Message
                     : NotifyMessage.THEM_CA_THAT_BAI.Message
             });
- 
+
+            if (success)
+            {
+                var schedule = await _context.WorkSchedules
+                    .Include(ws => ws.Staff)
+                    .Include(ws => ws.Workshift)
+                    .OrderByDescending(ws => ws.Date)
+                    .FirstOrDefaultAsync(); // hoặc lấy entity vừa thêm
+
+                var staff = schedule.Staff;
+                var workShift = schedule.Workshift;
+
+                await _hub.Clients.All.SendAsync("ReceiveWorkShiftUpdate", new
+                {
+                    Date = schedule.Date.HasValue ? schedule.Date.Value.ToString("yyyy-MM-dd") : "",
+                    Position = staff.Role?.RoleName ?? "",
+                    ShiftType = schedule.ShiftName,
+                    StartTime = workShift.StartTime.HasValue ? workShift.StartTime.Value.ToString(@"hh\:mm") : "",
+                    EndTime = workShift.EndTime.HasValue ? workShift.EndTime.Value.ToString(@"hh\:mm") : "",
+                    Description = schedule.Description ?? ""
+
+                });
+            }
+
 
             return RedirectToAction("Index");
         }
