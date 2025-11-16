@@ -225,8 +225,12 @@
                     <!-- NGUYÊN LIỆU -->
                     <div class="mb-3">
                         <label class="form-label">Nguyên liệu</label>
-                        <div id="editIngredientContainer"></div>
+
+                        <div id="editIngredientContainer">
+                        </div>
+
                     </div>
+
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -239,7 +243,7 @@
     </div>
 </div>
 
-
+@* Load form *@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const buttons = document.querySelectorAll('.view-recipe-btn');
@@ -270,6 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+@* Add *@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -329,12 +334,74 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+@* Edit *@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ====== NÚT EDIT ======
+    const editContainer = document.getElementById("editIngredientContainer");
+
+    // Hàm tạo dòng nguyên liệu
+    function createEditRow(index, ing = null) {
+        return `
+            <div class="row g-2 mb-2 ingredient-item">
+                <div class="col-4">
+                    <input type="text" name="Ingredients[${index}].IngredientName"
+                           class="form-control"
+                           value="${ing ? ing.ingredient.ingredientName : ""}"
+                           placeholder="Tên nguyên liệu" required />
+                </div>
+
+                <div class="col-3">
+                    <select name="Ingredients[${index}].Unit" class="form-select" required>
+                        <option value="kg" ${ing && ing.ingredient.unit == "kg" ? "selected" : ""}>kg</option>
+                        <option value="l" ${ing && ing.ingredient.unit == "l" ? "selected" : ""}>l</option>
+                        <option value="gram" ${ing && ing.ingredient.unit == "gram" ? "selected" : ""}>gram</option>
+                        <option value="ml" ${ing && ing.ingredient.unit == "ml" ? "selected" : ""}>ml</option>
+                    </select>
+                </div>
+
+                <div class="col-3">
+                    <input type="number" step="0.01"
+                           name="Ingredients[${index}].QuantityNeeded"
+                           class="form-control"
+                           value="${ing ? ing.quantityNeeded : ""}"
+                           placeholder="Số lượng" required />
+                </div>
+
+                <div class="col-2 d-flex">
+                    ${index === 0
+                        ? `<button type="button" class="btn btn-success addIngredientEdit w-100">+</button>`
+                        : `<button type="button" class="btn btn-danger removeIngredientEdit w-100">🗑</button>`
+                    }
+                </div>
+            </div>
+        `;
+    }
+
+    // Cập nhật lại index
+    function updateEditIndexes() {
+        const items = editContainer.querySelectorAll(".ingredient-item");
+        items.forEach((item, index) => {
+            item.querySelectorAll("input, select").forEach(el => {
+                let name = el.getAttribute("name");
+                name = name.replace(/\[\d+\]/, `[${index}]`);
+                el.setAttribute("name", name);
+            });
+
+            // Update nút + cho dòng đầu tiên và nút xóa  cho các dòng sau
+            const btnContainer = item.querySelector(".col-2");
+            if (index === 0) {
+                btnContainer.innerHTML = `<button type="button" class="btn btn-success addIngredientEdit w-100">+</button>`;
+            } else {
+                btnContainer.innerHTML = `<button type="button" class="btn btn-danger removeIngredientEdit w-100">🗑</button>`;
+            }
+        });
+    }
+
+    // Khi bấm nút EDIT
     document.querySelectorAll('.edit-recipe-btn').forEach(btn => {
         btn.addEventListener('click', function () {
+
             const product = JSON.parse(this.getAttribute('data-product'));
 
             document.getElementById('editProductId').value = product.productId;
@@ -342,51 +409,35 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('editDescription').value = product.description;
             document.getElementById('editPrice').value = product.price;
 
-            const container = document.getElementById('editIngredientContainer');
-            container.innerHTML = "";
+            editContainer.innerHTML = "";
 
             if (product.recipes && product.recipes.length > 0) {
                 product.recipes.forEach((r, index) => {
-
-                    const row = document.createElement("div");
-                    row.classList.add("row", "g-2", "mb-2", "ingredient-item");
-
-                    row.innerHTML = `
-                        <div class="col-4">
-                            <input type="text" name="Ingredients[${index}].IngredientName"
-                                   class="form-control"
-                                   value="${r.ingredient.ingredientName}" required />
-                        </div>
-
-                        <div class="col-3">
-                            <select name="Ingredients[${index}].Unit" class="form-select" required>
-                                <option value="kg" ${r.ingredient.unit == "kg" ? "selected" : ""}>kg</option>
-                                <option value="l" ${r.ingredient.unit == "l" ? "selected" : ""}>l</option>
-                                <option value="gram" ${r.ingredient.unit == "gram" ? "selected" : ""}>gram</option>
-                                <option value="ml" ${r.ingredient.unit == "ml" ? "selected" : ""}>ml</option>
-                            </select>
-                        </div>
-
-                        <div class="col-3">
-                            <input type="number" step="0.01"
-                                   name="Ingredients[${index}].QuantityNeeded"
-                                   class="form-control"
-                                   value="${r.quantityNeeded}" required />
-                        </div>
-
-                        <div class="col-2 d-flex">
-                            <button type="button" class="btn btn-danger removeIngredient w-100">🗑</button>
-                        </div>
-                    `;
-
-                    container.appendChild(row);
+                    editContainer.insertAdjacentHTML("beforeend", createEditRow(index, r));
                 });
+            } else {
+                editContainer.insertAdjacentHTML("beforeend", createEditRow(0));
             }
         });
     });
 
+    // Sự kiện click: thêm hoặc xóa dòng
+    editContainer.addEventListener("click", function (e) {
+        if (e.target.classList.contains("addIngredientEdit")) {
+            const index = editContainer.querySelectorAll(".ingredient-item").length;
+            editContainer.insertAdjacentHTML("beforeend", createEditRow(index));
+            updateEditIndexes();
+        }
+
+        if (e.target.classList.contains("removeIngredientEdit")) {
+            e.target.closest(".ingredient-item").remove();
+            updateEditIndexes();
+        }
+    });
+
 });
 </script>
+
 
 
 
