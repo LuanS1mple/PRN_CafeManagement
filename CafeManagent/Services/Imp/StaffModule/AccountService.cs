@@ -46,7 +46,7 @@ namespace CafeManagent.Services.Imp.StaffModule
                 // Giả sử _cache là IMemoryCache
                 _cache.Set($"reset_{email}", token, TimeSpan.FromMinutes(10));
                 // Đảm bảo host này là host chạy ứng dụng của bạn
-                string resetLink = $"https://localhost:5211/Account/ResetPassword?email={email}&token={token}";
+                string resetLink = $"http://localhost:5211/Account/ResetPassword?email={email}&token={token}";
 
                 // 4. Cấu hình Email (Sử dụng MailAddress và MailMessage)
                 var from = new MailAddress(fromAddress, "Cafe Management");

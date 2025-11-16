@@ -10,24 +10,22 @@ namespace CafeManagent.Controllers
 {
     public class ReportController : Controller
     {
-        private readonly CafeManagementContext _context; // Thay thế bằng DbContext thực tế của bạn
-
+        private readonly CafeManagementContext _context; 
         // Giả định Status Codes:
-        private const int STATUS_COMPLETED = 3; // Ví dụ: Đã hoàn thành/Thanh toán
-        private const int STATUS_REFUNDED = -1;  // Ví dụ: Đã hoàn tiền/Hủy sau khi thanh toán
+        private const int STATUS_COMPLETED = 3;
+        private const int STATUS_REFUNDED = -2;  
 
         public ReportController(CafeManagementContext context)
         {
             _context = context;
         }
 
-        // Action để hiển thị View báo cáo
         public IActionResult Index()
         {
             return View("RevenueReport"); 
         }
 
-        // DTO để trả về dữ liệu báo cáo qua API
+  
         public class RevenueReportDto
         {
             public decimal TotalRevenue { get; set; }

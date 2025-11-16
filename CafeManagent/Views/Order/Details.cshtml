@@ -149,7 +149,14 @@
                             <i class="fa-solid fa-check me-1"></i> Xác nhận Đã Giao
                         </button>
                     }
+                    else if(Model.Status == 3)
+                    {
+                        <button class="btn btn-warning text-dark action-btn" data-action="refund" data-id="@Model.OrderId" data-bs-toggle="modal" data-bs-target="#confirmRefundModal" title="Hoàn tiền và chuyển trạng thái">
+                            <i class="fa-solid fa-undo me-1"></i> Hoàn tiền
+                        </button>
+                    }
                 }
+
 
                 @if (role == "Barista")
                 {
@@ -165,15 +172,9 @@
                             <i class="fa-solid fa-check me-1"></i> Hoàn thành
                         </button>
                     }
+
                 }
 
-                {{-- REFUND: Dành cho Admin/Quản lý hoặc Waiter trên màn hình lịch sử (Status 3) --}}
-                @if (Model.Status == 3)
-                {
-                    <button class="btn btn-warning text-dark action-btn" data-action="refund" data-id="@Model.OrderId" data-bs-toggle="modal" data-bs-target="#confirmRefundModal" title="Hoàn tiền và chuyển trạng thái">
-                        <i class="fa-solid fa-undo me-1"></i> Hoàn tiền
-                    </button>
-                }
             </div>
         </div>
     }
@@ -338,18 +339,12 @@
 
             connection.start().catch(err => console.error("SignalR Connection Error: " + err.toString()));
 
-            // =======================================================
-            // Hàm tiện ích: Định dạng tiền tệ trong JavaScript
-            // =======================================================
             function formatCurrency(amount) {
                 if (amount == null || isNaN(amount)) return "0 VND";
                 // Sử dụng Intl.NumberFormat cho định dạng tiền tệ Việt Nam
                 return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
             }
 
-            // =======================================================
-            // Hàm tiện ích: Tải lại trang hiện tại (Dùng Query Parameter)
-            // =======================================================
             window.reloadCurrentPage = function() {
                 // Lấy URL hiện tại, xóa mọi tham số truy vấn cũ
                 const currentUrl = window.location.href.split('?')[0];
@@ -376,9 +371,6 @@
                 return { statusText, badgeClass };
             }
 
-            // =======================================================
-            // Hàm cập nhật trạng thái UI và Actions
-            // =======================================================
             function updateStatusUi(newStatus) {
                 currentStatus = newStatus;
                 const { statusText: newStatusText, badgeClass } = getStatusInfo(newStatus);
@@ -392,9 +384,6 @@
                 updateActions(newStatus);
             }
 
-            // =======================================================
-            // Hàm cập nhật Thông tin Chi tiết Order (Discount, Total, Note)
-            // =======================================================
             function updateOrderInfo(dto) {
                 // Cập nhật Giảm giá
                 $('#action-buttons-container').closest('.container').find('.text-danger.fw-bold').text(formatCurrency(dto.discount));
@@ -413,10 +402,6 @@
                 $footer.find('tr:eq(1) td:last').text("- " + formatCurrency(dto.discount)); // Giảm giá
                 $footer.find('tr:eq(2) td:last').text(formatCurrency(dto.totalAmount)); // Tổng thanh toán
 
-                // Vì các thông tin này nằm trong phần Razor View, để đảm bảo tính chính xác
-                // và cập nhật danh sách món (nếu có), chúng ta VẪN CẦN RELOAD
-                // Tuy nhiên, việc cập nhật UI trực tiếp giúp giảm độ trễ thấy trạng thái mới
-                // trước khi reload hoàn tất.
             }
 
 
@@ -536,9 +521,7 @@
                 });
             }
 
-            // =======================================================
-            // Xử lý các Modal Button Action (Đã sửa lỗi actionUrl cho 'ready')
-            // =======================================================
+    
             // 1. Bartender Action (Prepare/Ready)
             $("#confirmBartenderBtnActionDetail").off('click').on('click', function() {
                 const modal = $('#confirmBartenderModal');
@@ -562,9 +545,7 @@
                             if (response.success) {
                                 // toastr.success(`Order #${id} đã cập nhật trạng thái.`); // ĐÃ XÓA
                                 reloadCurrentPage();
-                            } else {
-                                // toastr.error("Không thể thay đổi trạng thái. Đã có lỗi xảy ra."); // ĐÃ XÓA
-                            }
+                            } 
                         })
                         .fail(function() {
                             modal.modal('hide');
@@ -584,11 +565,9 @@
                     .done(function (res) {
                         $('#confirmWaiterModal').modal('hide');
                         if (res.success) {
-                            // toastr.success(`Order #${id} đã hoàn thành.`); // ĐÃ XÓA
+                            
                             reloadCurrentPage();
-                        } else {
-                            // toastr.error("Không thể hoàn thành đơn hàng."); // ĐÃ XÓA
-                        }
+                        } 
                     })
                     .fail(function () {
                         $('#confirmWaiterModal').modal('hide');
@@ -605,11 +584,8 @@
                     .done(function (res) {
                         $('#confirmCancelModal').modal('hide');
                         if (res.success) {
-                            // toastr.warning(`Order #${id} đã hủy.`); // ĐÃ XÓA
                             reloadCurrentPage();
-                        } else {
-                            // toastr.error("Không thể hủy đơn hàng."); // ĐÃ XÓA
-                        }
+                        } 
                     })
                     .fail(function () {
                         $('#confirmCancelModal').modal('hide');
@@ -643,8 +619,7 @@
             // Hủy (Nhận Order ID)
             connection.on("OrderCanceled", (id) => {
                 if (id === currentOrderId) {
-                    // toastr.warning(`Order #${id} đã bị hủy bởi người dùng khác.`); // ĐÃ XÓA
-                    updateStatusUi(-1);
+                   updateStatusUi(-1);
                     reloadCurrentPage(); // Buộc tải lại
                 }
             });
@@ -652,7 +627,6 @@
             // Hoàn tiền (Nhận Order ID)
             connection.on("OrderRefunded", (id) => {
                 if (id === currentOrderId) {
-                    // toastr.warning(`Order #${id} đã được hoàn tiền bởi người dùng khác.`); // ĐÃ XÓA
                     updateStatusUi(-2);
                     reloadCurrentPage(); // Buộc tải lại
                 }
@@ -661,25 +635,24 @@
             // Chuẩn bị (Nhận Order DTO)
             connection.on("OrderPreparing", (dto) => {
                 if (dto.orderId === currentOrderId) {
-                    // toastr.info(`Order #${dto.orderId} đang được chuẩn bị bởi người dùng khác.`); // ĐÃ XÓA
-                    updateStatusUi(dto.status);
+                     updateStatusUi(dto.status);
                     reloadCurrentPage(); // Buộc tải lại
                 }
             });
 
-            // Sẵn sàng (Nhận Order DTO)
+  
             connection.on("OrderReady", (dto) => {
                 if (dto.orderId === currentOrderId) {
-                    // toastr.success(`Order #${dto.orderId} đã SẴN SÀNG bởi người dùng khác.`); // ĐÃ XÓA
+
                     updateStatusUi(dto.status);
-                    reloadCurrentPage(); // Buộc tải lại
+                    reloadCurrentPage(); 
                 }
             });
 
             // Hoàn thành (Nhận Order DTO)
             connection.on("OrderConfirmed", (dto) => {
                 if (dto.orderId === currentOrderId) {
-                    // toastr.success(`Order #${dto.orderId} đã HOÀN THÀNH bởi người dùng khác.`); // ĐÃ XÓA
+                   
                     updateOrderInfo(dto);
                     updateStatusUi(dto.status);
                     reloadCurrentPage(); // Buộc tải lại
