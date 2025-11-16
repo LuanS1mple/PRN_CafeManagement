@@ -49,10 +49,18 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
 
             if (!ModelState.IsValid)
             {
-                ResponseHub.SetNotify(staffId, new SystemNotify
+
+                var errorMessages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                var errorMessage = string.Join(". ", errorMessages);
+
+                ResponseHub.SetNotify(staffId, new SystemNotify()
                 {
                     IsSuccess = false,
-                    Message = NotifyMessage.DU_LIEU_KHONG_HOP_LE.Message
+                    Message = errorMessage
                 });
 
                 return RedirectToAction("Index");
@@ -79,10 +87,18 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
 
             if (!ModelState.IsValid)
             {
-                ResponseHub.SetNotify(staffId, new SystemNotify
+
+                var errorMessages = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                var errorMessage = string.Join(". ", errorMessages);
+
+                ResponseHub.SetNotify(staffId, new SystemNotify()
                 {
                     IsSuccess = false,
-                    Message = NotifyMessage.DU_LIEU_KHONG_HOP_LE.Message
+                    Message = errorMessage
                 });
 
                 return RedirectToAction("Index");

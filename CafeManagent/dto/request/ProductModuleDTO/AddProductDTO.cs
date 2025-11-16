@@ -14,6 +14,7 @@ namespace CafeManagent.dto.request.ProductModuleDTO
         public decimal Price { get; set; }
 
         [Required]
+        [StringLength(500)]
         public string Description { get; set; }
 
         public List<IngredientItemDTO> Ingredients { get; set; } = new();
