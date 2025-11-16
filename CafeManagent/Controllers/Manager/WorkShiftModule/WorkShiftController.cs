@@ -117,7 +117,7 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
         {
             int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
 
-            // Nếu DTO hoặc CustomValidation fail
+           
             if (!ModelState.IsValid)
             {
                 ResponseHub.SetNotify(staffId, new SystemNotify()

@@ -102,7 +102,19 @@ namespace CafeManagent.Controllers.Staffs.CustomerModule
         public async Task<IActionResult> UpdateCustomerProfile([FromForm] UpdateCustomerProfileDTO dto)
         {
             int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
+            if (!ModelState.IsValid)
+            {
+                ResponseHub.SetNotify(staffId, new SystemNotify()
+                {
+                    IsSuccess = false,
+                    Message = NotifyMessage.DU_LIEU_KHONG_HOP_LE.Message
+                });
+
+                return RedirectToAction("Index");
+            }
+
             var result = await _service.UpdateCustomerAsync(dto);
+
 
             ResponseHub.SetNotify(staffId, new SystemNotify()
             {

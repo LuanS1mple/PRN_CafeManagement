@@ -10,6 +10,7 @@ namespace CafeManagent.dto.request.ProductModuleDTO
         public string ProductName { get; set; }
 
         [Required]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Giá sản phẩm phải lớn hơn 0")]
         public decimal Price { get; set; }
 
         [Required]

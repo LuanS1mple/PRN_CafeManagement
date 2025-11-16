@@ -7,12 +7,14 @@ namespace CafeManagent.dto.request.WorkShiftModuleDTO
     public class AddWorkShiftDTO
     {
         [Required]
+        [RegularExpression(@"^[^\d]+$", ErrorMessage = "Không được chứa số")]
         public string EmployeeName { get; set; }
 
         [Required]
         public DateOnly Date { get; set; }
 
         [Required]
+        [RegularExpression(@"^[^\d]+$", ErrorMessage = "Không được chứa số")]
         public string ShiftType { get; set; }
         [Required]
         public int ManagerId { get; set; }
