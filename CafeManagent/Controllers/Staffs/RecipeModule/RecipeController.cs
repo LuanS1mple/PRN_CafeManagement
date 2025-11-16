@@ -49,7 +49,7 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
 
             if (!ModelState.IsValid)
             {
-                ResponseHub.SetNotify(staffId, new SystemNotify()
+                ResponseHub.SetNotify(staffId, new SystemNotify
                 {
                     IsSuccess = false,
                     Message = NotifyMessage.DU_LIEU_KHONG_HOP_LE.Message
@@ -58,12 +58,12 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
                 return RedirectToAction("Index");
             }
 
-            var ok = await _service.AddProductAsync(dto);
+            bool success = await _service.AddProductAsync(dto);
 
-            ResponseHub.SetNotify(staffId, new SystemNotify()
+            ResponseHub.SetNotify(staffId, new SystemNotify
             {
-                IsSuccess = ok,
-                Message = ok
+                IsSuccess = success,
+                Message = success
                     ? NotifyMessage.THEM_SAN_PHAM_THANH_CONG.Message
                     : NotifyMessage.SAN_PHAM_DA_TON_TAI.Message
             });
@@ -73,19 +73,30 @@ namespace CafeManagent.Controllers.Staffs.RecipeModule
 
         [Authorize(Roles = "Cashier , Barista")]
         [HttpPost]
-        public async Task<IActionResult> EditProduct(int productId, AddProductDTO dto)
+        public async Task<IActionResult> EditProduct(UpdateProductDTO dto)
         {
             int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
 
-            var ok = await _service.EditProductAsync(productId, dto);
-
-            var notify = new SystemNotify()
+            if (!ModelState.IsValid)
             {
-                IsSuccess = ok,
-                Message = NotifyMessage.SUA_SAN_PHAM_THANH_CONG.Message
-            };
+                ResponseHub.SetNotify(staffId, new SystemNotify
+                {
+                    IsSuccess = false,
+                    Message = NotifyMessage.DU_LIEU_KHONG_HOP_LE.Message
+                });
 
-            ResponseHub.SetNotify(staffId, notify);
+                return RedirectToAction("Index");
+            }
+
+            bool success = await _service.EditProductAsync(dto);
+
+            ResponseHub.SetNotify(staffId, new SystemNotify
+            {
+                IsSuccess = success,
+                Message = success
+                    ? NotifyMessage.SUA_SAN_PHAM_THANH_CONG.Message
+                    : NotifyMessage.SAN_PHAM_KHONG_TON_TAI.Message
+            });
 
             return RedirectToAction("Index");
         }

@@ -1,4 +1,5 @@
 ﻿using CafeManagent.dto.request.ProductModuleDTO;
+using CafeManagent.mapper;
 using CafeManagent.Models;
 using CafeManagent.Services.Interface.RecipeModule;
 using Microsoft.EntityFrameworkCore;
@@ -32,113 +33,72 @@ namespace CafeManagent.Services.Imp.RecipeModule
 
         public async Task<bool> AddProductAsync(AddProductDTO dto)
         {
-            // Kiểm tra trùng tên
-            if (await _context.Products.AnyAsync(p => p.ProductName == dto.ProductName))
-                return false;
-
-            var product = new Product
+            try
             {
-                ProductName = dto.ProductName,
-                Price = dto.Price,
-                Description = dto.Description,
-                CreatedAt = DateTime.Now,
-                Status = true
-            };
+                var product = ProductMapper.FromDTO(dto);
+                await _context.Products.AddAsync(product);
+                await _context.SaveChangesAsync(); // có ProductId
 
-            await _context.Products.AddAsync(product);
-            await _context.SaveChangesAsync(); // cần ProductId
-
-            // ---------- ADD NGUYÊN LIỆU -----------
-            if (dto.Ingredients != null && dto.Ingredients.Count > 0)
-            {
-                foreach (var ing in dto.Ingredients)
+                if (dto.Ingredients != null && dto.Ingredients.Count > 0)
                 {
-                    // Tìm hoặc tạo nguyên liệu
-                    var ingredient = await _context.Ingredients
-                        .FirstOrDefaultAsync(i => i.IngredientName == ing.IngredientName);
-
-                    if (ingredient == null)
+                    foreach (var ingDto in dto.Ingredients)
                     {
-                        ingredient = new Ingredient
+                        var ingredient = await _context.Ingredients
+                            .FirstOrDefaultAsync(i => i.IngredientName == ingDto.IngredientName);
+
+                        if (ingredient == null)
                         {
-                            IngredientName = ing.IngredientName,
-                            Unit = ing.Unit,
-                            QuantityInStock = 0,
-                            Status = true,
-                            CreatedAt = DateTime.Now,
-                            CostPerUnit = 0
-                        };
+                            ingredient = ProductMapper.FromDTO(ingDto);
+                            await _context.Ingredients.AddAsync(ingredient);
+                            await _context.SaveChangesAsync();
+                        }
 
-                        await _context.Ingredients.AddAsync(ingredient);
-                        await _context.SaveChangesAsync();
+                        var recipe = ProductMapper.FromDTO(product, ingredient, ingDto.QuantityNeeded);
+                        await _context.Recipes.AddAsync(recipe);
                     }
-
-                    // Tạo dòng recipe
-                    var recipe = new Recipe
-                    {
-                        ProductId = product.ProductId,
-                        IngredientId = ingredient.IngredientId,
-                        QuantityNeeded = ing.QuantityNeeded
-                    };
-
-                    await _context.Recipes.AddAsync(recipe);
                 }
-            }
 
-            await _context.SaveChangesAsync();
-            return true;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
 
-        public async Task<bool> EditProductAsync(int productId, AddProductDTO dto)
+        public async Task<bool> EditProductAsync(UpdateProductDTO dto)
         {
             var product = await _context.Products
                 .Include(p => p.Recipes)
-                .FirstOrDefaultAsync(p => p.ProductId == productId);
+                .FirstOrDefaultAsync(p => p.ProductId == dto.ProductId);
 
             if (product == null) return false;
 
-            // ===== Cập nhật thông tin sản phẩm =====
-            product.ProductName = dto.ProductName;
-            product.Price = dto.Price;
-            product.Description = dto.Description;
+            // Cập nhật thông tin product
+            ProductMapper.UpdateProductFromDTO(product, dto);
 
-            // ===== Xóa toàn bộ Recipe cũ ======
+            // Xóa toàn bộ Recipe cũ
             _context.Recipes.RemoveRange(product.Recipes);
             await _context.SaveChangesAsync();
 
-            // ===== Thêm Recipe mới =====
-            if (dto.Ingredients != null)
+            // Thêm Recipe mới
+            if (dto.Ingredients != null && dto.Ingredients.Count > 0)
             {
-                foreach (var ing in dto.Ingredients)
+                foreach (var ingDto in dto.Ingredients)
                 {
-                    // Tìm hoặc tạo nguyên liệu
                     var ingredient = await _context.Ingredients
-                        .FirstOrDefaultAsync(i => i.IngredientName == ing.IngredientName);
+                        .FirstOrDefaultAsync(i => i.IngredientName == ingDto.IngredientName);
 
                     if (ingredient == null)
                     {
-                        ingredient = new Ingredient
-                        {
-                            IngredientName = ing.IngredientName,
-                            Unit = ing.Unit,
-                            QuantityInStock = 0,
-                            Status = true,
-                            CreatedAt = DateTime.Now,
-                            CostPerUnit = 0
-                        };
-
+                        ingredient = ProductMapper.FromDTO(ingDto);
                         await _context.Ingredients.AddAsync(ingredient);
                         await _context.SaveChangesAsync();
                     }
 
-                    var recipe = new Recipe
-                    {
-                        ProductId = productId,
-                        IngredientId = ingredient.IngredientId,
-                        QuantityNeeded = ing.QuantityNeeded
-                    };
-
+                    var recipe = ProductMapper.FromDTO(product, ingredient, ingDto.QuantityNeeded);
                     await _context.Recipes.AddAsync(recipe);
                 }
             }
