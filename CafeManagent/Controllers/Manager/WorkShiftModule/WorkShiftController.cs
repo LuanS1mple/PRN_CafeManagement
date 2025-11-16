@@ -151,6 +151,7 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
             {
                 var schedule = await _context.WorkSchedules
                     .Include(ws => ws.Staff)
+                    .ThenInclude(s => s.Role)
                     .Include(ws => ws.Workshift)
                     .OrderByDescending(ws => ws.Date)
                     .FirstOrDefaultAsync(); // hoặc lấy entity vừa thêm
