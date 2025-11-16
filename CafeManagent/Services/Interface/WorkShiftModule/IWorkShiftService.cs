@@ -10,8 +10,8 @@ namespace CafeManagent.Services.Interface.WorkShiftModule
         Task<(List<WorkShiftDTO> shifts, int totalItems)> FilterPagedWorkShiftsAsync(FilterWorkShiftDTO filter, int page, int pageSize);
 
         Task<bool> AddWorkShiftAsync(AddWorkShiftDTO dto);
-        Task<(bool Success, CafeManagent.Enums.NotifyMessage Notify)> UpdateWorkShiftAsync(UpdateWorkShiftDTO dto);
-        Task<(bool Success, CafeManagent.Enums.NotifyMessage Notify)> DeleteWorkShiftAsync(int id);
+        Task<bool> UpdateWorkShiftAsync(UpdateWorkShiftDTO dto);
+        Task<bool> DeleteWorkShiftAsync(int id);
     }
 
 

@@ -128,6 +128,7 @@ namespace CafeManagent.Services.Imp.WorkShiftModule
 
                 await _context.SaveChangesAsync();
 
+
                 return true;
             }
             catch
@@ -137,12 +138,9 @@ namespace CafeManagent.Services.Imp.WorkShiftModule
         }
 
 
-        public async Task<(bool Success, NotifyMessage Notify)> DeleteWorkShiftAsync(int id)
+        public async Task<bool> DeleteWorkShiftAsync(int id)
         {
-            var schedule = await _context.WorkSchedules.FirstOrDefaultAsync(ws => ws.ShiftId == id);
-            if (schedule == null)
-                return (false, NotifyMessage.KHONG_THAY_CA_LAM);
-
+            var schedule = await _context.WorkSchedules.FirstOrDefaultAsync(ws => ws.ShiftId == id);        
             var attendance = await _context.Attendances
                 .FirstOrDefaultAsync(a =>
                     a.StaffId == schedule.StaffId &&
@@ -155,49 +153,35 @@ namespace CafeManagent.Services.Imp.WorkShiftModule
             _context.WorkSchedules.Remove(schedule);
             await _context.SaveChangesAsync();
 
-            return (true, NotifyMessage.XOA_CA_LAM_OK);
+            return true;
         }
 
-        public async Task<(bool Success, NotifyMessage Notify)> UpdateWorkShiftAsync(UpdateWorkShiftDTO dto)
+        public async Task<bool> UpdateWorkShiftAsync(UpdateWorkShiftDTO dto)
         {
-            var schedule = await _context.WorkSchedules
-                .Include(ws => ws.Staff)
-                .Include(ws => ws.Workshift)
-                .FirstOrDefaultAsync(ws => ws.ShiftId == dto.ShiftId);
+            try
+            {
+                var schedule = await _context.WorkSchedules
+                    .FirstOrDefaultAsync(ws => ws.ShiftId == dto.ShiftId);
 
-            if (schedule == null)
-                return (false, NotifyMessage.KHONG_THAY_CA_LAM);
+                if (schedule == null)
+                    return false;
 
-            var staff = await _context.Staff.FirstOrDefaultAsync(s => s.FullName == dto.EmployeeName);
-            if (staff == null)
-                return (false, NotifyMessage.THEM_CA_THAT_BAI);
+                var staff = await _context.Staff.FirstOrDefaultAsync(s => s.FullName == dto.EmployeeName);
+                var workShift = await _context.WorkShifts.FirstOrDefaultAsync(ws => ws.ShiftName == dto.ShiftType);
 
-            var workShift = await _context.WorkShifts.FirstOrDefaultAsync(ws => ws.ShiftName == dto.ShiftType);
-            if (workShift == null)
-                return (false, NotifyMessage.KHONG_THAY_CA_LAM);
+                if (staff == null || workShift == null)
+                    return false;
 
-            var today = DateOnly.FromDateTime(DateTime.Now);
-            if (dto.Date < today)
-                return (false, NotifyMessage.CA_CUA_NGAY_CU);
+                WorkShiftMapper.UpdateWorkScheduleFromDTO(schedule, dto, staff.StaffId, workShift.WorkshiftId);
 
-            var existsSame = await _context.WorkSchedules.AnyAsync(ws =>
-                ws.ShiftId != dto.ShiftId &&
-                ws.StaffId == staff.StaffId &&
-                ws.Date == dto.Date &&
-                ws.WorkshiftId == workShift.WorkshiftId);
+                await _context.SaveChangesAsync();
 
-            if (existsSame)
-                return (false, NotifyMessage.TRUNG_CA);
-
-            schedule.Date = dto.Date;
-            schedule.StaffId = staff.StaffId;
-            schedule.WorkshiftId = workShift.WorkshiftId;
-            schedule.Description = dto.Note;
-            schedule.ShiftName = dto.ShiftType;
-
-            await _context.SaveChangesAsync();
-
-            return (true, NotifyMessage.CAP_NHAT_CA_OK);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
     }

@@ -137,6 +137,7 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
                     ? NotifyMessage.THEM_CA_LAM_OK.Message
                     : NotifyMessage.THEM_CA_THAT_BAI.Message
             });
+ 
 
             return RedirectToAction("Index");
         }
@@ -147,12 +148,14 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
         {
             int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
 
-            var (success, notify) = await _service.DeleteWorkShiftAsync(id);
+            var success = await _service.DeleteWorkShiftAsync(id);
 
             ResponseHub.SetNotify(staffId, new SystemNotify()
             {
                 IsSuccess = success,
-                Message = notify.Message
+                Message = success
+                    ? NotifyMessage.XOA_CA_LAM_OK.Message
+                    : NotifyMessage.XOA_CA_THAT_BAI.Message
             });
 
             return RedirectToAction("Index");
@@ -164,16 +167,29 @@ namespace CafeManagent.Controllers.Manager.WorkShiftModule
         {
             int staffId = HttpContext.Session.GetInt32("StaffId") ?? 0;
 
-            var (success, notify) = await _service.UpdateWorkShiftAsync(dto);
+            if (!ModelState.IsValid)
+            {
+                ResponseHub.SetNotify(staffId, new SystemNotify()
+                {
+                    IsSuccess = false,
+                    Message = NotifyMessage.DU_LIEU_KHONG_HOP_LE.Message
+                });
+                return RedirectToAction("Index");
+            }
+
+            bool success = await _service.UpdateWorkShiftAsync(dto);
 
             ResponseHub.SetNotify(staffId, new SystemNotify()
             {
                 IsSuccess = success,
-                Message = notify.Message
+                Message = success
+                    ? NotifyMessage.CAP_NHAT_CA_OK.Message
+                    : NotifyMessage.CAP_NHAT_CA_THAT_BAI.Message
             });
 
             return RedirectToAction("Index");
         }
+
 
         [Authorize(Roles = "Branch Manager")]
         [HttpGet]
