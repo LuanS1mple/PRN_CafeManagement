@@ -1,9 +1,10 @@
 ﻿// File: ~/js/addOrder.js
-
 $(document).ready(function () {
     let cart = [];
     const VAT_PERCENT = 0.05;
     let currentDraftOrderId = 0;
+
+    // ... (Giữ nguyên: loadDraftFromInitialData, formatCurrency) ...
     function loadDraftFromInitialData() {
         if (initialDraftData && initialDraftData.Items) {
             console.log("Đang tải dữ liệu bản nháp từ Session...");
@@ -16,8 +17,8 @@ $(document).ready(function () {
                 UnitPrice: item.UnitPrice
             }));
 
-            $('#customerPhone').val(draft.CustomerPhone || ''); 
-            $('#discountPercent').val(draft.DiscountPercent || 0); 
+            $('#customerPhone').val(draft.CustomerPhone || '');
+            $('#discountPercent').val(draft.DiscountPercent || 0);
             $('#orderNote').val(draft.Note || '');
 
             $('#submitDraft').text('Cập Nhật Bản Nháp').removeClass('btn-info').addClass('btn-primary');
@@ -27,7 +28,6 @@ $(document).ready(function () {
         updateCartUI();
     }
 
-    // HÀM FORMAT GIÁ (GIỮ NGUYÊN)
     function formatCurrency(amount) {
         return (amount || 0).toLocaleString('vi-VN', {
             minimumFractionDigits: 0,
@@ -35,40 +35,49 @@ $(document).ready(function () {
         }) + ' VNĐ';
     }
 
-    // HÀM CẬP NHẬT TỔNG TIỀN (SỬA ĐỔI - Thêm OrderId vào DraftDto)
-    // File: ~/js/addOrder.js
-
-    // File: ~/js/addOrder.js
 
     function updateTotals() {
         // 1. Logic Thoát Sớm (Cart Rỗng)
         if (cart.length === 0 && currentDraftOrderId === 0) {
-            // ... (Giữ nguyên) ...
             $('#subtotal').text(formatCurrency(0));
             $('#discountAmount').text(formatCurrency(0));
             $('#vatAmount').text(formatCurrency(0));
             $('#grandTotal').text(formatCurrency(0));
             $('#emptyCartMessage').show();
-            $('#customerInfo').html('Không nhập SĐT nếu khách vãng lai.');
+            $('#customerInfo').html('Không nhập SĐT/SĐT không hợp lệ.');
             $('#newCustomerNameContainer').empty().hide();
             return;
         }
 
         const discountPercent = parseFloat($('#discountPercent').val()) || 0;
-        const phone = $('#customerPhone').val();
+        let phone = $('#customerPhone').val();
         const note = $('#orderNote').val();
 
-        // LẤY TÊN KHÁCH HÀNG MỚI ĐÃ NHẬP
-        // Lấy giá trị hiện tại, dù ô input có đang được hiển thị hay không.
+        // --- XÁC THỰC PHONE TRÊN FRONTEND (MỚI) ---
+        // Loại bỏ các ký tự không phải số và giới hạn độ dài
+        phone = phone.replace(/[^\d]/g, '');
+        $('#customerPhone').val(phone); // Cập nhật lại giá trị input
+
+        // Chỉ coi là hợp lệ khi >= 10 số (hoặc nếu rỗng, ta vẫn gọi API để tính toán tổng tiền vãng lai)
+        if (phone.length > 0 && phone.length < 10) {
+            $('#customerPhone').addClass('is-invalid');
+            $('#customerInfo').html('<span class="text-danger">SĐT phải có ít nhất 10 chữ số.</span>');
+            // Cập nhật giá trị phone để gửi lên API là rỗng (coi như khách vãng lai)
+            phone = '';
+        } else {
+            $('#customerPhone').removeClass('is-invalid');
+        }
+        // --- KẾT THÚC XÁC THỰC PHONE ---
+
         const newCustomerNameValue = $('#newCustomerName').val() || '';
 
         const draftDto = {
             Items: cart,
-            CustomerPhone: phone,
+            CustomerPhone: phone, // Gửi SĐT đã được làm sạch và xác thực
             DiscountPercent: discountPercent,
             Note: note,
             OrderId: currentDraftOrderId,
-            NewCustomerName: newCustomerNameValue // Gửi tên đã nhập
+            NewCustomerName: newCustomerNameValue
         };
 
         // 2. Gọi API tính toán
@@ -94,23 +103,31 @@ $(document).ready(function () {
                     // Trường hợp 1: SĐT mới (cần nhập tên) VÀ container CHƯA có input
                     if (data.customerFoundStatus === 2 && newCustomerContainer.is(':empty')) {
                         const html = `
-                    <div class="alert alert-info py-2 mt-2" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i> Đây là **SĐT mới**. Vui lòng nhập **Tên khách hàng** để lưu thông tin và tích lũy ${data.pointsEarned} điểm.
-                    </div>
-                    <div class="form-group mb-2">
-                        <label for="newCustomerName" class="form-label small fw-bold">Tên Khách Hàng Mới:</label>
-                        <input type="text" class="form-control" id="newCustomerName" placeholder="Ví dụ: Nguyễn Văn A" value="${newCustomerNameValue}">
-                        <div class="invalid-feedback">Vui lòng nhập tên khách hàng.</div>
-                    </div>
-                    `;
+                        <div class="alert alert-info py-2 mt-2" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i> Đây là **SĐT mới**. Vui lòng nhập **Tên khách hàng** để lưu thông tin và tích lũy ${data.pointsEarned} điểm.
+                        </div>
+                        <div class="form-group mb-2">
+                            <label for="newCustomerName" class="form-label small fw-bold">Tên Khách Hàng Mới:</label>
+                            <input type="text" class="form-control" id="newCustomerName" placeholder="Ví dụ: Nguyễn Văn A" value="${newCustomerNameValue}">
+                            <div class="invalid-feedback">Vui lòng nhập tên khách hàng.</div>
+                        </div>
+                        `;
                         newCustomerContainer.html(html).show();
 
-                        // QUAN TRỌNG: Gắn sự kiện để gọi updateTotals chỉ khi thay đổi SĐT, Discount, hoặc Cart
-                        // Nếu gỡ bỏ event này ở đây, bạn cần đảm bảo SĐT/Discount luôn kích hoạt updateTotals
+                        // QUAN TRỌNG: Gắn lại sự kiện updateTotals cho ô input Tên Khách Hàng Mới
+                        $('#newCustomerName').off('input').on('input', function () {
+                            // Khi nhập tên mới, ta không cần gọi API, chỉ cần gọi updateTotals để cập nhật draftDto.NewCustomerName
+                            // Lưu ý: Trong logic này, ta đã gửi newCustomerNameValue lên API, nên ta không cần gọi updateTotals ở đây.
+                        });
                     }
-                    // Trường hợp 2: Đang có input (customerFoundStatus=2) nhưng SĐT bị xóa/thay đổi sang khách cũ
+                    // Trường hợp 2: Đang có input nhưng SĐT bị xóa/thay đổi
                     else if (data.customerFoundStatus !== 2) {
                         newCustomerContainer.empty().hide();
+                    }
+
+                    // Trường hợp 3: SĐT mới nhưng input đã tồn tại, chỉ cần update value
+                    else if (data.customerFoundStatus === 2 && !newCustomerContainer.is(':empty')) {
+                        $('#newCustomerName').val(newCustomerNameValue); // Đảm bảo giữ giá trị đã nhập
                     }
 
                 } else {
@@ -122,6 +139,8 @@ $(document).ready(function () {
             }
         });
     }
+
+    // ... (Giữ nguyên: updateCartUI, btn-add-to-cart, item-quantity, btn-remove-item) ...
     function updateCartUI() {
         $('#cartItems').empty();
         if (cart.length === 0) {
@@ -159,8 +178,8 @@ $(document).ready(function () {
         updateTotals();
     }
 
+
     // --- 2. XỬ LÝ SỰ KIỆN CART & TÍNH TOÁN (GIỮ NGUYÊN) ---
-    // A. Thêm sản phẩm
     $(document).on('click', '.btn-add-to-cart', function () {
         const $item = $(this).closest('.product-item');
         const productId = parseInt($item.data('id'));
@@ -177,7 +196,6 @@ $(document).ready(function () {
         updateCartUI();
     });
 
-    // B. Thay đổi số lượng
     $(document).on('change', '.item-quantity', function () {
         const productId = parseInt($(this).data('product-id'));
         const newQuantity = parseInt($(this).val());
@@ -187,24 +205,36 @@ $(document).ready(function () {
         updateCartUI();
     });
 
-    // C. Xóa sản phẩm
     $(document).on('click', '.btn-remove-item', function () {
         const productId = parseInt($(this).data('product-id'));
         cart = cart.filter(item => item.ProductId !== productId);
         updateCartUI();
     });
 
-    // D. Thay đổi Discount/Phone
-    $('#discountPercent, #customerPhone').on('input change', function () {
+    // D. Thay đổi Discount/Phone (Sử dụng 'input' để kiểm tra liên tục)
+    $('#discountPercent, #customerPhone').on('input', function () {
+        // Validation cho Discount (Chỉ cho phép số từ 0-100)
+        if ($(this).attr('id') === 'discountPercent') {
+            let val = parseFloat($(this).val());
+            if (isNaN(val) || val < 0) val = 0;
+            if (val > 100) val = 100;
+            $(this).val(val);
+        }
+
+        // Hạn chế nhập ký tự không phải số trong ô phone
+        if ($(this).attr('id') === 'customerPhone') {
+            let phoneVal = $(this).val().replace(/[^\d]/g, '');
+            $(this).val(phoneVal);
+        }
+
         updateTotals();
     });
-
 
     // E. Tìm kiếm
     $('#productSearch').on('keyup', function () {
         const query = $(this).val().toLowerCase();
         $('.product-item').each(function () {
-            const name = $(this).data('name');
+            const name = $(this).data('name').toLowerCase(); // Chuyển name sang chữ thường để tìm kiếm không phân biệt hoa thường
             if (name.includes(query)) {
                 $(this).show();
             } else {
@@ -222,16 +252,25 @@ $(document).ready(function () {
             return;
         }
 
-        const customerPhone = $('#customerPhone').val();
+        let customerPhone = $('#customerPhone').val().replace(/[^\d]/g, ''); // LÀM SẠCH LẠI LẦN CUỐI
         let newCustomerName = '';
+        let isNewCustomer = $('#newCustomerNameContainer').is(':visible');
 
-        // Lấy tên khách hàng mới nếu ô đó đang hiển thị
-        if ($('#newCustomerNameContainer').is(':visible')) {
-            newCustomerName = $('#newCustomerName').val();
+        // Kiểm tra SĐT hợp lệ (10 số) nếu có nhập
+        if (customerPhone.length > 0 && customerPhone.length < 10) {
+            $('#customerPhone').addClass('is-invalid');
+            alert('SĐT phải có ít nhất 10 chữ số.');
+            return;
+        } else {
+            $('#customerPhone').removeClass('is-invalid');
+        }
 
-            // Bổ sung: Kiểm tra tên khách hàng mới đã được nhập chưa
+        // Kiểm tra tên khách hàng mới nếu cần
+        if (isNewCustomer) {
+            newCustomerName = $('#newCustomerName').val().trim();
+
             if (!newCustomerName) {
-                $('#newCustomerName').addClass('is-invalid'); // Thêm class báo lỗi
+                $('#newCustomerName').addClass('is-invalid');
                 alert('Vui lòng nhập tên khách hàng mới để tích lũy điểm.');
                 return;
             } else {
@@ -241,11 +280,11 @@ $(document).ready(function () {
 
         const draftData = {
             Items: cart,
-            CustomerPhone: customerPhone,
+            CustomerPhone: customerPhone, // Gửi SĐT đã làm sạch
             DiscountPercent: parseFloat($('#discountPercent').val()) || 0,
             Note: $('#orderNote').val(),
             OrderId: currentDraftOrderId,
-            NewCustomerName: newCustomerName 
+            NewCustomerName: newCustomerName
         };
 
         $.ajax({

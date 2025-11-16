@@ -95,6 +95,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
 
 
 
+
         [HttpPost]
         public IActionResult CalculateDraftApi([FromBody] OrderDraftDto draft)
         {
@@ -130,7 +131,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                 }
                 else
                 {
-                    customerFoundStatus = 2; 
+                    customerFoundStatus = 2;
                     customerStatus = $"<span class='text-info fw-bold'>SĐT mới ({draft.CustomerPhone})</span>. Sẽ nhận {pointsEarned} điểm.";
                 }
             }
@@ -138,7 +139,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
             {
                 customerFoundStatus = 0;
                 customerStatus = "Chưa nhập SĐT/SĐT không hợp lệ.";
-                pointsEarned = 0; 
+                pointsEarned = 0;
             }
 
             return Json(new
@@ -154,7 +155,7 @@ namespace CafeManagent.Controllers.Staffs.OrderModule
                     CustomerPhone = draft.CustomerPhone ?? "N/A",
                     CustomerStatus = customerStatus,
                     PointsEarned = pointsEarned,
-                    CustomerFoundStatus = customerFoundStatus 
+                    CustomerFoundStatus = customerFoundStatus
                 }
             });
         }

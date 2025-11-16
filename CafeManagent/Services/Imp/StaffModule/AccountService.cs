@@ -22,37 +22,58 @@ namespace CafeManagent.Services.Imp.StaffModule
 
         public async Task<bool> SendPasswordResetEmailAsync(string email)
         {
+            // Cần đảm bảo rằng _config (IConfiguration) và _context (DbContext) đã được inject
+            // và _cache (IMemoryCache) đã được inject
+
+            // 1. Kiểm tra User và Trạng thái
             var user = await _context.Staff.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null) { return false; }
-            if (user.Status != 1) { return false; }
+            if (user.Status != 1) { return false; } // Chỉ cho phép đặt lại mật khẩu nếu Status = 1 (Active)
+
             try
             {
-                string fromEmail = _config["Email:Address"];
-                string appPassword = _config["Email:AppPassword"];
+                // 2. Lấy cấu hình Email từ appsettings.json (Áp dụng từ hàm mẫu)
+                var host = _config["Email:Host"];
+                var port = int.Parse(_config["Email:Port"] ?? "587");
+                var fromAddress = _config["Email:Address"];
+                var appPassword = _config["Email:AppPassword"];
 
-                var smtp = new SmtpClient("smtp.gmail.com")
-                {
-                    Port = 587,
-                    Credentials = new NetworkCredential(fromEmail, appPassword),
-                    EnableSsl = true
-                };
+                if (string.IsNullOrWhiteSpace(fromAddress) || string.IsNullOrWhiteSpace(appPassword))
+                    throw new InvalidOperationException("Thiếu cấu hình Email (Host, Port, Address, AppPassword) trong appsettings.json.");
 
+                // 3. Tạo Token và Link Reset
                 string token = Guid.NewGuid().ToString();
+                // Giả sử _cache là IMemoryCache
                 _cache.Set($"reset_{email}", token, TimeSpan.FromMinutes(10));
+                // Đảm bảo host này là host chạy ứng dụng của bạn
                 string resetLink = $"https://localhost:5000/Account/ResetPassword?email={email}&token={token}";
 
-                var message = new MailMessage(fromEmail, email)
+                // 4. Cấu hình Email (Sử dụng MailAddress và MailMessage)
+                var from = new MailAddress(fromAddress, "Cafe Management");
+                var to = new MailAddress(email, user.FullName); // Sử dụng FullName làm displayName
+
+                using var message = new MailMessage(from, to)
                 {
                     Subject = "Khôi phục mật khẩu - Cafe Manager",
-                    Body = $"Nhấn vào liên kết sau để đặt lại mật khẩu:\n{resetLink}\nLiên kết sẽ hết hạn sau 10 phút.",
+                    Body = $"Xin chào {user.FullName},\n\n" +
+                           $"Chúng tôi nhận được yêu cầu đặt lại mật khẩu tài khoản của bạn.\n\n" +
+                           $"Vui lòng nhấn vào liên kết sau để đặt lại mật khẩu:\n{resetLink}\n\n" +
+                           $"Liên kết này sẽ hết hạn sau 10 phút. Nếu bạn không yêu cầu thay đổi mật khẩu, vui lòng bỏ qua email này.",
                     IsBodyHtml = false
                 };
 
-                await smtp.SendMailAsync(message);
+                // 5. Cấu hình SmtpClient (Sử dụng cấu hình từ appsettings.json)
+                using var smtp = new SmtpClient(host, port)
+                {
+                    EnableSsl = true,
+                    Credentials = new NetworkCredential(fromAddress, appPassword)
+                };
+                await smtp.SendMailAsync(message, CancellationToken.None);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Lỗi gửi email khôi phục mật khẩu cho {email}: {ex.Message}");
                 return false;
             }
         }
@@ -72,7 +93,9 @@ namespace CafeManagent.Services.Imp.StaffModule
             if (user.Password == newPassword)
                 return "SameAsOld";
 
-            user.Password = newPassword;
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
+
+            user.Password = hashedPassword;
             await _context.SaveChangesAsync();
 
             _cache.Remove(token);
