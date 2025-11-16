@@ -44,7 +44,7 @@ namespace CafeManagent.Controllers.Manager.TaskModule
             return (userIdInt, null);
         }
 
-        #region Task Management
+        //#region Task Management
 
         [Authorize(Roles = "Branch Manager")]
         public async Task<IActionResult> Index(string searchString, string statusFilter, string startDate, string endDate)
@@ -119,6 +119,7 @@ namespace CafeManagent.Controllers.Manager.TaskModule
             if (!staffId.HasValue) return errorResult;
 
             await _taskService.UpdateTaskStatusAsync(taskId, newStatus);
+
             return RedirectToAction("Detail");
         }
 
@@ -172,6 +173,5 @@ namespace CafeManagent.Controllers.Manager.TaskModule
                 return RedirectToAction("TaskReport");
             }
         }
-
     }
 }

@@ -21,10 +21,8 @@ namespace CafeManagent.ErrorHandler
 
         public void OnException(ExceptionContext context)
         {
-            // Lấy lỗi gốc
             var exception = context.Exception;
 
-            // Nếu là AppException thì dùng thông tin có sẵn
             if (exception is AppException appEx)
             {
 
@@ -41,9 +39,8 @@ namespace CafeManagent.ErrorHandler
                     }
                 };
             }
-            else // Nếu là Exception thường
+            else 
             {
-
                 context.Result = new ViewResult
                 {
                     ViewName = "Error",

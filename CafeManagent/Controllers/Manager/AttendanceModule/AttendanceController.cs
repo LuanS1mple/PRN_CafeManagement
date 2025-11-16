@@ -62,7 +62,7 @@ namespace CafeManagent.Controllers.Manager.AttendanceModule
                 return RedirectToAction("WorkScheduleToday", "WorkSchedule");
             }
 
-            var attendance = await attendanceService.GetAttendanceWithShiftAsync(workshiftId.Value, staffId.Value, date, shiftId.Value);
+            var attendance = await attendanceService.GetAttendanceWithShiftAsync(workshiftId.Value, staffId.Value, DateOnly.FromDateTime(DateTime.Now), shiftId.Value);
 
             if (attendance == null)
             {

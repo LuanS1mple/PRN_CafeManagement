@@ -2571,3 +2571,33 @@ StackTrace:    at System.Nullable`1.get_Value()
    at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
    at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in C:\Users\thanh\Downloads\Ki7_FALL25\PRN222\Project\CafeManagent\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
 
+--------------------------------------------------
+Time: 2025-11-16 08:40:08
+Exception Type: CafeManagent.ErrorHandler.AppException
+Message: Exception of type 'CafeManagent.ErrorHandler.AppException' was thrown.
+StackTrace:    at CafeManagent.Services.Imp.RequestModule.RequestService.GetById(Int32 id) in C:\Users\thanh\Downloads\Ki7_FALL25\PRN222\Project\CafeManagent\CafeManagent\Services\Imp\RequestModule\RequestService.cs:line 58
+   at CafeManagent.Controllers.Manager.RequestModule.RequestController.DetailAttendanceRequest(Int32 id) in C:\Users\thanh\Downloads\Ki7_FALL25\PRN222\Project\CafeManagent\CafeManagent\Controllers\Manager\RequestModule\RequestController.cs:line 70
+   at lambda_method1105(Closure, Object, Object[])
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.SyncActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeActionMethodAsync()
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeNextActionFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at CafeManagent.Middlewares.NotifyMiddleware.Invoke(HttpContext context, NotifyUlti ulti, IHubContext`1 hub) in C:\Users\thanh\Downloads\Ki7_FALL25\PRN222\Project\CafeManagent\CafeManagent\Middlewares\NotifyMiddleware.cs:line 20
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at CafeManagent.Middlewares.AuthenticationMiddleware.InvokeAsync(HttpContext context) in C:\Users\thanh\Downloads\Ki7_FALL25\PRN222\Project\CafeManagent\CafeManagent\Middlewares\AuthenticationMiddleware.cs:line 76
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+   at CafeManagent.ErrorHandler.ErrorHandlerMiddleware.InvokeAsync(HttpContext context) in C:\Users\thanh\Downloads\Ki7_FALL25\PRN222\Project\CafeManagent\CafeManagent\Middlewares\ErrorHandlerMiddleware.cs:line 25
+
